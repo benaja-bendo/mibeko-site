@@ -1,0 +1,117 @@
+---
+---
+
+<header class="header">
+	<div class="container header-container">
+		<a href="/" class="logo">
+			<span class="logo-text">Mibeko</span>
+			<span class="logo-dot">.</span>
+		</a>
+		
+		<nav class="nav">
+			<ul class="nav-list">
+				<li><a href="#features" class="nav-link">Pourquoi Mibeko ?</a></li>
+				<li><a href="#audience" class="nav-link">Pour qui ?</a></li>
+				<li><a href="#about" class="nav-link">Notre Mission</a></li>
+			</ul>
+		</nav>
+		
+		<div class="header-actions">
+			<a href="#download" class="btn btn-primary btn-sm">Télécharger</a>
+		</div>
+		
+		<button class="mobile-toggle" aria-label="Menu">
+			<span></span>
+			<span></span>
+			<span></span>
+		</button>
+	</div>
+</header>
+
+<style>
+	.header {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		background-color: rgba(10, 25, 47, 0.95);
+		backdrop-filter: blur(10px);
+		z-index: 1000;
+		padding: 1rem 0;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.header-container {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.logo {
+		font-size: 1.5rem;
+		font-weight: 800;
+		color: var(--color-white);
+		display: flex;
+		align-items: center;
+	}
+
+	.logo-dot {
+		color: var(--color-gold);
+	}
+
+	.nav-list {
+		display: flex;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		gap: 2rem;
+	}
+
+	.nav-link {
+		color: var(--color-gray);
+		font-weight: 500;
+		font-size: 0.95rem;
+	}
+
+	.nav-link:hover {
+		color: var(--color-white);
+	}
+	
+	.btn-sm {
+		padding: 0.5rem 1.2rem;
+		font-size: 0.9rem;
+	}
+
+	.mobile-toggle {
+		display: none;
+		flex-direction: column;
+		gap: 5px;
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: 0;
+	}
+
+	.mobile-toggle span {
+		display: block;
+		width: 25px;
+		height: 3px;
+		background-color: var(--color-white);
+		border-radius: 3px;
+		transition: all 0.3s;
+	}
+
+	@media (max-width: 768px) {
+		.nav, .header-actions {
+			display: none;
+		}
+		
+		.mobile-toggle {
+			display: flex;
+		}
+	}
+</style>
+
+<script>
+	// Simple mobile menu toggle logic could be added here
+</script>

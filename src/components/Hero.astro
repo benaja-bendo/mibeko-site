@@ -1,0 +1,364 @@
+---
+---
+
+<section class="hero bg-navy">
+	<div class="container hero-container">
+		<div class="hero-content">
+			<span class="badge">Lancement Officiel</span>
+			<h1 class="hero-title">
+				Le Droit Congolais, <br/>
+				<span class="text-gold">Accessible Partout.</span>
+			</h1>
+			<p class="hero-description text-gray">
+				Découvrez Mibeko, la première plateforme intelligente propulsée par l'IA pour les professionnels du droit, étudiants et citoyens en République du Congo. Une recherche juridique rapide, fiable et hors-ligne.
+			</p>
+			
+			<div class="hero-ctas" id="download">
+				<a href="#" class="store-btn apple-store">
+					<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M16.365 21.444c-1.343 0-2.585-.85-3.628-.85-1.041 0-2.454.85-3.626.85-3.793 0-7.111-4.708-7.111-9.589 0-4.331 2.37-6.812 5.097-6.812 1.543 0 2.825.962 3.655.962.828 0 2.227-.962 3.868-.962 2.112 0 3.89 1.107 4.82 2.768-4.085 2.274-3.414 7.734.733 9.423-1.066 2.657-2.618 4.208-3.808 4.208zM14.473 3.125c-.68.83-1.631 1.34-2.646 1.34-.112-1.28.472-2.515 1.258-3.321.751-.767 1.838-1.145 2.812-1.145.146 1.25-.436 2.368-1.424 3.126z"/></svg>
+					<div class="store-text">
+						<span class="store-sub">Télécharger dans</span>
+						<span class="store-title">l'App Store</span>
+					</div>
+				</a>
+				<a href="#" class="store-btn google-play">
+					<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M3.609 1.814L13.792 12 3.61 22.186a1.983 1.983 0 0 1-.462-1.28V3.094c0-.512.18-.981.461-1.28zM14.654 12.863l3.52 3.52-12.72 7.344 9.2-10.864zM15.485 12l4.853-4.854a1.996 1.996 0 0 1 .42 1.055 2.016 2.016 0 0 1-.42 1.8L15.485 12zM14.654 11.137l-9.2-10.864 12.72 7.344-3.52 3.52z"/></svg>
+					<div class="store-text">
+						<span class="store-sub">DISPONIBLE SUR</span>
+						<span class="store-title">Google Play</span>
+					</div>
+				</a>
+			</div>
+			
+			<div class="hero-stats">
+				<div class="stat">
+					<span class="stat-val text-white">+10k</span>
+					<span class="stat-label text-gray">Textes de loi</span>
+				</div>
+				<div class="stat">
+					<span class="stat-val text-white">100%</span>
+					<span class="stat-label text-gray">Hors-ligne</span>
+				</div>
+				<div class="stat">
+					<span class="stat-val text-white">24/7</span>
+					<span class="stat-label text-gray">IA Juridique</span>
+				</div>
+			</div>
+		</div>
+		
+		<div class="hero-visual">
+			<div class="mockup mockup-back">
+				<div class="mockup-screen">
+					<div class="mockup-header"></div>
+					<div class="mockup-body">
+						<div class="mockup-line"></div>
+						<div class="mockup-line short"></div>
+						<div class="mockup-card"></div>
+						<div class="mockup-card"></div>
+					</div>
+				</div>
+			</div>
+			<div class="mockup mockup-front">
+				<div class="mockup-screen">
+					<div class="mockup-header-gold">
+						<span class="mockup-logo">M</span>
+					</div>
+					<div class="mockup-search">
+						<span class="search-icon">🔍</span> Recherche IA...
+					</div>
+					<div class="mockup-body">
+						<div class="mockup-result">
+							<div class="result-title">Code Pénal, Art. 142</div>
+							<div class="result-desc"></div>
+							<div class="result-desc short"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="glow-effect"></div>
+		</div>
+	</div>
+	
+	<!-- Wave shape divider -->
+	<div class="wave-divider">
+		<svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+			<path d="M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86A600.21,600.21,0,0,1,0,27.35V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z" class="shape-fill"></path>
+		</svg>
+	</div>
+</section>
+
+<style>
+	.hero {
+		position: relative;
+		padding: 10rem 0 8rem;
+		min-height: 100vh;
+		display: flex;
+		align-items: center;
+		overflow: hidden;
+	}
+
+	.hero-container {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 4rem;
+		align-items: center;
+		position: relative;
+		z-index: 2;
+	}
+
+	.badge {
+		display: inline-block;
+		padding: 0.4rem 1rem;
+		background-color: rgba(212, 175, 55, 0.1);
+		color: var(--color-gold);
+		border-radius: 50px;
+		font-size: 0.85rem;
+		font-weight: 600;
+		margin-bottom: 1.5rem;
+		border: 1px solid rgba(212, 175, 55, 0.3);
+	}
+
+	.hero-title {
+		font-size: 3.5rem;
+		color: var(--color-white);
+		margin-bottom: 1.5rem;
+		letter-spacing: -1px;
+	}
+
+	.hero-description {
+		font-size: 1.2rem;
+		max-width: 500px;
+		margin-bottom: 2.5rem;
+	}
+
+	.hero-ctas {
+		display: flex;
+		gap: 1rem;
+		margin-bottom: 3rem;
+	}
+
+	.store-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.8rem;
+		background-color: var(--color-white);
+		color: var(--color-navy);
+		padding: 0.6rem 1.2rem;
+		border-radius: 12px;
+		transition: transform 0.3s, box-shadow 0.3s;
+	}
+
+	.store-btn:hover {
+		transform: translateY(-3px);
+		box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+	}
+
+	.store-text {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.store-sub {
+		font-size: 0.65rem;
+		text-transform: uppercase;
+		font-weight: 600;
+	}
+
+	.store-title {
+		font-size: 1.1rem;
+		font-weight: 700;
+		line-height: 1;
+	}
+
+	.hero-stats {
+		display: flex;
+		gap: 3rem;
+		border-top: 1px solid rgba(255,255,255,0.1);
+		padding-top: 2rem;
+	}
+
+	.stat {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+	}
+
+	.stat-val {
+		font-size: 1.5rem;
+		font-weight: 800;
+	}
+
+	.stat-label {
+		font-size: 0.85rem;
+		text-transform: uppercase;
+		letter-spacing: 1px;
+	}
+
+	/* Mockup Styles */
+	.hero-visual {
+		position: relative;
+		height: 600px;
+		perspective: 1000px;
+	}
+
+	.mockup {
+		position: absolute;
+		width: 280px;
+		height: 580px;
+		background-color: #1a1a1a;
+		border-radius: 40px;
+		border: 8px solid #333;
+		box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+		overflow: hidden;
+	}
+
+	.mockup-screen {
+		width: 100%;
+		height: 100%;
+		background-color: var(--color-gray-light);
+		position: relative;
+	}
+
+	.mockup-back {
+		right: 20px;
+		top: 0;
+		transform: rotateY(-15deg) rotateX(5deg) scale(0.9);
+		opacity: 0.7;
+		z-index: 1;
+		border-color: #222;
+	}
+
+	.mockup-front {
+		left: 20px;
+		top: 40px;
+		transform: rotateY(-5deg) rotateX(2deg);
+		z-index: 2;
+		border-color: var(--color-navy-light);
+	}
+
+	.glow-effect {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: 300px;
+		height: 300px;
+		background: radial-gradient(circle, rgba(212,175,55,0.15) 0%, rgba(10,25,47,0) 70%);
+		z-index: 0;
+		pointer-events: none;
+	}
+
+	.mockup-header-gold {
+		background-color: var(--color-navy);
+		color: var(--color-gold);
+		padding: 2.5rem 1rem 1rem;
+		text-align: center;
+		border-bottom: 2px solid var(--color-gold);
+	}
+
+	.mockup-logo {
+		font-weight: 800;
+		font-size: 1.5rem;
+	}
+
+	.mockup-search {
+		background-color: white;
+		margin: -15px 15px 15px;
+		padding: 10px;
+		border-radius: 8px;
+		box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+		font-size: 0.85rem;
+		color: #999;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		position: relative;
+		z-index: 2;
+	}
+
+	.mockup-body {
+		padding: 1rem;
+	}
+
+	.mockup-result {
+		background-color: white;
+		padding: 15px;
+		border-radius: 12px;
+		box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+		margin-bottom: 10px;
+		border-left: 3px solid var(--color-gold);
+	}
+
+	.result-title {
+		font-weight: 700;
+		color: var(--color-navy);
+		font-size: 0.9rem;
+		margin-bottom: 8px;
+	}
+
+	.result-desc {
+		height: 8px;
+		background-color: #eee;
+		border-radius: 4px;
+		margin-bottom: 6px;
+	}
+	
+	.result-desc.short {
+		width: 70%;
+	}
+
+	.wave-divider {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		width: 100%;
+		overflow: hidden;
+		line-height: 0;
+	}
+
+	.wave-divider svg {
+		position: relative;
+		display: block;
+		width: calc(100% + 1.3px);
+		height: 80px;
+	}
+
+	.wave-divider .shape-fill {
+		fill: var(--color-gray-light);
+	}
+
+	@media (max-width: 992px) {
+		.hero-container {
+			grid-template-columns: 1fr;
+			text-align: center;
+			gap: 3rem;
+		}
+
+		.hero-description {
+			margin: 0 auto 2.5rem;
+		}
+
+		.hero-ctas {
+			justify-content: center;
+		}
+
+		.hero-stats {
+			justify-content: center;
+		}
+
+		.hero-visual {
+			height: 500px;
+			max-width: 400px;
+			margin: 0 auto;
+		}
+		
+		.mockup-front {
+			left: 50%;
+			transform: translateX(-50%) rotateY(-5deg) rotateX(2deg);
+		}
+		
+		.mockup-back {
+			display: none;
+		}
+	}
+</style>
