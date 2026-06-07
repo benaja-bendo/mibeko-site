@@ -1,0 +1,27 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout title="Page introuvable — Mibeko">
+	<Header />
+	<main id="main" class="flex-grow flex items-center">
+		<div class="max-w-[640px] mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
+			<p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-3">Erreur 404</p>
+			<h1 class="text-4xl md:text-5xl font-bold text-on-surface tracking-tight mb-4">Cette page n'existe pas</h1>
+			<p class="text-on-surface-variant font-serif text-lg mb-10">
+				Le lien est peut-être obsolète ou la page a été déplacée. Reprenons depuis l'accueil.
+			</p>
+			<div class="flex flex-col sm:flex-row gap-4 justify-center">
+				<a href="/" class="inline-flex items-center justify-center h-12 px-7 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">
+					Retour à l'accueil
+				</a>
+				<a href="/contact" class="inline-flex items-center justify-center h-12 px-7 border border-outline text-on-surface font-semibold rounded hover:bg-surface-container transition-colors">
+					Nous contacter
+				</a>
+			</div>
+		</div>
+	</main>
+	<Footer />
+</Layout>

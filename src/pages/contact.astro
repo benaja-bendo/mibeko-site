@@ -1,0 +1,123 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Footer from '../components/Footer.astro';
+
+const infos = [
+  {
+    label: 'E-mail',
+    value: 'contact@mibeko.fr',
+    href: 'mailto:contact@mibeko.fr',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>`,
+  },
+  {
+    label: 'Localisation',
+    value: 'Brazzaville, République du Congo',
+    href: null,
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>`,
+  },
+  {
+    label: 'Espace Pro',
+    value: 'Demander une démo',
+    href: 'app.mibeko.fr',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>`,
+  },
+];
+---
+
+<Layout
+	title="Contact — Mibeko"
+	description="Une question, un partenariat, une démo de l'offre professionnelle ? Contactez l'équipe Mibeko. Nous répondons sous 48 heures ouvrées."
+>
+	<Header />
+	<main id="main" class="flex-grow">
+		<PageHeader
+			eyebrow="Contact"
+			title="Parlons de vos besoins"
+			subtitle="Citoyen, professionnel du droit ou partenaire : écrivez-nous. Nous répondons généralement sous 48 heures ouvrées."
+		/>
+
+		<section class="py-16 md:py-20 bg-background">
+			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16">
+				<!-- Infos -->
+				<div class="lg:col-span-2 flex flex-col gap-6">
+					{infos.map((info) => (
+						<div class="flex items-start gap-4">
+							<div class="w-11 h-11 rounded-lg bg-surface-container text-primary flex items-center justify-center shrink-0" set:html={info.icon} />
+							<div>
+								<p class="text-sm font-semibold text-on-surface mb-0.5">{info.label}</p>
+								{info.href ? (
+									<a href={info.href} class="text-on-surface-variant hover:text-primary transition-colors">{info.value}</a>
+								) : (
+									<p class="text-on-surface-variant">{info.value}</p>
+								)}
+							</div>
+						</div>
+					))}
+
+					<div class="mt-2 p-5 rounded-xl bg-surface-container-low border border-surface-variant">
+						<p class="text-sm text-on-surface-variant leading-relaxed">
+							<strong class="text-on-surface">Mibeko</strong> est une plateforme LegalTech qui démocratise l'accès au droit en République du Congo et dans l'espace OHADA.
+						</p>
+					</div>
+				</div>
+
+				<!-- Form -->
+				<div class="lg:col-span-3">
+					<form id="contact-form" class="bg-white border border-surface-variant rounded-xl p-6 md:p-8 flex flex-col gap-5">
+						<div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+							<div class="flex flex-col gap-2">
+								<label for="name" class="text-sm font-medium text-on-surface">Nom complet</label>
+								<input id="name" name="name" type="text" required class="h-11 px-4 rounded border border-outline-variant bg-white text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
+							</div>
+							<div class="flex flex-col gap-2">
+								<label for="email" class="text-sm font-medium text-on-surface">E-mail</label>
+								<input id="email" name="email" type="email" required class="h-11 px-4 rounded border border-outline-variant bg-white text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
+							</div>
+						</div>
+
+						<div class="flex flex-col gap-2">
+							<label for="profile" class="text-sm font-medium text-on-surface">Vous êtes</label>
+							<select id="profile" name="profile" class="h-11 px-4 rounded border border-outline-variant bg-white text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+								<option>Un particulier</option>
+								<option>Un professionnel du droit</option>
+								<option>Un partenaire / une institution</option>
+								<option>Autre</option>
+							</select>
+						</div>
+
+						<div class="flex flex-col gap-2">
+							<label for="message" class="text-sm font-medium text-on-surface">Message</label>
+							<textarea id="message" name="message" rows="5" required class="px-4 py-3 rounded border border-outline-variant bg-white text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-y"></textarea>
+						</div>
+
+						<button type="submit" class="inline-flex items-center justify-center h-12 px-6 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">
+							Envoyer le message
+						</button>
+
+						<p id="form-note" class="text-xs text-on-surface-variant">
+							En envoyant ce formulaire, votre logiciel de messagerie s'ouvrira avec votre message pré-rempli à destination de contact@mibeko.cg.
+						</p>
+					</form>
+				</div>
+			</div>
+		</section>
+	</main>
+	<Footer />
+</Layout>
+
+<script>
+	const form = document.getElementById('contact-form') as HTMLFormElement | null;
+	form?.addEventListener('submit', (e) => {
+		e.preventDefault();
+		const data = new FormData(form);
+		const name = String(data.get('name') ?? '');
+		const email = String(data.get('email') ?? '');
+		const profile = String(data.get('profile') ?? '');
+		const message = String(data.get('message') ?? '');
+		const subject = encodeURIComponent(`Contact Mibeko — ${name} (${profile})`);
+		const body = encodeURIComponent(`Nom : ${name}\nE-mail : ${email}\nProfil : ${profile}\n\n${message}`);
+		window.location.href = `mailto:contact@mibeko.cg?subject=${subject}&body=${body}`;
+	});
+</script>

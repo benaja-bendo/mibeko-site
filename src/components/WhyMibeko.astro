@@ -1,0 +1,44 @@
+---
+const reasons = [
+  {
+    title: 'Sources Officielles',
+    description: 'Accédez à une base de données rigoureusement vérifiée, issue des journaux officiels et des publications gouvernementales.',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-3"></path><path d="M9 7v14"></path></svg>`
+  },
+  {
+    title: 'Français Simple',
+    description: 'Des explications claires et simplifiées pour démocratiser la compréhension des textes de loi souvent complexes.',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"></path><path d="m4 14 6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="m22 22-5-10-5 10"></path><path d="M14 18h6"></path></svg>`
+  },
+  {
+    title: 'Sécurité des Données',
+    description: 'Conformité totale avec la législation congolaise sur la protection des données personnelles (Loi 2019).',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"></path></svg>`
+  }
+];
+---
+
+<section class="py-16 md:py-24 bg-surface-container-low border-y border-surface-variant/50">
+  <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-16 animate-fade-in-up">
+      <h2 class="text-3xl md:text-[32px] font-bold text-on-surface mb-3 tracking-tight">Pourquoi Mibeko</h2>
+      <p class="text-on-surface-variant italic font-serif">Développé avec le soutien de juristes congolais.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+      {reasons.map((reason, index) => (
+        <div 
+          class={`bg-white rounded-xl p-8 shadow-sm border border-surface-variant hover-lift animate-fade-in-up animation-delay-${(index + 1) * 100}`}
+        >
+          <div class="text-secondary mb-6">
+            <Fragment set:html={reason.icon} />
+          </div>
+          <h3 class="text-xl font-bold text-on-surface mb-3">{reason.title}</h3>
+          <p class="text-sm text-on-surface-variant leading-relaxed">
+            {reason.description}
+          </p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

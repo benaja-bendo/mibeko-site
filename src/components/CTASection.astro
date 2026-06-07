@@ -1,0 +1,25 @@
+---
+interface Props {
+  title?: string;
+  text?: string;
+}
+const {
+  title = "Prêt à reprendre le contrôle de vos droits ?",
+  text = "Rejoignez les citoyens et les professionnels du droit qui font confiance à Mibeko pour rechercher, comprendre et agir.",
+} = Astro.props;
+---
+
+<section class="py-16 md:py-24 bg-primary text-on-primary">
+  <div class="max-w-[800px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <h2 class="text-3xl md:text-4xl font-bold tracking-tight mb-4">{title}</h2>
+    <p class="text-inverse-primary text-lg leading-relaxed mb-10 max-w-xl mx-auto">{text}</p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="/application" class="inline-flex items-center justify-center h-12 px-7 bg-background text-primary font-semibold rounded hover:bg-surface-container-low transition-colors">
+        Télécharger l'application
+      </a>
+      <a href="/professionnels" class="inline-flex items-center justify-center h-12 px-7 border border-inverse-primary/40 text-on-primary font-semibold rounded hover:bg-on-primary/10 transition-colors">
+        Découvrir l'offre Pro
+      </a>
+    </div>
+  </div>
+</section>

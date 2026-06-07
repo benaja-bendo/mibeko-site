@@ -1,0 +1,69 @@
+---
+const updates = [
+  {
+    tag: 'Droit Commercial',
+    date: '12 mai 2026',
+    title: "Révision de l'Acte Uniforme OHADA sur le Droit Commercial Général",
+    description: "Les nouvelles dispositions concernant le registre du commerce et du crédit mobilier (RCCM) entrent en vigueur ce trimestre. Décryptage des implications pour les PME."
+  },
+  {
+    tag: 'Droit du Travail',
+    date: '05 mai 2026',
+    title: "Nouveau barème des indemnités de licenciement",
+    description: "Publication de l'arrêté ministériel fixant les nouvelles modalités de calcul des indemnités de fin de carrière et de licenciement."
+  }
+];
+---
+
+<section class="py-16 md:py-24 bg-background">
+  <div class="max-w-[800px] mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <div class="flex flex-col sm:flex-row sm:items-baseline justify-between mb-8 pb-4 border-b border-surface-variant animate-fade-in-up">
+      <h2 class="text-2xl md:text-3xl font-bold text-on-surface tracking-tight mb-4 sm:mb-0">
+        Dernières mises à jour législatives
+      </h2>
+      <a href="/ressources" class="text-sm font-semibold text-secondary hover:text-secondary-container transition-colors inline-flex items-center gap-1 group">
+        Voir toute l'actualité
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1 transition-transform">
+          <path d="M5 12h14"></path>
+          <path d="m12 5 7 7-7 7"></path>
+        </svg>
+      </a>
+    </div>
+
+    <div class="flex flex-col gap-4">
+      {updates.map((update, index) => (
+        <a
+          href="/ressources"
+          class={`block bg-white border border-surface-variant rounded-xl p-6 md:p-8 hover:border-secondary/30 hover-lift group animate-fade-in-up animation-delay-${(index + 1) * 100}`}
+        >
+          <div class="flex items-center gap-4 mb-4">
+            <span class="inline-flex items-center px-2.5 py-1 rounded bg-secondary-container/20 text-secondary text-xs font-semibold">
+              {update.tag}
+            </span>
+            <span class="text-xs text-on-surface-variant font-medium">
+              {update.date}
+            </span>
+          </div>
+          
+          <div class="flex justify-between items-start gap-4">
+            <div>
+              <h3 class="text-xl font-bold text-on-surface mb-2 group-hover:text-primary transition-colors">
+                {update.title}
+              </h3>
+              <p class="text-sm text-on-surface-variant leading-relaxed">
+                {update.description}
+              </p>
+            </div>
+            <div class="text-surface-variant group-hover:text-secondary transition-colors shrink-0 hidden sm:block mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 18 6-6-6-6"></path>
+              </svg>
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+    
+  </div>
+</section>

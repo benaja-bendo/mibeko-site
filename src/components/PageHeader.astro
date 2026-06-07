@@ -1,0 +1,20 @@
+---
+interface Props {
+  eyebrow?: string;
+  title: string;
+  subtitle?: string;
+}
+const { eyebrow, title, subtitle } = Astro.props;
+---
+
+<section class="pt-16 pb-12 md:pt-20 md:pb-16 border-b border-surface-variant/50 bg-surface-container-low">
+  <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in-up">
+    {eyebrow && (
+      <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-3">{eyebrow}</p>
+    )}
+    <h1 class="text-3xl md:text-5xl font-bold text-on-surface tracking-tight max-w-3xl">{title}</h1>
+    {subtitle && (
+      <p class="mt-5 text-lg md:text-xl text-on-surface-variant font-serif max-w-2xl leading-relaxed">{subtitle}</p>
+    )}
+  </div>
+</section>

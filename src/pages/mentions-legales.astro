@@ -1,0 +1,53 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout title="Mentions légales — Mibeko" description="Mentions légales de la plateforme Mibeko.">
+	<Header />
+	<main id="main" class="flex-grow">
+		<PageHeader eyebrow="Légal" title="Mentions légales" subtitle="Dernière mise à jour : juin 2026" />
+		<section class="py-12 md:py-16 bg-background">
+			<div class="max-w-[760px] mx-auto px-4 sm:px-6 lg:px-8 legal-prose">
+				<!-- <div class="p-4 rounded-lg bg-secondary-container/20 border border-secondary-container/40 mb-8 not-prose">
+					<p class="text-sm text-on-secondary-container">⚠️ Modèle à compléter et à faire valider par un conseil juridique avant la mise en ligne définitive. Les informations entre crochets doivent être renseignées.</p>
+				</div> -->
+
+				<h2>Éditeur du site</h2>
+				<p>
+					Le présent site est édité par <strong>Mibeko</strong>, startup, au capital de 1 000 000 FCFA, immatriculée au Registre du Commerce et du Crédit Mobilier (RCCM) sous le numéro 92140945400011, dont le siège social est situé à 186 Av. du Maréchal Gallieni, Mérignac.
+				</p>
+				<p>
+					Adresse e-mail : <a href="mailto:contact@mibeko.fr">contact@mibeko.fr</a><br />
+					Représentant légal : Bénaja BENDO-MATONDO
+				</p>
+
+				<h2>Hébergement</h2>
+				<p>
+					Le site est hébergé par Infomaniak, Pour toute question relative à l'hébergement, contactez nous.
+				</p>
+
+				<h2>Propriété intellectuelle</h2>
+				<p>
+					L'ensemble des contenus présents sur ce site (marque Mibeko, logo, textes, interfaces, éléments graphiques) est protégé par le droit de la propriété intellectuelle. Toute reproduction ou représentation, totale ou partielle, sans autorisation préalable écrite de Mibeko est interdite.
+				</p>
+				<p>
+					Les textes juridiques (lois, codes, actes uniformes OHADA, jurisprudence) reproduits sur la plateforme demeurent la propriété de leurs auteurs et institutions respectives et sont diffusés à titre informatif.
+				</p>
+
+				<h2>Avertissement</h2>
+				<p>
+					Les informations diffusées sur Mibeko ont une vocation strictement informative et pédagogique. Elles ne constituent en aucun cas un conseil juridique personnalisé et ne remplacent pas la consultation d'un avocat, d'un notaire ou d'un juriste qualifié.
+				</p>
+
+				<h2>Contact</h2>
+				<p>
+					Pour toute question relative au site ou à ces mentions, écrivez-nous à <a href="mailto:contact@mibeko.fr">contact@mibeko.fr</a> ou via notre <a href="/contact">formulaire de contact</a>.
+				</p>
+			</div>
+		</section>
+	</main>
+	<Footer />
+</Layout>

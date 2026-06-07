@@ -1,0 +1,26 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import Features from '../components/Features.astro';
+import Testimonial from '../components/Testimonial.astro';
+import CTASection from '../components/CTASection.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout
+	title="L'application Mibeko — Vos droits dans votre poche"
+	description="L'application Mibeko met la bibliothèque juridique congolaise et l'assistant IA dans votre poche. Comprenez la loi, trouvez des réponses et contactez des professionnels certifiés."
+>
+	<Header />
+	<main id="main" class="flex-grow">
+		<Hero />
+		<Features />
+		<Testimonial />
+		<CTASection
+			title="Téléchargez Mibeko dès aujourd'hui"
+			text="Disponible bientôt sur Android et iOS, et dès maintenant en version web. Vos droits, où que vous soyez."
+		/>
+	</main>
+	<Footer />
+</Layout>

@@ -1,143 +1,72 @@
 ---
+import '../styles/global.css';
+
 interface Props {
 	title: string;
 	description?: string;
+	image?: string;
 }
 
-const { title, description = "Mibeko - L'intelligence artificielle au service du droit congolais." } = Astro.props;
+const {
+	title,
+	description = "Mibeko : la plateforme juridique de la République du Congo et de l'espace OHADA. Recherchez, comprenez et agissez sur vos droits — pour les citoyens comme pour les professionnels du droit.",
+	image = '/logo.svg',
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const siteName = 'Mibeko';
+
+const orgJsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'Organization',
+	name: 'Mibeko',
+	url: canonical,
+	logo: new URL('/logo.svg', Astro.site ?? Astro.url.origin).href,
+	description,
+	slogan: 'Vos droits, simplifiés.',
+	areaServed: 'CG',
+};
 ---
 
 <!doctype html>
 <html lang="fr" class="scroll-smooth">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="icon" type="image/svg+xml" href="/logo.svg" />
 		<meta name="generator" content={Astro.generator} />
+		<link rel="canonical" href={canonical} />
+
 		<title>{title}</title>
 		<meta name="description" content={description} />
-		
-		<!-- Google Fonts: Montserrat -->
+		<meta name="theme-color" content="#03271a" />
+
+		<!-- Open Graph -->
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content={siteName} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonical} />
+		<meta property="og:image" content={image} />
+		<meta property="og:locale" content="fr_FR" />
+
+		<!-- Twitter -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={image} />
+
+		<!-- Google Fonts: Inter & Source Serif 4 -->
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-		<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+
+		<script type="application/ld+json" set:html={JSON.stringify(orgJsonLd)} />
 	</head>
-	<body>
+	<body class="antialiased min-h-screen flex flex-col selection:bg-primary selection:text-on-primary">
+		<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-on-primary focus:rounded">
+			Aller au contenu principal
+		</a>
 		<slot />
 	</body>
 </html>
-
-<style is:global>
-	:root {
-		/* Palette de couleurs */
-		--color-navy: #0A192F;
-		--color-navy-light: #112240;
-		--color-navy-lighter: #233554;
-		--color-white: #FFFFFF;
-		--color-gray-light: #F8F9FA;
-		--color-gray: #8892B0;
-		--color-gold: #D4AF37;
-		--color-gold-hover: #F3C623;
-		
-		/* Typographie */
-		--font-main: 'Montserrat', sans-serif;
-	}
-
-	html,
-	body {
-		margin: 0;
-		padding: 0;
-		width: 100%;
-		min-height: 100vh;
-		font-family: var(--font-main);
-		background-color: var(--color-gray-light);
-		color: var(--color-navy);
-		overflow-x: hidden;
-	}
-
-	* {
-		box-sizing: border-box;
-	}
-
-	h1, h2, h3, h4, h5, h6 {
-		margin-top: 0;
-		font-weight: 700;
-		line-height: 1.2;
-	}
-
-	p {
-		line-height: 1.6;
-		margin-top: 0;
-	}
-
-	a {
-		text-decoration: none;
-		color: inherit;
-		transition: color 0.3s ease;
-	}
-
-	img {
-		max-width: 100%;
-		height: auto;
-		display: block;
-	}
-	
-	.container {
-		width: 100%;
-		max-width: 1200px;
-		margin: 0 auto;
-		padding: 0 2rem;
-	}
-	
-	/* Utility classes */
-	.text-navy { color: var(--color-navy); }
-	.text-white { color: var(--color-white); }
-	.text-gold { color: var(--color-gold); }
-	.text-gray { color: var(--color-gray); }
-	
-	.bg-navy { background-color: var(--color-navy); }
-	.bg-navy-light { background-color: var(--color-navy-light); }
-	.bg-white { background-color: var(--color-white); }
-	.bg-gray-light { background-color: var(--color-gray-light); }
-	
-	.btn {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		padding: 0.8rem 1.8rem;
-		border-radius: 8px;
-		font-weight: 600;
-		font-size: 1rem;
-		cursor: pointer;
-		transition: all 0.3s ease;
-		border: none;
-		gap: 0.5rem;
-	}
-	
-	.btn-primary {
-		background-color: var(--color-gold);
-		color: var(--color-navy);
-	}
-	
-	.btn-primary:hover {
-		background-color: var(--color-gold-hover);
-		transform: translateY(-2px);
-		box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
-	}
-	
-	.btn-outline {
-		background-color: transparent;
-		color: var(--color-white);
-		border: 2px solid var(--color-white);
-	}
-	
-	.btn-outline:hover {
-		background-color: rgba(255, 255, 255, 0.1);
-		transform: translateY(-2px);
-	}
-
-	.section {
-		padding: 6rem 0;
-	}
-</style>

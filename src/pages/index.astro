@@ -1,24 +1,20 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
-import Hero from '../components/Hero.astro';
-import Features from '../components/Features.astro';
-import Audience from '../components/Audience.astro';
-import About from '../components/About.astro';
+import HomeHero from '../components/HomeHero.astro';
+import WhyMibeko from '../components/WhyMibeko.astro';
+import LatestUpdates from '../components/LatestUpdates.astro';
+import CTASection from '../components/CTASection.astro';
 import Footer from '../components/Footer.astro';
-
-// Bienvenue sur le site vitrine de Mibeko
 ---
 
-<Layout title="Mibeko - L'intelligence artificielle au service du droit congolais">
+<Layout title="Mibeko — Vos droits, simplifiés. | Plateforme juridique du Congo">
 	<Header />
-	
-	<main>
-		<Hero />
-		<Features />
-		<Audience />
-		<About />
+	<main id="main" class="flex-grow">
+		<HomeHero />
+		<WhyMibeko />
+		<LatestUpdates />
+		<CTASection />
 	</main>
-
 	<Footer />
 </Layout>

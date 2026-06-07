@@ -1,220 +1,93 @@
 ---
+const year = new Date().getFullYear();
+
+const columns = [
+  {
+    title: 'Plateforme',
+    links: [
+      { href: '/application', label: 'Pour les particuliers' },
+      { href: '/professionnels', label: 'Pour les professionnels' },
+      { href: '/ressources', label: 'Ressources & actualités' },
+      { href: '/contact', label: 'Contact' },
+    ],
+  },
+  {
+    title: 'Entreprise',
+    links: [
+      { href: '/professionnels#essai', label: 'Essai gratuit' },
+      { href: '/contact', label: 'Nous contacter' },
+      { href: '/ressources', label: "Veille juridique" },
+    ],
+  },
+  {
+    title: 'Légal',
+    links: [
+      { href: '/mentions-legales', label: 'Mentions légales' },
+      { href: '/cgu', label: "Conditions d'utilisation" },
+      { href: '/confidentialite', label: 'Confidentialité' },
+    ],
+  },
+];
 ---
 
-<footer class="footer">
-	<div class="container">
-		<div class="footer-top">
-			<div class="footer-brand">
-				<a href="/" class="logo">
-					<span class="logo-text">Mibeko</span>
-					<span class="logo-dot">.</span>
-				</a>
-				<p class="brand-desc text-gray">
-					La première plateforme d'intelligence juridique en République du Congo. Accédez à vos droits, partout, tout le temps.
-				</p>
-				<div class="socials">
-					<a href="#" class="social-link" aria-label="LinkedIn">
-						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
-					</a>
-					<a href="#" class="social-link" aria-label="Twitter">
-						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg>
-					</a>
-				</div>
-			</div>
+<footer class="bg-primary text-on-primary pt-12 md:pt-16 mt-auto">
+  <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-8 md:gap-12">
+      <!-- Brand -->
+      <div class="col-span-2 flex flex-col gap-4">
+        <a href="/" class="flex items-center gap-2 w-fit">
+          <img src="/logo.svg" alt="" class="w-6 h-6 brightness-0 invert" />
+          <span class="font-sans font-bold text-lg tracking-tight">Mibeko</span>
+        </a>
+        <p class="text-inverse-primary text-sm leading-relaxed max-w-xs">
+          Vos droits, simplifiés. La plateforme juridique de la République du Congo et de l'espace OHADA.
+        </p>
+        <div class="flex gap-3 mt-2">
+          <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="w-9 h-9 rounded-full border border-inverse-primary/40 flex items-center justify-center text-inverse-primary hover:text-white hover:border-white transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+              <rect x="2" y="9" width="4" height="12"></rect>
+              <circle cx="4" cy="4" r="2"></circle>
+            </svg>
+          </a>
+          <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="w-9 h-9 rounded-full border border-inverse-primary/40 flex items-center justify-center text-inverse-primary hover:text-white hover:border-white transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+            </svg>
+          </a>
+          <a href="mailto:contact@mibeko.cg" aria-label="E-mail" class="w-9 h-9 rounded-full border border-inverse-primary/40 flex items-center justify-center text-inverse-primary hover:text-white hover:border-white transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
 
-			<div class="footer-links">
-				<div class="link-group">
-					<h4 class="group-title text-white">Produit</h4>
-					<ul>
-						<li><a href="#features">Fonctionnalités</a></li>
-						<li><a href="#audience">Pour qui ?</a></li>
-						<li><a href="#download">Télécharger l'App</a></li>
-						<li><a href="https://app.mibeko.fr">Portail Pro</a></li>
-					</ul>
-				</div>
-				<div class="link-group">
-					<h4 class="group-title text-white">Légal</h4>
-					<ul>
-						<li><a href="#">Mentions Légales</a></li>
-						<li><a href="#">Politique de Confidentialité</a></li>
-						<li><a href="#">CGU</a></li>
-						<li><a href="mailto:mibeko@benaja-bendo.fr">Contact</a></li>
-					</ul>
-				</div>
-			</div>
+      <!-- Link columns -->
+      {columns.map((col) => (
+        <div class="flex flex-col gap-4">
+          <h3 class="font-sans font-semibold text-sm">{col.title}</h3>
+          <ul class="flex flex-col gap-3">
+            {col.links.map((link) => (
+              <li>
+                <a href={link.href} class="text-inverse-primary hover:text-white text-sm transition-colors">
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
 
-			<div class="footer-newsletter">
-				<h4 class="group-title text-white">Restez informé</h4>
-				<p class="text-gray" style="font-size: 0.9rem; margin-bottom: 1rem;">
-					Inscrivez-vous pour recevoir les dernières actualités juridiques et les mises à jour de la plateforme.
-				</p>
-				<form class="newsletter-form">
-					<input type="email" placeholder="Votre adresse email" required class="newsletter-input" />
-					<button type="submit" class="btn btn-primary newsletter-btn">S'inscrire</button>
-				</form>
-				<p class="rgpd-text">
-					En vous inscrivant, vous acceptez notre politique de confidentialité. Conformité RGPD assurée.
-				</p>
-			</div>
-		</div>
-
-		<div class="footer-bottom text-gray">
-			<p>&copy; {new Date().getFullYear()} Mibeko. Tous droits réservés.</p>
-			<p>Fait avec passion pour le droit congolais.</p>
-		</div>
-	</div>
+    <div class="mt-12 pt-6 pb-8 border-t border-inverse-primary/20 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+      <p class="text-inverse-primary text-xs">
+        © {year} Mibeko. Tous droits réservés.
+      </p>
+      <p class="text-inverse-primary/80 text-xs">
+        Développé avec le soutien de juristes congolais · Conforme à la loi n°29-2019 sur la protection des données.
+      </p>
+    </div>
+  </div>
 </footer>
-
-<style>
-	.footer {
-		background-color: var(--color-navy-light);
-		padding: 6rem 0 2rem;
-		border-top: 1px solid rgba(255,255,255,0.05);
-	}
-
-	.footer-top {
-		display: grid;
-		grid-template-columns: 2fr 3fr 2fr;
-		gap: 4rem;
-		margin-bottom: 4rem;
-	}
-
-	.logo {
-		font-size: 1.8rem;
-		font-weight: 800;
-		color: var(--color-white);
-		display: flex;
-		align-items: center;
-		margin-bottom: 1.5rem;
-	}
-
-	.logo-dot {
-		color: var(--color-gold);
-	}
-
-	.brand-desc {
-		font-size: 0.95rem;
-		line-height: 1.6;
-		margin-bottom: 1.5rem;
-		max-width: 300px;
-	}
-
-	.socials {
-		display: flex;
-		gap: 1rem;
-	}
-
-	.social-link {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 40px;
-		height: 40px;
-		border-radius: 50%;
-		background-color: var(--color-navy-lighter);
-		color: var(--color-white);
-		transition: all 0.3s;
-	}
-
-	.social-link:hover {
-		background-color: var(--color-gold);
-		color: var(--color-navy);
-		transform: translateY(-3px);
-	}
-
-	.footer-links {
-		display: flex;
-		justify-content: space-around;
-	}
-
-	.group-title {
-		font-size: 1.1rem;
-		margin-bottom: 1.5rem;
-	}
-
-	.link-group ul {
-		list-style: none;
-		padding: 0;
-		margin: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 0.8rem;
-	}
-
-	.link-group a {
-		color: var(--color-gray);
-		font-size: 0.95rem;
-		transition: color 0.3s;
-	}
-
-	.link-group a:hover {
-		color: var(--color-gold);
-	}
-
-	.newsletter-form {
-		display: flex;
-		flex-direction: column;
-		gap: 0.8rem;
-		margin-bottom: 0.8rem;
-	}
-
-	.newsletter-input {
-		padding: 0.8rem 1rem;
-		border-radius: 8px;
-		border: 1px solid rgba(255,255,255,0.1);
-		background-color: var(--color-navy-lighter);
-		color: var(--color-white);
-		font-family: var(--font-main);
-		font-size: 0.95rem;
-		outline: none;
-		transition: border-color 0.3s;
-	}
-
-	.newsletter-input:focus {
-		border-color: var(--color-gold);
-	}
-
-	.newsletter-input::placeholder {
-		color: var(--color-gray);
-	}
-
-	.newsletter-btn {
-		width: 100%;
-		padding: 0.8rem;
-	}
-
-	.rgpd-text {
-		font-size: 0.75rem;
-		color: var(--color-gray);
-		opacity: 0.7;
-	}
-
-	.footer-bottom {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding-top: 2rem;
-		border-top: 1px solid rgba(255,255,255,0.05);
-		font-size: 0.85rem;
-	}
-
-	@media (max-width: 992px) {
-		.footer-top {
-			grid-template-columns: 1fr;
-			gap: 3rem;
-		}
-
-		.footer-links {
-			justify-content: flex-start;
-			gap: 4rem;
-		}
-	}
-
-	@media (max-width: 768px) {
-		.footer-bottom {
-			flex-direction: column;
-			gap: 1rem;
-			text-align: center;
-		}
-	}
-</style>

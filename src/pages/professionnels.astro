@@ -1,0 +1,148 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Footer from '../components/Footer.astro';
+
+const benefits = [
+  {
+    title: 'Recherche 5× plus rapide',
+    description: "Trouvez l'article, l'acte uniforme OHADA ou la jurisprudence pertinente en quelques secondes grâce à la recherche sémantique en langage naturel.",
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line></svg>`,
+  },
+  {
+    title: 'Documents automatisés',
+    description: "Générez des statuts de société, contrats et actes en 3 minutes à partir de modèles conformes au droit congolais et OHADA.",
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M16 13H8M16 17H8M10 9H8"></path></svg>`,
+  },
+  {
+    title: 'Veille juridique',
+    description: "Suivez en temps réel le Journal Officiel, la jurisprudence et les évolutions législatives. Recevez des alertes sur vos domaines de pratique.",
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>`,
+  },
+  {
+    title: 'Nouveaux clients',
+    description: "Apparaissez dans l'annuaire des professionnels certifiés et recevez des demandes de rendez-vous qualifiées directement depuis l'application.",
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
+  },
+];
+
+const audiences = ['Avocats', 'Notaires', 'Huissiers', "Juristes d'entreprise", 'Cabinets', 'Études'];
+
+const plans = [
+  {
+    name: 'Découverte',
+    price: 'Gratuit',
+    period: '',
+    description: "Pour tester la plateforme et la recherche juridique.",
+    features: ['Recherche dans la bibliothèque juridique', 'Accès aux textes OHADA', 'Assistant IA (usage limité)'],
+    cta: 'Commencer gratuitement',
+    featured: false,
+  },
+  {
+    name: 'Cabinet',
+    price: 'Sur devis',
+    period: '',
+    description: "Pour les professionnels et cabinets qui veulent gagner du temps.",
+    features: ['Tout le plan Découverte', 'Génération de documents illimitée', 'Veille & alertes personnalisées', 'Profil dans l\'annuaire certifié', 'Support prioritaire'],
+    cta: 'Demander une démo',
+    featured: true,
+  },
+];
+---
+
+<Layout
+	title="Mibeko pour les professionnels du droit — Le SaaS juridique congolais"
+	description="Gagnez du temps : recherche 5× plus rapide, génération de documents, veille OHADA et nouveaux clients. La solution SaaS des avocats, notaires, huissiers et juristes au Congo."
+>
+	<Header />
+	<main id="main" class="flex-grow">
+		<PageHeader
+			eyebrow="Espace Professionnels"
+			title="L'outil qui fait gagner du temps aux professionnels du droit"
+			subtitle="Recherche, rédaction, veille et acquisition de clients : tout ce dont votre cabinet a besoin, réuni dans une seule plateforme conforme au droit congolais et OHADA."
+		/>
+
+		<!-- Audiences -->
+		<section class="py-8 bg-background border-b border-surface-variant/50">
+			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center gap-3">
+				<span class="text-sm font-medium text-on-surface-variant mr-2">Conçu pour&nbsp;:</span>
+				{audiences.map((a) => (
+					<span class="inline-flex items-center px-3 py-1.5 rounded bg-surface-container text-on-surface text-sm font-medium">{a}</span>
+				))}
+			</div>
+		</section>
+
+		<!-- Benefits -->
+		<section class="py-16 md:py-24 bg-surface-container-lowest">
+			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+					{benefits.map((b) => (
+						<div class="bg-white rounded-xl p-8 border border-surface-variant hover-lift">
+							<div class="w-12 h-12 bg-primary text-on-primary rounded-lg flex items-center justify-center mb-6" set:html={b.icon} />
+							<h2 class="text-xl font-bold text-on-surface mb-3">{b.title}</h2>
+							<p class="text-on-surface-variant leading-relaxed">{b.description}</p>
+						</div>
+					))}
+				</div>
+			</div>
+		</section>
+
+		<!-- ROI band -->
+		<section class="py-16 bg-surface-container-low border-y border-surface-variant/50">
+			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+				<div>
+					<p class="text-4xl font-bold text-primary mb-1">5×</p>
+					<p class="text-sm text-on-surface-variant">Recherche plus rapide</p>
+				</div>
+				<div>
+					<p class="text-4xl font-bold text-primary mb-1">3 min</p>
+					<p class="text-sm text-on-surface-variant">Pour générer des statuts</p>
+				</div>
+				<div>
+					<p class="text-4xl font-bold text-primary mb-1">OHADA</p>
+					<p class="text-sm text-on-surface-variant">17 États couverts</p>
+				</div>
+				<div>
+					<p class="text-4xl font-bold text-primary mb-1">24/7</p>
+					<p class="text-sm text-on-surface-variant">Veille automatisée</p>
+				</div>
+			</div>
+		</section>
+
+		<!-- Pricing / essai -->
+		<section id="essai" class="py-16 md:py-24 bg-background scroll-mt-24">
+			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+				<div class="text-center max-w-2xl mx-auto mb-12">
+					<h2 class="text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-4">Commencez votre essai</h2>
+					<p class="text-on-surface-variant font-serif text-lg">Essayez gratuitement, sans carte bancaire. Passez au plan Cabinet quand vous êtes prêt.</p>
+				</div>
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 max-w-3xl mx-auto">
+					{plans.map((plan) => (
+						<div class:list={[
+							"rounded-xl p-8 flex flex-col",
+							plan.featured ? "bg-primary text-on-primary border border-primary" : "bg-white border border-surface-variant"
+						]}>
+							<h3 class:list={["text-lg font-bold mb-1", plan.featured ? "text-on-primary" : "text-on-surface"]}>{plan.name}</h3>
+							<p class:list={["text-3xl font-bold mb-2", plan.featured ? "text-on-primary" : "text-primary"]}>{plan.price}</p>
+							<p class:list={["text-sm mb-6", plan.featured ? "text-inverse-primary" : "text-on-surface-variant"]}>{plan.description}</p>
+							<ul class="flex flex-col gap-3 mb-8 flex-grow">
+								{plan.features.map((f) => (
+									<li class="flex items-start gap-2 text-sm">
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class:list={["shrink-0 mt-0.5", plan.featured ? "text-secondary-fixed-dim" : "text-secondary"]}><path d="M20 6 9 17l-5-5"></path></svg>
+										<span class={plan.featured ? "text-on-primary" : "text-on-surface"}>{f}</span>
+									</li>
+								))}
+							</ul>
+							<a href="/contact" class:list={[
+								"inline-flex items-center justify-center h-11 px-5 font-semibold rounded transition-colors",
+								plan.featured ? "bg-background text-primary hover:bg-surface-container-low" : "bg-primary text-on-primary hover:bg-primary-container"
+							]}>{plan.cta}</a>
+						</div>
+					))}
+				</div>
+			</div>
+		</section>
+	</main>
+	<Footer />
+</Layout>

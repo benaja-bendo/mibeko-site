@@ -1,117 +1,114 @@
 ---
+const navLinks = [
+  { href: '/', label: 'Accueil' },
+  { href: '/application', label: 'Particuliers' },
+  { href: '/professionnels', label: 'Professionnels' },
+  { href: '/ressources', label: 'Ressources' },
+  { href: '/contact', label: 'Contact' },
+];
+
+const pathname = Astro.url.pathname;
+const isActive = (href: string) =>
+  href === '/' ? pathname === '/' : pathname.startsWith(href);
 ---
 
-<header class="header">
-	<div class="container header-container">
-		<a href="/" class="logo">
-			<span class="logo-text">Mibeko</span>
-			<span class="logo-dot">.</span>
-		</a>
-		
-		<nav class="nav">
-			<ul class="nav-list">
-				<li><a href="#features" class="nav-link">Pourquoi Mibeko ?</a></li>
-				<li><a href="#audience" class="nav-link">Pour qui ?</a></li>
-				<li><a href="#about" class="nav-link">Notre Mission</a></li>
-			</ul>
-		</nav>
-		
-		<div class="header-actions">
-			<a href="#download" class="btn btn-primary btn-sm">Télécharger</a>
-		</div>
-		
-		<button class="mobile-toggle" aria-label="Menu">
-			<span></span>
-			<span></span>
-			<span></span>
-		</button>
-	</div>
+<header class="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-surface-variant/60">
+  <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+    <!-- Logo -->
+    <a href="/" class="flex items-center gap-2 group" aria-label="Mibeko — Accueil">
+      <img src="/logo.svg" alt="" class="w-8 h-8 group-hover:opacity-90 transition-opacity" />
+      <span class="font-sans font-bold text-xl text-primary tracking-tight">Mibeko</span>
+    </a>
+
+    <!-- Navigation (Desktop) -->
+    <nav class="hidden md:flex items-center gap-8" aria-label="Navigation principale">
+      {navLinks.map((link) => (
+        <a
+          href={link.href}
+          aria-current={isActive(link.href) ? 'page' : undefined}
+          class:list={[
+            "text-sm font-medium transition-colors relative py-2",
+            isActive(link.href) ? "text-primary" : "text-on-surface-variant hover:text-primary"
+          ]}
+        >
+          {link.label}
+          {isActive(link.href) && (
+            <span class="absolute bottom-0 left-0 w-full h-[2px] bg-secondary rounded-t-full"></span>
+          )}
+        </a>
+      ))}
+    </nav>
+
+    <!-- Actions (Desktop) -->
+    <div class="hidden md:flex items-center gap-6">
+      <a href="/professionnels#essai" class="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors">
+        Espace Pro
+      </a>
+      <a
+        href="/application"
+        class="inline-flex items-center justify-center h-10 px-5 text-sm font-medium text-on-primary bg-primary rounded hover:bg-primary-container transition-colors"
+      >
+        Télécharger l'appli
+      </a>
+    </div>
+
+    <!-- Mobile menu button (Hamburger) -->
+    <button
+      id="mobile-menu-toggle"
+      type="button"
+      class="md:hidden p-2 -mr-2 text-on-surface-variant hover:text-primary"
+      aria-label="Ouvrir le menu"
+      aria-expanded="false"
+      aria-controls="mobile-menu"
+    >
+      <svg data-icon="open" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="4" x2="20" y1="12" y2="12"></line>
+        <line x1="4" x2="20" y1="6" y2="6"></line>
+        <line x1="4" x2="20" y1="18" y2="18"></line>
+      </svg>
+      <svg data-icon="close" class="hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" x2="6" y1="6" y2="18"></line>
+        <line x1="6" x2="18" y1="6" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Mobile menu panel -->
+  <div id="mobile-menu" class="hidden md:hidden border-t border-surface-variant/60 bg-background">
+    <nav class="max-w-[1120px] mx-auto px-4 sm:px-6 py-4 flex flex-col" aria-label="Navigation mobile">
+      {navLinks.map((link) => (
+        <a
+          href={link.href}
+          aria-current={isActive(link.href) ? 'page' : undefined}
+          class:list={[
+            "py-3 text-base font-medium border-b border-surface-variant/40 transition-colors",
+            isActive(link.href) ? "text-primary" : "text-on-surface-variant hover:text-primary"
+          ]}
+        >
+          {link.label}
+        </a>
+      ))}
+      <a
+        href="/application"
+        class="mt-4 inline-flex items-center justify-center h-11 px-5 text-sm font-medium text-on-primary bg-primary rounded hover:bg-primary-container transition-colors"
+      >
+        Télécharger l'appli
+      </a>
+    </nav>
+  </div>
 </header>
 
-<style>
-	.header {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		background-color: rgba(10, 25, 47, 0.95);
-		backdrop-filter: blur(10px);
-		z-index: 1000;
-		padding: 1rem 0;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-	}
-
-	.header-container {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
-	.logo {
-		font-size: 1.5rem;
-		font-weight: 800;
-		color: var(--color-white);
-		display: flex;
-		align-items: center;
-	}
-
-	.logo-dot {
-		color: var(--color-gold);
-	}
-
-	.nav-list {
-		display: flex;
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		gap: 2rem;
-	}
-
-	.nav-link {
-		color: var(--color-gray);
-		font-weight: 500;
-		font-size: 0.95rem;
-	}
-
-	.nav-link:hover {
-		color: var(--color-white);
-	}
-	
-	.btn-sm {
-		padding: 0.5rem 1.2rem;
-		font-size: 0.9rem;
-	}
-
-	.mobile-toggle {
-		display: none;
-		flex-direction: column;
-		gap: 5px;
-		background: none;
-		border: none;
-		cursor: pointer;
-		padding: 0;
-	}
-
-	.mobile-toggle span {
-		display: block;
-		width: 25px;
-		height: 3px;
-		background-color: var(--color-white);
-		border-radius: 3px;
-		transition: all 0.3s;
-	}
-
-	@media (max-width: 768px) {
-		.nav, .header-actions {
-			display: none;
-		}
-		
-		.mobile-toggle {
-			display: flex;
-		}
-	}
-</style>
-
 <script>
-	// Simple mobile menu toggle logic could be added here
+  const toggle = document.getElementById('mobile-menu-toggle');
+  const menu = document.getElementById('mobile-menu');
+  const openIcon = toggle?.querySelector('[data-icon="open"]');
+  const closeIcon = toggle?.querySelector('[data-icon="close"]');
+
+  toggle?.addEventListener('click', () => {
+    const isOpen = menu?.classList.toggle('hidden') === false;
+    toggle.setAttribute('aria-expanded', String(isOpen));
+    toggle.setAttribute('aria-label', isOpen ? 'Fermer le menu' : 'Ouvrir le menu');
+    openIcon?.classList.toggle('hidden', isOpen);
+    closeIcon?.classList.toggle('hidden', !isOpen);
+  });
 </script>

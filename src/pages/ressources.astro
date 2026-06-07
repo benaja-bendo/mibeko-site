@@ -1,0 +1,106 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import PageHeader from '../components/PageHeader.astro';
+import CTASection from '../components/CTASection.astro';
+import Footer from '../components/Footer.astro';
+
+const categories = ['Tout', 'Droit commercial', 'Droit du travail', 'OHADA', 'Droit de la famille', 'Création d\'entreprise'];
+
+const articles = [
+  {
+    tag: 'Droit commercial',
+    date: '12 mai 2026',
+    title: "Révision de l'Acte Uniforme OHADA sur le Droit Commercial Général",
+    description: "Les nouvelles dispositions concernant le registre du commerce et du crédit mobilier (RCCM) entrent en vigueur ce trimestre. Décryptage des implications pour les PME.",
+  },
+  {
+    tag: 'Droit du travail',
+    date: '05 mai 2026',
+    title: "Nouveau barème des indemnités de licenciement",
+    description: "Publication de l'arrêté ministériel fixant les nouvelles modalités de calcul des indemnités de fin de carrière et de licenciement.",
+  },
+  {
+    tag: "Création d'entreprise",
+    date: '28 avril 2026',
+    title: "Créer une SARL au Congo : le guide complet 2026",
+    description: "Étapes, coûts, délais et pièces à fournir pour immatriculer votre société. Un guide pratique en français simple, à jour des dernières réformes.",
+  },
+  {
+    tag: 'Droit de la famille',
+    date: '15 avril 2026',
+    title: "Divorce : comprendre vos droits et la procédure",
+    description: "Procédure, garde des enfants, partage des biens : tout ce que la loi congolaise prévoit, expliqué sans jargon.",
+  },
+  {
+    tag: 'OHADA',
+    date: '02 avril 2026',
+    title: "Sûretés OHADA : ce qui change pour les garanties bancaires",
+    description: "Panorama des évolutions récentes de l'Acte Uniforme portant organisation des sûretés et leurs conséquences pratiques.",
+  },
+  {
+    tag: 'Droit commercial',
+    date: '20 mars 2026',
+    title: "Bail commercial : droits et obligations du locataire",
+    description: "Durée, renouvellement, loyer, résiliation : les points essentiels du bail commercial à connaître avant de signer.",
+  },
+];
+---
+
+<Layout
+	title="Ressources & actualités juridiques — Mibeko"
+	description="Veille juridique, guides pratiques et actualités du droit congolais et OHADA. Comprenez vos droits grâce à des explications claires, en français simple."
+>
+	<Header />
+	<main id="main" class="flex-grow">
+		<PageHeader
+			eyebrow="Ressources"
+			title="Actualités & guides juridiques"
+			subtitle="La veille juridique du Congo et de l'espace OHADA, expliquée en français simple. Restez informé des évolutions qui concernent vos droits."
+		/>
+
+		<!-- Filters (visuels) -->
+		<section class="py-8 bg-background border-b border-surface-variant/50">
+			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap gap-2">
+				{categories.map((cat, i) => (
+					<span class:list={[
+						"inline-flex items-center px-3.5 py-1.5 rounded text-sm font-medium cursor-default",
+						i === 0 ? "bg-primary text-on-primary" : "bg-surface-container text-on-surface-variant"
+					]}>{cat}</span>
+				))}
+			</div>
+		</section>
+
+		<!-- Articles -->
+		<section class="py-16 md:py-20 bg-background">
+			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+					{articles.map((article) => (
+						<article class="bg-white border border-surface-variant rounded-xl p-6 flex flex-col hover:border-secondary/30 hover-lift group">
+							<div class="flex items-center gap-3 mb-4">
+								<span class="inline-flex items-center px-2.5 py-1 rounded bg-secondary-container/20 text-secondary text-xs font-semibold">{article.tag}</span>
+								<span class="text-xs text-on-surface-variant font-medium">{article.date}</span>
+							</div>
+							<h2 class="text-lg font-bold text-on-surface mb-2 group-hover:text-primary transition-colors leading-snug">{article.title}</h2>
+							<p class="text-sm text-on-surface-variant leading-relaxed flex-grow">{article.description}</p>
+							<span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-secondary">
+								Lire l'article
+								<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1 transition-transform"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+							</span>
+						</article>
+					))}
+				</div>
+
+				<p class="text-center text-sm text-on-surface-variant mt-12">
+					D'autres ressources arrivent. <a href="/contact" class="text-secondary font-semibold hover:underline">Suggérez un sujet</a> qui vous intéresse.
+				</p>
+			</div>
+		</section>
+
+		<CTASection
+			title="Ne manquez aucune évolution du droit"
+			text="Avec Mibeko, recevez les actualités juridiques qui vous concernent directement dans votre poche."
+		/>
+	</main>
+	<Footer />
+</Layout>
