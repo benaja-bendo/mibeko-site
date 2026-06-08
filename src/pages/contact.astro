@@ -97,7 +97,7 @@ const infos = [
 						</button>
 
 						<p id="form-note" class="text-xs text-on-surface-variant">
-							En envoyant ce formulaire, votre logiciel de messagerie s'ouvrira avec votre message pré-rempli à destination de contact@mibeko.cg.
+							En envoyant ce formulaire, votre logiciel de messagerie s'ouvrira avec votre message pré-rempli à destination de contact@mibeko.fr.
 						</p>
 					</form>
 				</div>
@@ -118,6 +118,6 @@ const infos = [
 		const message = String(data.get('message') ?? '');
 		const subject = encodeURIComponent(`Contact Mibeko — ${name} (${profile})`);
 		const body = encodeURIComponent(`Nom : ${name}\nE-mail : ${email}\nProfil : ${profile}\n\n${message}`);
-		window.location.href = `mailto:contact@mibeko.cg?subject=${subject}&body=${body}`;
+		window.location.href = `mailto:contact@mibeko.fr?subject=${subject}&body=${body}`;
 	});
 </script>
