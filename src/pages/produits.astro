@@ -1,0 +1,193 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Footer from '../components/Footer.astro';
+
+const mobileFeatures = [
+  {
+    title: 'Bibliothèque Juridique',
+    description: 'Accédez à l\'ensemble du droit congolais et des traités OHADA. Constitution, codes, lois et jurisprudences — tout structuré et facile à retrouver.',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>`,
+  },
+  {
+    title: 'Assistant IA',
+    description: 'Posez vos questions en français courant. Comprenez vos droits face à une situation réelle (contrat, licenciement, héritage, etc.).',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>`,
+  },
+  {
+    title: 'Dossiers Personnels',
+    description: 'Organisez vos questions et réponses IA par thème. Sauvegardez les articles importants et révisez vos notes quand vous en avez besoin.',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`,
+  },
+  {
+    title: 'Annuaire de Professionnels',
+    description: 'Trouvez un avocat, notaire ou huissier certifié près de chez vous. Prenez rendez-vous directement depuis l\'app en quelques clics.',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
+  },
+];
+
+const proFeatures = [
+  {
+    title: 'Recherche Avancée 5× Plus Rapide',
+    description: 'Recherche hybride (lexicale + sémantique) combinée à l\'arborescence complète du droit. Trouvez l\'article pertinent en secondes, pas en minutes.',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>`,
+  },
+  {
+    title: 'Génération de Documents',
+    description: 'Créez des statuts de société, contrats et actes en moins de 3 minutes. Tous les modèles respectent le droit congolais et les normes OHADA.',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M16 13H8M16 17H8M10 9H8"></path></svg>`,
+  },
+  {
+    title: 'Veille Juridique & Alertes',
+    description: 'Suivez le Journal Officiel, la jurisprudence et les évolutions législatives en temps réel. Recevez des alertes personnalisées sur vos domaines de pratique.',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>`,
+  },
+  {
+    title: 'Annuaire & Acquisition de Clients',
+    description: 'Apparaissez dans le répertoire des professionnels certifiés. Recevez des demandes de rendez-vous qualifiées directement depuis la plateforme.',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
+  },
+];
+---
+
+<Layout
+	title="Les solutions Mibeko — App Mobile et Plateforme Pro"
+	description="Découvrez les solutions Mibeko : l'Application Mobile pour le grand public et la Plateforme Web pour les professionnels du droit et les administrateurs."
+>
+	<Header />
+	<main id="main" class="flex-grow">
+		<PageHeader
+			eyebrow="Nos Produits"
+			title="L'écosystème Mibeko"
+			subtitle="Que vous soyez un citoyen à la recherche de ses droits ou un professionnel cherchant à optimiser son cabinet, nous avons l'outil qu'il vous faut."
+		/>
+
+		<!-- APP MOBILE -->
+		<section id="mobile" class="py-16 md:py-24 bg-background scroll-mt-24">
+			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+				<div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-16">
+					<div>
+						<div class="inline-flex items-center px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold tracking-wide mb-4">
+							APPLICATION MOBILE
+						</div>
+						<h2 class="text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-4">
+							Comprendre vos droits,<br class="hidden md:block" /> directement dans votre poche
+						</h2>
+						<p class="text-on-surface-variant font-serif text-lg leading-relaxed mb-8">
+							Conçue pour le grand public. Posez vos questions en français courant et explorez la loi à votre rythme. Tous les textes sont officiels et sourcés.
+						</p>
+						<a href="/contact" class="inline-flex items-center justify-center h-12 px-6 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors mb-10">
+							Télécharger l'App (Bêta)
+						</a>
+            
+            <!-- Placeholder Mobile Image -->
+            <div class="relative w-full max-w-sm mx-auto md:mx-0 aspect-[9/16] rounded-[2rem] overflow-hidden border-8 border-surface-variant shadow-2xl bg-surface-container-low">
+              <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&q=80&w=800&h=1600" alt="Application Mobile Mibeko" class="w-full h-full object-cover" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+              <div class="absolute bottom-6 left-6 right-6">
+                <div class="h-2 w-1/3 bg-white/50 rounded-full mb-3"></div>
+                <div class="h-4 w-2/3 bg-white rounded-full"></div>
+              </div>
+            </div>
+					</div>
+					<div class="grid grid-cols-1 gap-4">
+						{mobileFeatures.map((f) => (
+							<div class="bg-white rounded-xl p-6 border border-surface-variant hover:border-outline-variant/70 hover-lift">
+								<div class="w-12 h-12 bg-primary text-on-primary rounded-lg flex items-center justify-center mb-4" set:html={f.icon} />
+								<h3 class="text-lg font-semibold text-on-surface mb-2">{f.title}</h3>
+								<p class="text-sm text-on-surface-variant leading-relaxed">{f.description}</p>
+							</div>
+						))}
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- PLATEFORME PRO -->
+		<section id="pro" class="py-16 md:py-24 bg-surface-container-lowest scroll-mt-24">
+			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+				<div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-16">
+					<div class="grid grid-cols-1 gap-4">
+						{proFeatures.map((f) => (
+							<div class="bg-white rounded-xl p-6 border border-surface-variant hover:border-outline-variant/70 hover-lift">
+								<div class="w-12 h-12 bg-secondary text-on-secondary rounded-lg flex items-center justify-center mb-4" set:html={f.icon} />
+								<h3 class="text-lg font-semibold text-on-surface mb-2">{f.title}</h3>
+								<p class="text-sm text-on-surface-variant leading-relaxed">{f.description}</p>
+							</div>
+						))}
+					</div>
+					<div>
+						<div class="inline-flex items-center px-3 py-1.5 rounded-full bg-secondary/10 text-on-secondary text-xs font-semibold tracking-wide mb-4">
+							PLATEFORME PRO
+						</div>
+						<h2 class="text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-4">
+							Gagnez du temps,<br class="hidden md:block" /> servez mieux
+						</h2>
+						<p class="text-on-surface-variant font-serif text-lg leading-relaxed mb-8">
+							La plateforme web conçue pour les professionnels (avocats, notaires, huissiers, juristes) et les administrateurs. Outils de recherche avancée, génération de documents, veille juridique et gestion de données.
+						</p>
+						<a href="/contact" class="inline-flex items-center justify-center h-12 px-6 bg-secondary text-on-secondary font-semibold rounded hover:bg-secondary-container transition-colors mb-10">
+							Découvrir la Plateforme
+						</a>
+
+            <!-- Placeholder SaaS Image -->
+            <div class="relative w-full aspect-video rounded-xl overflow-hidden border border-surface-variant shadow-2xl bg-surface-container-low">
+              <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1200&h=675" alt="Plateforme Pro Mibeko" class="w-full h-full object-cover" />
+              <div class="absolute inset-0 bg-secondary/10 mix-blend-overlay"></div>
+              <!-- Mock UI overlay -->
+              <div class="absolute top-0 left-0 right-0 h-8 bg-surface-container-highest/90 backdrop-blur flex items-center px-4 gap-2">
+                <div class="w-2.5 h-2.5 rounded-full bg-error"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-[#fbbc04]"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-[#34a853]"></div>
+              </div>
+            </div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- ROI band (Pro) -->
+		<section class="py-16 bg-surface-container-low border-y border-surface-variant/50">
+			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+				<div>
+					<p class="text-4xl font-bold text-primary mb-1">5×</p>
+					<p class="text-sm text-on-surface-variant">Recherche plus rapide</p>
+				</div>
+				<div>
+					<p class="text-4xl font-bold text-primary mb-1">3 min</p>
+					<p class="text-sm text-on-surface-variant">Pour générer des statuts</p>
+				</div>
+				<div>
+					<p class="text-4xl font-bold text-primary mb-1">OHADA</p>
+					<p class="text-sm text-on-surface-variant">17 États couverts</p>
+				</div>
+				<div>
+					<p class="text-4xl font-bold text-primary mb-1">24/7</p>
+					<p class="text-sm text-on-surface-variant">Veille automatisée</p>
+				</div>
+			</div>
+		</section>
+
+		<!-- CTA FINAL -->
+		<section class="py-16 md:py-24 bg-background">
+			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
+				<h2 class="text-3xl md:text-4xl font-bold text-on-surface mb-4">
+					Prêt à rejoindre l'écosystème Mibeko ?
+				</h2>
+				<p class="text-on-surface-variant font-serif text-lg mb-8 max-w-2xl mx-auto">
+					Nos produits sont en phase bêta. Soyez parmi les premiers à accéder à nos plateformes.
+				</p>
+				<div class="flex flex-col sm:flex-row gap-3 justify-center">
+					<a href="/contact" class="inline-flex items-center justify-center h-12 px-8 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">
+						Demander l'accès
+					</a>
+					<a href="/ressources" class="inline-flex items-center justify-center h-12 px-8 border border-outline-variant/70 text-on-surface font-semibold rounded hover:bg-surface-container-low transition-colors">
+						Consulter nos ressources
+					</a>
+				</div>
+			</div>
+		</section>
+	</main>
+	<Footer />
+</Layout>

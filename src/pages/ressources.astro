@@ -1,50 +1,13 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
-import PageHeader from '../components/PageHeader.astro';
 import CTASection from '../components/CTASection.astro';
 import Footer from '../components/Footer.astro';
+import { articles, categories } from '../data/articles';
 
-const categories = ['Tout', 'Droit commercial', 'Droit du travail', 'OHADA', 'Droit de la famille', 'Création d\'entreprise'];
-
-const articles = [
-  {
-    tag: 'Droit commercial',
-    date: '12 mai 2026',
-    title: "Révision de l'Acte Uniforme OHADA sur le Droit Commercial Général",
-    description: "Les nouvelles dispositions concernant le registre du commerce et du crédit mobilier (RCCM) entrent en vigueur ce trimestre. Décryptage des implications pour les PME.",
-  },
-  {
-    tag: 'Droit du travail',
-    date: '05 mai 2026',
-    title: "Nouveau barème des indemnités de licenciement",
-    description: "Publication de l'arrêté ministériel fixant les nouvelles modalités de calcul des indemnités de fin de carrière et de licenciement.",
-  },
-  {
-    tag: "Création d'entreprise",
-    date: '28 avril 2026',
-    title: "Créer une SARL au Congo : le guide complet 2026",
-    description: "Étapes, coûts, délais et pièces à fournir pour immatriculer votre société. Un guide pratique en français simple, à jour des dernières réformes.",
-  },
-  {
-    tag: 'Droit de la famille',
-    date: '15 avril 2026',
-    title: "Divorce : comprendre vos droits et la procédure",
-    description: "Procédure, garde des enfants, partage des biens : tout ce que la loi congolaise prévoit, expliqué sans jargon.",
-  },
-  {
-    tag: 'OHADA',
-    date: '02 avril 2026',
-    title: "Sûretés OHADA : ce qui change pour les garanties bancaires",
-    description: "Panorama des évolutions récentes de l'Acte Uniforme portant organisation des sûretés et leurs conséquences pratiques.",
-  },
-  {
-    tag: 'Droit commercial',
-    date: '20 mars 2026',
-    title: "Bail commercial : droits et obligations du locataire",
-    description: "Durée, renouvellement, loyer, résiliation : les points essentiels du bail commercial à connaître avant de signer.",
-  },
-];
+// Séparer le premier article (à mettre en avant) du reste
+const featuredArticle = articles[0];
+const restArticles = articles.slice(1);
 ---
 
 <Layout
@@ -53,53 +16,126 @@ const articles = [
 >
 	<Header />
 	<main id="main" class="flex-grow">
-		<PageHeader
-			eyebrow="Ressources"
-			title="Actualités & guides juridiques"
-			subtitle="La veille juridique du Congo et de l'espace OHADA, expliquée en français simple. Restez informé des évolutions qui concernent vos droits."
-		/>
+		
+		<!-- Hero Section Ressources -->
+		<section class="pt-20 pb-12 md:pt-28 md:pb-16 bg-background relative overflow-hidden">
+      <!-- Decor -->
+      <div class="absolute inset-0 pointer-events-none z-0">
+        <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-secondary/5 rounded-[100%] blur-3xl"></div>
+      </div>
 
-		<!-- Filters (visuels) -->
-		<section class="py-8 bg-background border-b border-surface-variant/50">
-			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap gap-2">
+			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center animate-fade-in-up">
+        <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-4">Mibeko Insights</p>
+				<h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-on-surface tracking-tight mb-6">
+          Actualités & Guides Juridiques
+        </h1>
+				<p class="text-lg md:text-xl text-on-surface-variant font-serif max-w-2xl mx-auto leading-relaxed">
+          La veille juridique du Congo et de l'espace OHADA. Décryptée pour les professionnels, simplifiée pour tous.
+        </p>
+			</div>
+		</section>
+
+		<!-- Filters -->
+		<section class="pb-12 bg-background sticky top-[79px] z-40 backdrop-blur-md bg-background/90 border-b border-surface-variant/40">
+			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap justify-center gap-2 md:gap-3">
 				{categories.map((cat, i) => (
-					<span class:list={[
-						"inline-flex items-center px-3.5 py-1.5 rounded text-sm font-medium cursor-default",
-						i === 0 ? "bg-primary text-on-primary" : "bg-surface-container text-on-surface-variant"
-					]}>{cat}</span>
+					<button class:list={[
+						"inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-all duration-300",
+						i === 0 
+              ? "bg-primary text-on-primary shadow-md hover:bg-primary-container" 
+              : "bg-surface-container-lowest border border-surface-variant text-on-surface hover:border-primary/30 hover:text-primary"
+					]}>
+            {cat}
+          </button>
 				))}
 			</div>
 		</section>
 
-		<!-- Articles -->
-		<section class="py-16 md:py-20 bg-background">
+		<!-- Articles Section -->
+		<section class="py-16 md:py-24 bg-surface-container-low">
 			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
-				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-					{articles.map((article) => (
-						<article class="bg-white border border-surface-variant rounded-xl p-6 flex flex-col hover:border-secondary/30 hover-lift group">
-							<div class="flex items-center gap-3 mb-4">
-								<span class="inline-flex items-center px-2.5 py-1 rounded bg-secondary-container/20 text-secondary text-xs font-semibold">{article.tag}</span>
-								<span class="text-xs text-on-surface-variant font-medium">{article.date}</span>
-							</div>
-							<h2 class="text-lg font-bold text-on-surface mb-2 group-hover:text-primary transition-colors leading-snug">{article.title}</h2>
-							<p class="text-sm text-on-surface-variant leading-relaxed flex-grow">{article.description}</p>
-							<span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-secondary">
-								Lire l'article
-								<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1 transition-transform"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-							</span>
+				
+        <!-- Featured Article -->
+        <article class="mb-16 md:mb-24 bg-surface-container-lowest rounded-3xl border border-surface-variant overflow-hidden group hover:shadow-xl hover:border-primary/30 transition-all duration-500 animate-fade-in-up">
+          <div class="grid grid-cols-1 lg:grid-cols-2">
+            <div class="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+              <div class="flex items-center gap-3 mb-6">
+                <span class="inline-flex items-center px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-bold tracking-wide uppercase">
+                  À la une • {featuredArticle.tag}
+                </span>
+                <span class="text-sm text-on-surface-variant font-medium">{featuredArticle.date}</span>
+              </div>
+              <h2 class="text-3xl md:text-4xl font-bold text-on-surface mb-6 leading-tight group-hover:text-primary transition-colors">
+                <a href={`/ressources/${featuredArticle.id}`} class="before:absolute before:inset-0">
+                  {featuredArticle.title}
+                </a>
+              </h2>
+              <p class="text-lg text-on-surface-variant font-serif leading-relaxed mb-8">
+                {featuredArticle.description}
+              </p>
+              <div class="inline-flex items-center gap-2 text-primary font-semibold mt-auto">
+                Lire l'article complet
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-2 transition-transform duration-300"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+              </div>
+            </div>
+            <!-- Decorative Visual for Featured -->
+            <div class="relative bg-primary/5 border-l border-surface-variant/50 overflow-hidden min-h-[300px] lg:min-h-full">
+              <img src={featuredArticle.imageUrl} alt={featuredArticle.title} class="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700 ease-out" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Grid Articles -->
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+					{restArticles.map((article, index) => (
+						<article class={`bg-surface-container-lowest border border-surface-variant rounded-2xl flex flex-col hover:border-secondary/40 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 group animate-fade-in-up animation-delay-${(index % 3 + 1) * 100} relative overflow-hidden`}>
+              {article.imageUrl && (
+                <div class="w-full h-48 overflow-hidden bg-surface-container-low border-b border-surface-variant relative">
+                  <img src={article.imageUrl} alt={article.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" />
+                  <div class="absolute inset-0 bg-[url('/noise.svg')] opacity-10 mix-blend-overlay"></div>
+                </div>
+              )}
+							<div class="p-6 md:p-8 flex flex-col flex-grow">
+                <div class="flex items-center justify-between gap-3 mb-5">
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-semibold uppercase tracking-wider group-hover:bg-secondary/10 group-hover:text-secondary transition-colors">
+                    {article.tag}
+                  </span>
+                  <span class="text-xs text-outline font-medium">{article.date}</span>
+                </div>
+                <h3 class="text-xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors leading-snug">
+                  <a href={`/ressources/${article.id}`} class="before:absolute before:inset-0">
+                    {article.title}
+                  </a>
+                </h3>
+                <p class="text-sm text-on-surface-variant font-serif leading-relaxed mb-6 flex-grow line-clamp-3">
+                  {article.description}
+                </p>
+                <div class="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-secondary">
+                  Lire l'article
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1.5 transition-transform duration-300"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                </div>
+              </div>
 						</article>
 					))}
 				</div>
 
-				<p class="text-center text-sm text-on-surface-variant mt-12">
-					D'autres ressources arrivent. <a href="/contact" class="text-secondary font-semibold hover:underline">Suggérez un sujet</a> qui vous intéresse.
-				</p>
+				<div class="mt-20 text-center animate-fade-in-up">
+          <div class="inline-flex flex-col items-center justify-center p-8 border border-dashed border-outline-variant/60 rounded-2xl bg-background max-w-2xl mx-auto">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-outline mb-4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            <h4 class="text-lg font-bold text-on-surface mb-2">Vous cherchez un sujet précis ?</h4>
+            <p class="text-sm text-on-surface-variant mb-6">Notre équipe juridique enrichit la base Mibeko chaque semaine.</p>
+            <a href="/contact" class="inline-flex items-center h-10 px-5 bg-surface-container text-on-surface font-semibold rounded hover:bg-surface-container-high transition-colors text-sm">
+              Suggérer un article
+            </a>
+          </div>
+				</div>
 			</div>
 		</section>
 
 		<CTASection
 			title="Ne manquez aucune évolution du droit"
-			text="Avec Mibeko, recevez les actualités juridiques qui vous concernent directement dans votre poche."
+			text="Avec Mibeko, recevez les actualités juridiques qui vous concernent directement dans votre espace."
 		/>
 	</main>
 	<Footer />

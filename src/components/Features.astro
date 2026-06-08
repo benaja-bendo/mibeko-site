@@ -28,40 +28,50 @@ const features = [
   <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
     <div class="text-center max-w-2xl mx-auto mb-16">
       <h2 class="font-sans text-3xl md:text-[32px] font-semibold text-on-surface mb-4">
-        Des outils pensés pour vous
+        Les fonctionnalités essentielles
       </h2>
       <p class="font-sans text-on-surface-variant">
-        Naviguez à travers les textes complexes avec des fonctionnalités conçues pour simplifier votre compréhension et faciliter vos démarches.
+        Une expérience pensée pour aller vite, comprendre clairement et agir en confiance.
       </p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
       {features.map((feature) => (
         <div class:list={[
-          "p-8 rounded-xl border flex flex-col bg-white",
-          feature.active ? "border-t-2 border-t-secondary border-x-surface-variant border-b-surface-variant shadow-sm" : "border-surface-variant"
+          "relative overflow-hidden p-7 md:p-8 rounded-2xl border flex flex-col bg-white shadow-sm hover-lift md:col-span-4",
+          feature.active ? "border-secondary/30 ring-1 ring-secondary/15 shadow-md" : "border-surface-variant hover:border-outline-variant/70"
         ]}>
+          {feature.active && (
+            <div class="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-secondary-container/55 blur-2xl"></div>
+          )}
           <div class:list={[
-            "w-10 h-10 rounded flex items-center justify-center mb-6",
+            "relative w-11 h-11 rounded-xl flex items-center justify-center mb-6",
             feature.active ? "bg-secondary-container text-on-secondary-container" : "bg-primary text-on-primary"
           ]} set:html={feature.icon} />
           
-          <h3 class="font-sans text-xl font-semibold text-on-surface mb-3">
+          <h3 class="relative font-sans text-xl font-semibold text-on-surface mb-3 tracking-tight">
             {feature.title}
           </h3>
           
-          <p class="font-sans text-sm text-on-surface-variant leading-relaxed mb-6 flex-grow">
+          <p class="relative font-sans text-sm text-on-surface-variant leading-relaxed mb-6 flex-grow">
             {feature.description}
           </p>
 
           {feature.alert && (
-            <div class="mt-auto p-3 rounded bg-error-container/50 border border-error-container text-on-error-container text-xs flex gap-2 items-start">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 mt-0.5">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" x2="12" y1="8" y2="12"></line>
-                <line x1="12" x2="12.01" y1="16" y2="16"></line>
-              </svg>
-              <p>{feature.alert}</p>
+            <div role="note" aria-label="Avertissement" class="relative mt-auto rounded-xl border border-outline-variant/70 bg-surface-container-low p-3.5 text-on-surface-variant">
+              <div class="flex gap-3 items-start">
+                <span class="mt-0.5 w-7 h-7 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" x2="12" y1="10" y2="16"></line>
+                    <line x1="12" x2="12.01" y1="8" y2="8"></line>
+                  </svg>
+                </span>
+                <div class="min-w-0">
+                  <p class="text-[10px] font-semibold uppercase tracking-wider text-on-surface mb-1">À savoir</p>
+                  <p class="text-xs leading-relaxed">{feature.alert}</p>
+                </div>
+              </div>
             </div>
           )}
         </div>

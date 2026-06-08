@@ -1,8 +1,7 @@
 ---
 const navLinks = [
   { href: '/', label: 'Accueil' },
-  { href: '/application', label: 'Particuliers' },
-  { href: '/professionnels', label: 'Professionnels' },
+  { href: '/produits', label: 'Produits' },
   { href: '/ressources', label: 'Ressources' },
   { href: '/contact', label: 'Contact' },
 ];
@@ -41,14 +40,14 @@ const isActive = (href: string) =>
 
     <!-- Actions (Desktop) -->
     <div class="hidden md:flex items-center gap-6">
-      <a href="/professionnels#essai" class="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors">
+      <a href="/produits#pro" class="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors">
         Espace Pro
       </a>
       <a
-        href="/application"
+        href="/produits#mobile"
         class="inline-flex items-center justify-center h-10 px-5 text-sm font-medium text-on-primary bg-primary rounded hover:bg-primary-container transition-colors"
       >
-        Télécharger l'appli
+        L'App Mobile
       </a>
     </div>
 
@@ -88,11 +87,14 @@ const isActive = (href: string) =>
           {link.label}
         </a>
       ))}
+      <a href="/produits#pro" class="py-3 text-base font-medium border-b border-surface-variant/40 transition-colors text-on-surface-variant hover:text-primary">
+        Espace Pro
+      </a>
       <a
-        href="/application"
+        href="/produits#mobile"
         class="mt-4 inline-flex items-center justify-center h-11 px-5 text-sm font-medium text-on-primary bg-primary rounded hover:bg-primary-container transition-colors"
       >
-        Télécharger l'appli
+        L'App Mobile
       </a>
     </nav>
   </div>
