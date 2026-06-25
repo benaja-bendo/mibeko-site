@@ -1,0 +1,107 @@
+---
+export const prerender = false;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { fetchLibrarySearch, articlePath, type LibrarySearchResult } from '../lib/api';
+
+const query = (Astro.url.searchParams.get('q') ?? '').trim();
+const hasQuery = query.length >= 2;
+
+let results: LibrarySearchResult[] = [];
+let failed = false;
+
+if (hasQuery) {
+  try {
+    results = await fetchLibrarySearch(query);
+  } catch {
+    failed = true;
+  }
+}
+
+const snippet = (text: string | null): string => {
+  const clean = (text ?? '').replace(/\s+/g, ' ').trim();
+  return clean.length > 240 ? `${clean.slice(0, 237)}…` : clean;
+};
+
+const pageTitle = hasQuery ? `« ${query} » — Recherche` : 'Rechercher dans le fonds juridique';
+---
+
+<Layout
+  title={`${pageTitle} — Mibeko`}
+  description="Recherchez dans les codes, lois et textes officiels de la République du Congo et de l'espace OHADA."
+  noindex
+>
+  <Header />
+  <main id="main" class="flex-grow bg-background">
+
+    <section class="pt-16 pb-10 md:pt-20 md:pb-12">
+      <div class="max-w-[860px] mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-6">Rechercher dans le fonds</h1>
+        <form action="/recherche" method="get" class="relative" role="search">
+          <div class="flex items-center bg-surface-container-lowest border border-outline-variant/60 rounded-xl shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all p-2 pl-5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-on-surface-variant/60 shrink-0">
+              <circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+            </svg>
+            <label for="q" class="sr-only">Rechercher une loi, un article, un thème</label>
+            <input id="q" name="q" type="search" value={query} placeholder="Ex : « bail commercial », « article 230 »…" autofocus
+              class="flex-1 bg-transparent border-none outline-none px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 text-base w-full" />
+            <button type="submit" class="bg-primary text-on-primary px-6 py-3 rounded-lg text-sm font-semibold hover:bg-primary-container transition-transform active:scale-95 shrink-0">
+              Rechercher
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="pb-20">
+      <div class="max-w-[860px] mx-auto px-4 sm:px-6 lg:px-8">
+        {!hasQuery ? (
+          <p class="text-on-surface-variant font-serif">Saisissez au moins deux caractères pour interroger les textes officiels.</p>
+        ) : failed ? (
+          <p class="text-on-surface-variant">La recherche est momentanément indisponible. Réessayez dans un instant.</p>
+        ) : results.length === 0 ? (
+          <div class="text-center py-12">
+            <p class="text-lg text-on-surface mb-2">Aucun résultat pour « {query} ».</p>
+            <p class="text-sm text-on-surface-variant">Essayez d'autres termes, ou <a href="/codes" class="text-primary font-semibold hover:underline">parcourez le fonds</a>.</p>
+          </div>
+        ) : (
+          <>
+            <p class="text-sm text-on-surface-variant mb-6">{results.length} résultat{results.length > 1 ? 's' : ''} pour « {query} »</p>
+            <ul class="flex flex-col gap-4">
+              {results.map((r) => {
+                const href = r.document_slug ? articlePath(r.document_slug, r.number) : null;
+                const Tag = href ? 'a' : 'div';
+                return (
+                  <li>
+                    <Tag
+                      {...(href ? { href } : {})}
+                      class:list={[
+                        'block p-6 rounded-2xl border border-surface-variant bg-surface-container-lowest transition-all',
+                        href ? 'hover:border-primary/40 hover:shadow-md group' : 'opacity-80',
+                      ]}
+                    >
+                      <p class="text-xs text-on-surface-variant uppercase tracking-wider mb-2 line-clamp-1">{r.breadcrumb}</p>
+                      <h2 class="text-lg font-bold text-on-surface group-hover:text-primary transition-colors mb-2">
+                        Article {r.number} — <span class="font-medium text-on-surface-variant">{r.document_title}</span>
+                      </h2>
+                      <p class="text-sm text-on-surface-variant font-serif leading-relaxed line-clamp-3">{snippet(r.content)}</p>
+                    </Tag>
+                  </li>
+                );
+              })}
+            </ul>
+            <div class="mt-10 rounded-2xl border border-surface-variant bg-surface-container-low p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <p class="text-sm text-on-surface-variant">Besoin d'une synthèse ou d'une explication de ces textes ?</p>
+              <a href="https://app.mibeko.fr/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center h-10 px-5 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors text-sm shrink-0">
+                Demander à Mibeko IA
+              </a>
+            </div>
+          </>
+        )}
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Layout>

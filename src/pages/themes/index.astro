@@ -1,0 +1,58 @@
+---
+export const prerender = false;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ThemeIcon from '../../components/ThemeIcon.astro';
+import { fetchThemes, themePath, type ThemeSummary } from '../../lib/api';
+
+let themes: ThemeSummary[] = [];
+let failed = false;
+try {
+  themes = await fetchThemes();
+} catch {
+  failed = true;
+}
+---
+
+<Layout
+  title="Le droit par situation de vie — Mibeko"
+  description="Famille, travail, logement, entreprise, justice… Parcourez le droit congolais par thème de vie, selon ce qui vous concerne."
+>
+  <Header />
+  <main id="main" class="flex-grow bg-background">
+    <section class="pt-20 pb-10 md:pt-28 md:pb-12">
+      <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+        <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-4">Par votre situation</p>
+        <h1 class="text-4xl md:text-5xl font-bold text-on-surface tracking-tight mb-6">Le droit, par thème de vie</h1>
+        <p class="text-lg md:text-xl text-on-surface-variant font-serif max-w-2xl leading-relaxed">
+          Entrez par ce que vous vivez — famille, travail, logement, entreprise… — plutôt que par le nom d'un code.
+        </p>
+      </div>
+    </section>
+
+    <section class="pb-20">
+      <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+        {failed ? (
+          <p class="text-on-surface-variant">Les thèmes sont momentanément indisponibles. Réessayez dans un instant.</p>
+        ) : (
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {themes.map((theme) => (
+              <a href={themePath(theme.slug)} class="group flex flex-col gap-4 p-6 rounded-2xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:-translate-y-1 hover:shadow-md transition-all">
+                <span class="w-12 h-12 rounded-xl bg-primary/8 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors">
+                  <ThemeIcon name={theme.icon} class="w-6 h-6" />
+                </span>
+                <div>
+                  <h2 class="text-base font-bold text-on-surface group-hover:text-primary transition-colors leading-snug mb-1">{theme.name}</h2>
+                  {theme.documents_count > 0 && <span class="text-xs text-outline">{theme.documents_count} texte{theme.documents_count > 1 ? 's' : ''}</span>}
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Layout>

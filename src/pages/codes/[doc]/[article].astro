@@ -1,0 +1,237 @@
+---
+export const prerender = false;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import { fetchPublicDocument, documentPath, articlePath } from '../../../lib/api';
+
+const ARTICLE_PREFIX = 'article-';
+const { doc, article: articleParam } = Astro.params;
+
+let payload = null;
+let invalid = !doc || !articleParam || !articleParam.startsWith(ARTICLE_PREFIX);
+let numero = '';
+
+if (!invalid) {
+  numero = decodeURIComponent(articleParam!.slice(ARTICLE_PREFIX.length));
+  payload = await fetchPublicDocument(doc!, numero);
+}
+
+const notFound = invalid || !payload || !payload.current_article;
+
+if (notFound) {
+  Astro.response.status = 404;
+}
+
+const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
+
+// --- Données de la page (uniquement si trouvée) -----------------------------
+const document = payload?.document;
+const current = payload?.current_article;
+const articles = payload?.articles ?? [];
+
+const idx = current ? articles.findIndex((a) => a.number === current.number) : -1;
+const previous = idx > 0 ? articles[idx - 1] : null;
+const next = idx >= 0 && idx < articles.length - 1 ? articles[idx + 1] : null;
+
+const plain = (current?.content ?? '').replace(/\s+/g, ' ').trim();
+const description = plain
+  ? plain.length > 160
+    ? `${plain.slice(0, 157)}…`
+    : plain
+  : `Article ${numero} du ${document?.titre_officiel ?? 'texte'} — République du Congo.`;
+
+const pageTitle = document && current
+  ? `Article ${current.number} — ${document.titre_officiel}`
+  : 'Texte introuvable';
+
+const typeName = document?.type?.name ?? 'Texte juridique';
+const selfUrl = document && current ? new URL(articlePath(document.slug, current.number), siteOrigin).href : '';
+const docUrl = document ? new URL(documentPath(document.slug), siteOrigin).href : '';
+
+const dateFmt = (iso?: string | null) =>
+  iso ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso)) : null;
+
+const legislationLd = document && current
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'Legislation',
+      name: pageTitle,
+      legislationType: typeName,
+      legislationJurisdiction: { '@type': 'AdministrativeArea', name: 'République du Congo' },
+      inLanguage: 'fr',
+      url: selfUrl,
+      isPartOf: { '@type': 'Legislation', name: document.titre_officiel, url: docUrl },
+      ...(document.reference_nor ? { legislationIdentifier: document.reference_nor } : {}),
+      ...(document.date_publication ? { datePublished: document.date_publication } : {}),
+      ...(plain ? { text: plain } : {}),
+    }
+  : null;
+
+const breadcrumbLd = document && current
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Accueil', item: new URL('/', siteOrigin).href },
+        { '@type': 'ListItem', position: 2, name: 'Codes & lois', item: new URL('/codes', siteOrigin).href },
+        { '@type': 'ListItem', position: 3, name: document.titre_officiel, item: docUrl },
+        { '@type': 'ListItem', position: 4, name: `Article ${current.number}`, item: selfUrl },
+      ],
+    }
+  : null;
+
+const jsonLd = [legislationLd, breadcrumbLd].filter(Boolean) as Record<string, unknown>[];
+
+const RELATION_LABELS: Record<string, string> = {
+  CITE: 'Référence',
+  MODIFIE: 'Modification',
+  ABROGE: 'Abrogation',
+  COMPLETE: 'Complément',
+  RENUMEROTE: 'Renumérotation',
+  CREE: 'Création',
+};
+const related = current?.related ?? [];
+---
+
+<Layout
+  title={notFound ? 'Texte introuvable — Mibeko' : `${pageTitle} — Mibeko`}
+  description={description}
+  ogType="article"
+  canonical={selfUrl || undefined}
+  jsonLd={jsonLd}
+>
+  <Header />
+  <main id="main" class="flex-grow bg-background">
+    {notFound ? (
+      <section class="max-w-[700px] mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
+        <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-4">Erreur 404</p>
+        <h1 class="text-3xl md:text-4xl font-bold text-on-surface mb-6">Ce texte est introuvable</h1>
+        <p class="text-on-surface-variant font-serif mb-8">
+          L'article ou le texte que vous cherchez n'existe pas, ou n'est pas encore publié dans le fonds Mibeko.
+        </p>
+        <a href="/codes" class="inline-flex items-center h-11 px-6 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">
+          Parcourir le fonds juridique
+        </a>
+      </section>
+    ) : (
+      <article class="max-w-[760px] mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+
+        <!-- Fil d'Ariane -->
+        <nav aria-label="Fil d'Ariane" class="text-sm text-on-surface-variant mb-8 flex flex-wrap items-center gap-1.5">
+          <a href="/" class="hover:text-primary transition-colors">Accueil</a>
+          <span class="text-outline">/</span>
+          <a href="/codes" class="hover:text-primary transition-colors">Codes &amp; lois</a>
+          <span class="text-outline">/</span>
+          <a href={documentPath(document!.slug)} class="hover:text-primary transition-colors line-clamp-1">{document!.titre_officiel}</a>
+          <span class="text-outline">/</span>
+          <span class="text-on-surface font-medium">Article {current!.number}</span>
+        </nav>
+
+        <!-- En-tête article -->
+        <header class="mb-10 pb-10 border-b border-surface-variant">
+          <div class="flex flex-wrap items-center gap-3 mb-5">
+            <span class="inline-flex items-center px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-bold tracking-wide uppercase">
+              {typeName}
+            </span>
+            {document!.date_publication && (
+              <span class="text-sm text-on-surface-variant">Publié le {dateFmt(document!.date_publication)}</span>
+            )}
+            {document!.reference_nor && (
+              <span class="text-sm text-outline">Réf. {document!.reference_nor}</span>
+            )}
+          </div>
+          <h1 class="text-3xl md:text-4xl font-bold text-on-surface tracking-tight leading-tight mb-3">
+            Article {current!.number}
+          </h1>
+          <a href={documentPath(document!.slug)} class="text-lg text-on-surface-variant font-serif hover:text-primary transition-colors">
+            {document!.titre_officiel}
+          </a>
+        </header>
+
+        <!-- Corps de l'article (texte officiel intégral) -->
+        <div class="legal-prose">
+          {plain
+            ? <div class="article-text font-serif text-on-surface text-lg leading-relaxed whitespace-pre-wrap">{current!.content}</div>
+            : <p class="text-on-surface-variant italic">Le texte de cet article n'est pas encore disponible.</p>}
+        </div>
+
+        {(document!.themes && document!.themes.length > 0) && (
+          <div class="mt-10 flex flex-wrap items-center gap-2">
+            <span class="text-sm text-on-surface-variant">Thèmes :</span>
+            {document!.themes.map((theme) => (
+              <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-medium">
+                {theme.name}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <!-- Maillage interne : textes liés (publiés uniquement) -->
+        {related.length > 0 && (
+          <section class="mt-12">
+            <h2 class="text-xl font-bold text-on-surface mb-4">Textes liés</h2>
+            <ul class="flex flex-col gap-3">
+              {related.map((rel) => (
+                <li>
+                  <a
+                    href={rel.article_number ? articlePath(rel.document_slug, rel.article_number) : documentPath(rel.document_slug)}
+                    class="flex items-start gap-3 p-4 rounded-xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:shadow-sm transition-all group"
+                  >
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-secondary/10 text-secondary text-xs font-bold uppercase tracking-wide shrink-0 mt-0.5">
+                      {RELATION_LABELS[rel.type] ?? rel.type}
+                    </span>
+                    <span class="text-on-surface group-hover:text-primary transition-colors font-medium">
+                      {rel.document_title}{rel.article_number ? `, article ${rel.article_number}` : ''}
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <!-- Navigation entre articles -->
+        <nav class="mt-12 pt-8 border-t border-surface-variant flex items-center justify-between gap-4" aria-label="Navigation entre articles">
+          {previous ? (
+            <a href={articlePath(document!.slug, previous.number)} class="group inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:-translate-x-1 transition-transform"><path d="m15 18-6-6 6-6"></path></svg>
+              <span class="text-sm font-semibold">Article {previous.number}</span>
+            </a>
+          ) : <span></span>}
+          {next ? (
+            <a href={articlePath(document!.slug, next.number)} class="group inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors">
+              <span class="text-sm font-semibold">Article {next.number}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1 transition-transform"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+            </a>
+          ) : <span></span>}
+        </nav>
+
+        <!-- Mur de conversion : lire est public, agir demande un compte -->
+        <aside class="mt-16 rounded-2xl border border-surface-variant bg-surface-container-low p-8 md:p-10">
+          <h2 class="text-xl font-bold text-on-surface mb-2">Aller plus loin avec cet article</h2>
+          <p class="text-on-surface-variant font-serif mb-8 max-w-xl">
+            La lecture du fonds est libre. Pour l'expliquer avec l'assistant Mibeko IA, le suivre ou le classer dans un dossier, créez votre espace.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <a href="https://app.mibeko.fr/" target="_blank" rel="noopener noreferrer" class="flex flex-col gap-2 p-5 rounded-xl border border-surface-variant bg-surface-container-lowest hover:border-secondary/40 hover:shadow-md transition-all group">
+              <span class="text-secondary font-bold">Expliquer avec l'IA</span>
+              <span class="text-sm text-on-surface-variant">Mibeko IA décrypte l'article en langage clair.</span>
+            </a>
+            <a href="https://app.mibeko.fr/" target="_blank" rel="noopener noreferrer" class="flex flex-col gap-2 p-5 rounded-xl border border-surface-variant bg-surface-container-lowest hover:border-secondary/40 hover:shadow-md transition-all group">
+              <span class="text-secondary font-bold">Ajouter à un dossier</span>
+              <span class="text-sm text-on-surface-variant">Rassemblez vos textes par affaire.</span>
+            </a>
+            <a href="/produits#mobile" class="flex flex-col gap-2 p-5 rounded-xl border border-surface-variant bg-surface-container-lowest hover:border-secondary/40 hover:shadow-md transition-all group">
+              <span class="text-secondary font-bold">Lire hors-ligne</span>
+              <span class="text-sm text-on-surface-variant">L'app mobile et les alertes Journal Officiel.</span>
+            </a>
+          </div>
+        </aside>
+
+      </article>
+    )}
+  </main>
+  <Footer />
+</Layout>

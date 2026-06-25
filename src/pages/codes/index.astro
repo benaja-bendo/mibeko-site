@@ -1,0 +1,72 @@
+---
+export const prerender = false;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import CTASection from '../../components/CTASection.astro';
+import { fetchPublishedDocuments, documentPath, type DocumentMeta } from '../../lib/api';
+
+let documents: DocumentMeta[] = [];
+let loadError = false;
+try {
+  documents = await fetchPublishedDocuments();
+} catch {
+  loadError = true;
+}
+
+const dateFmt = (iso?: string | null) =>
+  iso ? new Intl.DateTimeFormat('fr-FR', { year: 'numeric' }).format(new Date(iso)) : null;
+---
+
+<Layout
+  title="Codes & lois du Congo — le fonds juridique Mibeko"
+  description="Consultez librement les codes, lois et textes officiels de la République du Congo et de l'espace OHADA. Recherche, navigation par article, explications IA dans votre espace."
+>
+  <Header />
+  <main id="main" class="flex-grow bg-background">
+
+    <section class="pt-20 pb-10 md:pt-28 md:pb-12">
+      <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+        <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-4">Le fonds juridique</p>
+        <h1 class="text-4xl md:text-5xl font-bold text-on-surface tracking-tight mb-6">Codes &amp; lois du Congo</h1>
+        <p class="text-lg text-on-surface-variant font-serif max-w-2xl leading-relaxed">
+          Les textes officiels de la République du Congo et de l'espace OHADA, consultables article par article, librement.
+        </p>
+      </div>
+    </section>
+
+    <section class="pb-20">
+      <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+        {loadError ? (
+          <p class="text-on-surface-variant">Le fonds est momentanément indisponible. Réessayez dans un instant.</p>
+        ) : documents.length === 0 ? (
+          <p class="text-on-surface-variant">Aucun texte publié pour le moment.</p>
+        ) : (
+          <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {documents.map((d) => (
+              <li>
+                <a href={documentPath(d.slug)} class="flex flex-col h-full p-6 rounded-2xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:-translate-y-1 hover:shadow-lg transition-all group">
+                  <div class="flex items-center gap-3 mb-4">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-semibold uppercase tracking-wider group-hover:bg-secondary/10 group-hover:text-secondary transition-colors">
+                      {d.type?.name ?? 'Texte'}
+                    </span>
+                    {d.date_publication && <span class="text-xs text-outline">{dateFmt(d.date_publication)}</span>}
+                  </div>
+                  <h2 class="text-lg font-bold text-on-surface group-hover:text-primary transition-colors leading-snug">{d.titre_officiel}</h2>
+                  {d.reference_nor && <p class="mt-2 text-sm text-outline">Réf. {d.reference_nor}</p>}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </section>
+
+    <CTASection
+      title="Besoin d'aller plus loin qu'une lecture ?"
+      text="Expliquez les textes avec Mibeko IA, classez-les en dossiers et recevez les alertes du Journal Officiel dans votre espace."
+    />
+  </main>
+  <Footer />
+</Layout>

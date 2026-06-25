@@ -1,0 +1,72 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import CTASection from '../../components/CTASection.astro';
+import Footer from '../../components/Footer.astro';
+import { getCollection } from 'astro:content';
+
+const demarches = (await getCollection('demarches', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.publishedDate.getTime() - a.data.publishedDate.getTime(),
+);
+
+const audienceLabel: Record<string, string> = {
+  citoyen: 'Citoyen',
+  entreprise: 'Entreprise',
+  professionnel: 'Professionnel',
+};
+---
+
+<Layout
+	title="Démarches juridiques au Congo, pas à pas — Mibeko"
+	description="Comment faire vos démarches au Congo : des parcours guidés, étape par étape, avec les documents à fournir et la base légale. Du concret, relié aux textes officiels."
+>
+	<Header />
+	<main id="main" class="flex-grow bg-background">
+
+		<section class="pt-20 pb-12 md:pt-28 md:pb-16">
+			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+				<p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-4">Pas à pas</p>
+				<h1 class="text-4xl md:text-5xl font-bold text-on-surface tracking-tight mb-6">Vos démarches, guidées</h1>
+				<p class="text-lg md:text-xl text-on-surface-variant font-serif max-w-2xl leading-relaxed">
+					Comment faire concrètement, au Congo — étape par étape, avec les documents à réunir et le renvoi vers les textes officiels.
+				</p>
+			</div>
+		</section>
+
+		<section class="pb-20">
+			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+				{demarches.length === 0 ? (
+					<p class="text-on-surface-variant">Les premières démarches arrivent bientôt.</p>
+				) : (
+					<ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+						{demarches.map((d) => (
+							<li>
+								<a href={`/demarches/${d.id}`} class="flex flex-col h-full p-6 md:p-7 rounded-2xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:-translate-y-1 hover:shadow-lg transition-all group">
+									<div class="flex items-center gap-2 mb-4 flex-wrap">
+										<span class="inline-flex items-center px-2.5 py-1 rounded-md bg-secondary/10 text-secondary text-xs font-bold uppercase tracking-wide">{d.data.category}</span>
+										<span class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-semibold">{audienceLabel[d.data.audience] ?? d.data.audience}</span>
+									</div>
+									<h2 class="text-xl font-bold text-on-surface group-hover:text-primary transition-colors leading-snug mb-2">{d.data.title}</h2>
+									<p class="text-sm text-on-surface-variant font-serif leading-relaxed mb-6 flex-grow line-clamp-3">{d.data.description}</p>
+									<div class="mt-auto flex items-center justify-between">
+										<span class="inline-flex items-center gap-1.5 text-xs text-outline font-medium">
+											<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+											{d.data.steps.length} étapes
+										</span>
+										<span class="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
+											Voir la démarche
+											<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1 transition-transform"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+										</span>
+									</div>
+								</a>
+							</li>
+						))}
+					</ul>
+				)}
+			</div>
+		</section>
+
+		<CTASection title="Suivez vos démarches dans Mibeko" text="Cochez vos étapes, recevez des rappels et posez vos questions à l'assistant — depuis votre espace." />
+	</main>
+	<Footer />
+</Layout>

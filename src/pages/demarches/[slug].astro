@@ -1,0 +1,288 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const demarches = await getCollection('demarches', ({ data }) => !data.draft);
+  return demarches.map((demarche) => ({ params: { slug: demarche.id }, props: { demarche } }));
+}
+
+const { demarche } = Astro.props;
+const { Content } = await render(demarche);
+const { data } = demarche;
+
+const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
+const canonical = new URL(`/demarches/${demarche.id}`, siteOrigin).href;
+const audienceLabel: Record<string, string> = { citoyen: 'Citoyen', entreprise: 'Entreprise', professionnel: 'Professionnel' };
+const lawHref = (query: string) => `/recherche?q=${encodeURIComponent(query)}`;
+
+const howToLd = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: data.title,
+  description: data.description,
+  inLanguage: 'fr',
+  ...(data.cover ? { image: new URL(data.cover.src, siteOrigin).href } : {}),
+  step: data.steps.map((s, i) => ({
+    '@type': 'HowToStep',
+    position: i + 1,
+    name: s.title,
+    text: s.description,
+    url: `${canonical}#etape-${i + 1}`,
+  })),
+};
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Accueil', item: new URL('/', siteOrigin).href },
+    { '@type': 'ListItem', position: 2, name: 'Démarches', item: new URL('/demarches', siteOrigin).href },
+    { '@type': 'ListItem', position: 3, name: data.title, item: canonical },
+  ],
+};
+---
+
+<Layout title={`${data.title} — Démarche pas à pas — Mibeko`} description={data.description} ogType="article" canonical={canonical} jsonLd={[howToLd, breadcrumbLd]}>
+	<Header />
+	<main id="main" class="flex-grow bg-background">
+		<div class="max-w-[820px] mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+
+			<nav aria-label="Fil d'Ariane" class="text-sm text-on-surface-variant mb-8 flex flex-wrap items-center gap-1.5">
+				<a href="/" class="hover:text-primary transition-colors">Accueil</a>
+				<span class="text-outline">/</span>
+				<a href="/demarches" class="hover:text-primary transition-colors">Démarches</a>
+				<span class="text-outline">/</span>
+				<span class="text-on-surface font-medium line-clamp-1">{data.title}</span>
+			</nav>
+
+			<header class="mb-8">
+				<div class="flex items-center gap-2 mb-4 flex-wrap">
+					<span class="inline-flex items-center px-2.5 py-1 rounded-md bg-secondary/10 text-secondary text-xs font-bold uppercase tracking-wide">{data.category}</span>
+					<span class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-semibold">{audienceLabel[data.audience] ?? data.audience}</span>
+					<span class="text-xs text-outline font-medium">{data.steps.length} étapes</span>
+				</div>
+				<h1 class="text-3xl md:text-4xl font-bold text-on-surface tracking-tight leading-tight mb-4">{data.title}</h1>
+				<p class="text-lg text-on-surface-variant font-serif leading-relaxed">{data.description}</p>
+			</header>
+
+			<div class="demarche-intro legal-prose mb-6"><Content /></div>
+
+			<section class="rm" data-roadmap data-slug={demarche.id} aria-label="Étapes de la démarche">
+				<div class="rm-sticky" data-js>
+					<div class="rm-sticky-row">
+						<span class="rm-sticky-label" data-counter>Le parcours</span>
+						<span class="rm-sticky-sub" data-current>{data.steps.length} étapes</span>
+					</div>
+					<div class="rm-sticky-bar"><span class="rm-sticky-fill" data-bar></span></div>
+				</div>
+
+				<div class="rm-list">
+					<div class="rm-track" data-js></div>
+					<div class="rm-fill" data-js></div>
+
+					<ol class="rm-steps">
+						<li class="rm-step rm-start" data-step>
+							<div class="rm-rail"><span class="rm-node rm-node-mark"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg></span></div>
+							<div class="rm-card rm-card-plain">
+								<p class="rm-kicker">Départ</p>
+								<p class="rm-start-text">{data.steps.length} étapes à suivre. Descendez le fil, cochez vos documents au passage — le parcours avance avec vous.</p>
+							</div>
+						</li>
+
+						{data.steps.map((s, i) => (
+							<li class="rm-step" data-step data-index={i + 1} id={`etape-${i + 1}`}>
+								<div class="rm-rail"><span class="rm-node" data-node data-n={i + 1}>{i + 1}</span></div>
+								<article class="rm-card">
+									<h2 class="rm-title">{s.title}</h2>
+									<p class="rm-desc">{s.description}</p>
+									{s.documents.length > 0 && (
+										<div class="rm-docs">
+											<p class="rm-docs-label">Documents à fournir</p>
+											<ul>
+												{s.documents.map((doc, j) => (
+													<li>
+														<label>
+															<input type="checkbox" data-doc data-key={`${i}-${j}`} />
+															<span>{doc}</span>
+														</label>
+													</li>
+												))}
+											</ul>
+										</div>
+									)}
+									{s.law && (
+										<a href={lawHref(s.law.query)} class="rm-law">
+											<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+											Base légale : {s.law.label}
+										</a>
+									)}
+									{s.tip && (
+										<p class="rm-tip"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M12 2a7 7 0 0 0-4 12.7c.5.4.8 1 .9 1.6h6.2c.1-.6.4-1.2.9-1.6A7 7 0 0 0 12 2z"></path></svg>{s.tip}</p>
+									)}
+								</article>
+							</li>
+						))}
+
+						<li class="rm-step rm-end" data-step>
+							<div class="rm-rail"><span class="rm-node rm-node-mark rm-node-end"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span></div>
+							<div class="rm-card rm-card-cta">
+								<p class="rm-kicker">Objectif</p>
+								<h2 class="rm-title">Vous avez les clés de la démarche</h2>
+								<p class="rm-desc">Gardez votre progression, recevez des rappels d'échéances et posez vos questions à l'assistant — depuis votre espace Mibeko.</p>
+								<div class="rm-cta-actions">
+									<a href="https://app.mibeko.fr/" target="_blank" rel="noopener noreferrer" class="rm-btn rm-btn-primary">Ouvrir mon espace</a>
+									<a href="/produits#mobile" class="rm-btn">L'app mobile</a>
+								</div>
+							</div>
+						</li>
+					</ol>
+				</div>
+			</section>
+
+			<div class="mt-12 pt-8 border-t border-surface-variant">
+				<a href="/demarches" class="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary font-semibold transition-colors">
+					<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+					Toutes les démarches
+				</a>
+			</div>
+		</div>
+	</main>
+	<Footer />
+</Layout>
+
+<style>
+	.rm [data-js] { display: none; }
+	.rm.is-enhanced [data-js] { display: block; }
+
+	.rm-sticky { position: sticky; top: 80px; z-index: 20; background: var(--color-background); padding: 0.75rem 0 0.85rem; margin-bottom: 0.5rem; }
+	.rm-sticky-row { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem; }
+	.rm-sticky-label { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-secondary); }
+	.rm-sticky-sub { font-size: 0.85rem; color: var(--color-on-surface-variant); text-align: right; }
+	.rm-sticky-bar { height: 5px; background: var(--color-surface-container); border-radius: 99px; overflow: hidden; }
+	.rm-sticky-fill { display: block; height: 100%; width: 0; background: var(--color-primary); border-radius: 99px; transition: width 0.45s ease; }
+
+	.rm-list { position: relative; }
+	.rm-steps { list-style: none; margin: 0; padding: 0; }
+	.rm-step { position: relative; display: grid; grid-template-columns: 48px 1fr; gap: 18px; padding-bottom: 2.25rem; }
+	.rm-step:last-child { padding-bottom: 0; }
+	.rm-rail { position: relative; display: flex; justify-content: center; }
+
+	.rm-track, .rm-fill { position: absolute; left: 24px; transform: translateX(-50%); width: 3px; border-radius: 99px; pointer-events: none; }
+	.rm-track { background: var(--color-surface-variant); z-index: 0; }
+	.rm-fill { background: var(--color-primary); z-index: 1; height: 0; transition: height 0.45s cubic-bezier(0.4, 0, 0.2, 1); }
+
+	.rm-node { position: relative; z-index: 2; flex: none; width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.95rem; font-weight: 700; background: var(--color-surface-container-lowest); color: var(--color-on-surface-variant); border: 2px solid var(--color-surface-variant); transition: all 0.3s ease; }
+	.rm-step.is-done .rm-node { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
+	.rm-step.is-active .rm-node { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-primary) 18%, transparent); }
+	.rm-node-mark { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
+
+	.rm-card { background: var(--color-surface-container-lowest); border: 1px solid var(--color-surface-variant); border-radius: 1rem; padding: 1.25rem 1.4rem; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
+	.rm-step.is-active .rm-card { border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-surface-variant)); box-shadow: 0 8px 24px -12px color-mix(in srgb, var(--color-primary) 40%, transparent); }
+
+	.rm-kicker { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--color-secondary); margin: 0 0 0.35rem; }
+	.rm-title { font-size: 1.15rem; font-weight: 700; color: var(--color-on-surface); margin: 0 0 0.4rem; line-height: 1.3; }
+	.rm-desc { color: var(--color-on-surface-variant); line-height: 1.65; margin: 0; }
+	.rm-card .rm-desc + * { margin-top: 1.1rem; }
+	.rm-start-text { color: var(--color-on-surface-variant); line-height: 1.6; margin: 0; }
+
+	.rm-docs-label { font-size: 0.82rem; font-weight: 600; color: var(--color-on-surface); margin: 0 0 0.5rem; }
+	.rm-docs ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.45rem; }
+	.rm-docs label { display: flex; align-items: center; gap: 0.6rem; font-size: 0.92rem; color: var(--color-on-surface-variant); cursor: pointer; }
+	.rm-docs input { width: 17px; height: 17px; accent-color: var(--color-primary); cursor: pointer; }
+	.rm-docs label:has(input:checked) span { color: var(--color-on-surface-variant); text-decoration: line-through; opacity: 0.7; }
+
+	.rm-law { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 600; color: var(--color-secondary); text-decoration: none; }
+	.rm-law:hover { text-decoration: underline; }
+	.rm-tip { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.85rem; color: var(--color-on-surface-variant); background: var(--color-surface-container); border-radius: 0.6rem; padding: 0.7rem 0.85rem; margin: 0; }
+	.rm-tip svg { flex: none; margin-top: 2px; }
+
+	.rm-card-cta { background: var(--color-surface-container-low); }
+	.rm-cta-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.1rem; }
+	.rm-btn { display: inline-flex; align-items: center; height: 42px; padding: 0 1.25rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem; text-decoration: none; border: 1px solid var(--color-surface-variant); background: var(--color-surface-container-lowest); color: var(--color-on-surface); transition: all 0.2s; }
+	.rm-btn:hover { border-color: var(--color-primary); }
+	.rm-btn-primary { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
+	.rm-btn-primary:hover { background: var(--color-primary-container); }
+
+	@media (prefers-reduced-motion: reduce) {
+		.rm-fill, .rm-card, .rm-node, .rm-sticky-fill { transition: none; }
+	}
+</style>
+
+<script>
+	document.querySelectorAll<HTMLElement>('.rm[data-roadmap]').forEach((root) => {
+		const list = root.querySelector<HTMLElement>('.rm-list');
+		const track = root.querySelector<HTMLElement>('.rm-track');
+		const fill = root.querySelector<HTMLElement>('.rm-fill');
+		const bar = root.querySelector<HTMLElement>('[data-bar]');
+		const counter = root.querySelector<HTMLElement>('[data-counter]');
+		const current = root.querySelector<HTMLElement>('[data-current]');
+		const steps = Array.from(root.querySelectorAll<HTMLElement>('[data-step]'));
+		const nodes = steps.map((s) => s.querySelector<HTMLElement>('.rm-node')!);
+		if (!list || !track || !fill || steps.length === 0) return;
+
+		const realCount = root.querySelectorAll('[data-index]').length;
+		const slug = root.dataset.slug ?? 'demarche';
+		let active = -1;
+
+		root.classList.add('is-enhanced');
+
+		root.querySelectorAll<HTMLInputElement>('[data-doc]').forEach((box) => {
+			const key = `mibeko_dm_${slug}_${box.dataset.key}`;
+			if (localStorage.getItem(key) === '1') box.checked = true;
+			box.addEventListener('change', () => localStorage.setItem(key, box.checked ? '1' : '0'));
+		});
+
+		const centerY = (el: HTMLElement) =>
+			el.getBoundingClientRect().top - list.getBoundingClientRect().top + el.offsetHeight / 2;
+
+		function layout() {
+			const first = centerY(nodes[0]);
+			const last = centerY(nodes[nodes.length - 1]);
+			track!.style.top = `${first}px`;
+			track!.style.height = `${Math.max(0, last - first)}px`;
+			fill!.style.top = `${first}px`;
+			paint();
+		}
+
+		function paint() {
+			const first = centerY(nodes[0]);
+			const target = active >= 0 ? centerY(nodes[active]) : first;
+			fill!.style.height = `${Math.max(0, target - first)}px`;
+
+			steps.forEach((step, i) => {
+				step.classList.toggle('is-done', i < active);
+				step.classList.toggle('is-active', i === active);
+				const node = nodes[i];
+				if (node.dataset.n) node.textContent = i < active ? '✓' : node.dataset.n;
+			});
+
+			if (bar) bar.style.width = `${active <= 0 ? 0 : Math.min(100, (active / (steps.length - 1)) * 100)}%`;
+			const idx = active >= 0 ? steps[active].dataset.index : undefined;
+			if (counter) counter.textContent = idx ? `Étape ${idx}` : active >= steps.length - 1 ? 'Objectif atteint' : 'Le parcours';
+			if (current) current.textContent = idx ? `sur ${realCount}` : active >= steps.length - 1 ? 'Bravo' : `${realCount} étapes`;
+		}
+
+		function onScroll() {
+			const vh = window.innerHeight || document.documentElement.clientHeight || 800;
+			const mid = vh * 0.5;
+			let idx = 0;
+			for (let i = 0; i < nodes.length; i++) {
+				if (nodes[i].getBoundingClientRect().top <= mid) idx = i;
+			}
+			if (idx !== active) {
+				active = idx;
+				paint();
+			}
+		}
+
+		let ticking = false;
+		const schedule = () => { if (!ticking) { ticking = true; requestAnimationFrame(() => { ticking = false; onScroll(); }); } };
+		window.addEventListener('scroll', schedule, { passive: true });
+		window.addEventListener('resize', () => { layout(); }, { passive: true });
+
+		layout();
+		onScroll();
+	});
+</script>

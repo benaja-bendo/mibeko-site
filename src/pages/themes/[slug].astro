@@ -1,0 +1,120 @@
+---
+export const prerender = false;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ThemeIcon from '../../components/ThemeIcon.astro';
+import { fetchThemeDocuments, documentPath, type ThemeDetail } from '../../lib/api';
+
+const { slug } = Astro.params;
+let data: ThemeDetail | null = null;
+try {
+  data = slug ? await fetchThemeDocuments(slug) : null;
+} catch {
+  data = null;
+}
+const notFound = !data;
+if (notFound) {
+  Astro.response.status = 404;
+}
+
+const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
+const theme = data?.theme;
+const documents = data?.documents ?? [];
+const canonical = theme ? new URL(`/themes/${theme.slug}`, siteOrigin).href : undefined;
+const dateFmt = (iso?: string | null) =>
+  iso ? new Intl.DateTimeFormat('fr-FR', { year: 'numeric' }).format(new Date(iso)) : null;
+
+const breadcrumbLd = theme
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Accueil', item: new URL('/', siteOrigin).href },
+        { '@type': 'ListItem', position: 2, name: 'Thèmes', item: new URL('/themes', siteOrigin).href },
+        { '@type': 'ListItem', position: 3, name: theme.name, item: canonical },
+      ],
+    }
+  : null;
+const jsonLd = breadcrumbLd ? [breadcrumbLd as Record<string, unknown>] : [];
+---
+
+<Layout
+  title={notFound ? 'Thème introuvable — Mibeko' : `${theme!.name} — Le droit par situation — Mibeko`}
+  description={notFound ? 'Ce thème est introuvable.' : (theme!.description ?? `Les textes du droit congolais sur le thème « ${theme!.name} ».`)}
+  canonical={canonical}
+  jsonLd={jsonLd}
+>
+  <Header />
+  <main id="main" class="flex-grow bg-background">
+    {notFound ? (
+      <section class="max-w-[700px] mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
+        <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-4">Erreur 404</p>
+        <h1 class="text-3xl md:text-4xl font-bold text-on-surface mb-6">Ce thème est introuvable</h1>
+        <a href="/codes" class="inline-flex items-center h-11 px-6 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">Parcourir le fonds</a>
+      </section>
+    ) : (
+      <div class="max-w-[860px] mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+
+        <nav aria-label="Fil d'Ariane" class="text-sm text-on-surface-variant mb-8 flex flex-wrap items-center gap-1.5">
+          <a href="/" class="hover:text-primary transition-colors">Accueil</a>
+          <span class="text-outline">/</span>
+          <a href="/themes" class="hover:text-primary transition-colors">Thèmes</a>
+          <span class="text-outline">/</span>
+          <span class="text-on-surface font-medium">{theme!.name}</span>
+        </nav>
+
+        <header class="mb-12 pb-10 border-b border-surface-variant flex items-start gap-5">
+          <span class="w-14 h-14 rounded-2xl bg-primary/8 text-primary flex items-center justify-center shrink-0">
+            <ThemeIcon name={theme!.icon} class="w-7 h-7" />
+          </span>
+          <div>
+            <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-2">Par votre situation</p>
+            <h1 class="text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-3">{theme!.name}</h1>
+            {theme!.description && <p class="text-on-surface-variant font-serif leading-relaxed">{theme!.description}</p>}
+          </div>
+        </header>
+
+        {documents.length > 0 ? (
+          <>
+            <h2 class="text-xl font-bold text-on-surface mb-6">Textes rattachés</h2>
+            <ul class="flex flex-col gap-3 mb-12">
+              {documents.map((doc) => (
+                <li>
+                  {doc.slug ? (
+                    <a href={documentPath(doc.slug)} class="flex items-center justify-between gap-4 p-5 rounded-2xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:shadow-sm transition-all group">
+                      <div>
+                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                          <span class="inline-flex items-center px-2 py-0.5 rounded bg-surface-container text-on-surface-variant text-xs font-semibold uppercase tracking-wider">{doc.type_name ?? 'Texte'}</span>
+                          {doc.date_publication && <span class="text-xs text-outline">{dateFmt(doc.date_publication)}</span>}
+                        </div>
+                        <span class="font-bold text-on-surface group-hover:text-primary transition-colors leading-snug">{doc.title}</span>
+                      </div>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-outline group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                    </a>
+                  ) : (
+                    <div class="p-5 rounded-2xl border border-surface-variant bg-surface-container-lowest opacity-70">
+                      <span class="font-bold text-on-surface">{doc.title}</span>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <p class="text-on-surface-variant font-serif mb-12">Aucun texte n'est encore rattaché à ce thème. Utilisez la recherche, ou explorez les démarches.</p>
+        )}
+
+        <div class="rounded-2xl border border-surface-variant bg-surface-container-low p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <p class="text-sm text-on-surface-variant">Approfondir « {theme!.name} » :</p>
+          <div class="flex flex-wrap gap-3">
+            <a href={`/recherche?q=${encodeURIComponent(theme!.name)}`} class="inline-flex items-center h-10 px-5 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors text-sm">Rechercher</a>
+            <a href="/demarches" class="inline-flex items-center h-10 px-5 bg-surface-container text-on-surface font-semibold rounded hover:bg-surface-container-high transition-colors text-sm">Démarches</a>
+          </div>
+        </div>
+      </div>
+    )}
+  </main>
+  <Footer />
+</Layout>
