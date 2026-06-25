@@ -89,6 +89,7 @@ jobs:
 
             cat > .env <<EOF
             MIBEKO_SITE_HOST=${{ secrets.MIBEKO_SITE_HOST }}
+            MIBEKO_API_URL=${{ secrets.MIBEKO_API_URL || 'https://api.mibeko.fr/api/v1' }}
             GITHUB_REPOSITORY=$REPO_LC
             EOF
 

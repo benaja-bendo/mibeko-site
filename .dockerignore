@@ -4,3 +4,7 @@ dist
 .git
 .github
 .env*
+.vscode
+.idea
+image-originals-gemini
+.DS_Store
