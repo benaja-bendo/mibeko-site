@@ -1,102 +1,48 @@
 ---
+const quickLinks = [
+  { href: '/codes', label: 'Codes & lois' },
+  { href: '/demarches', label: 'Démarches' },
+  { href: '/ressources', label: 'Guides' },
+];
 ---
 
 <section class="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden bg-background">
-  <!-- Subtle background decoration -->
   <div class="absolute inset-0 z-0 pointer-events-none">
     <div class="absolute -top-40 -right-40 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl"></div>
     <div class="absolute top-40 -left-40 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-3xl"></div>
     <div class="absolute inset-0 bg-[url('/noise.svg')] opacity-[0.015] mix-blend-overlay"></div>
   </div>
 
-  <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-      
-      <!-- Text Content (Left) -->
-      <div class="lg:col-span-6 text-left animate-fade-in-up">
-        
-        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-on-surface tracking-tight leading-[1.1] mb-6">
-          L'intelligence juridique <br class="hidden md:block" />
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
-            à portée de main.
-          </span>
-        </h1>
-        
-        <p class="text-lg md:text-xl text-on-surface-variant font-serif leading-relaxed mb-10 max-w-lg">
-          Mibeko démocratise l'accès au droit. Une plateforme unifiée pour rechercher, comprendre et agir, conçue pour les citoyens et les experts.
-        </p>
+  <div class="max-w-[820px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center animate-fade-in-up">
+    <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-5">République du Congo · espace OHADA</p>
 
-        <!-- Search Bar -->
-        <form action="/produits" method="get" class="relative max-w-lg">
-          <div class="flex items-center bg-surface-container-lowest border border-outline-variant/60 rounded-xl shadow-sm hover:shadow-md focus-within:shadow-md focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all p-2 pl-5 group">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-on-surface-variant/60 group-focus-within:text-primary transition-colors shrink-0">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" x2="16.65" y1="21" y2="16.65"></line>
-            </svg>
-            <label for="hero-search" class="sr-only">Rechercher un droit, une loi ou un modèle</label>
-            <input
-              id="hero-search"
-              name="q"
-              type="text"
-              placeholder="Ex : 'bail commercial', 'divorce'..."
-              class="flex-1 bg-transparent border-none outline-none px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 text-base w-full"
-            />
-            <button type="submit" class="bg-primary text-on-primary px-6 py-3 rounded-lg text-sm font-semibold hover:bg-primary-container transition-transform active:scale-95 shrink-0">
-              Explorer
-            </button>
-          </div>
-        </form>
+    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-on-surface tracking-tight leading-[1.1] mb-6">
+      Le droit congolais,{' '}
+      <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">clair et à portée de main.</span>
+    </h1>
+
+    <p class="text-lg md:text-xl text-on-surface-variant font-serif leading-relaxed mb-10 max-w-2xl mx-auto">
+      Cherchez un texte, comprenez un sujet, suivez une démarche. Une plateforme unique pour les citoyens et les professionnels du droit.
+    </p>
+
+    <form action="/recherche" method="get" class="relative max-w-xl mx-auto" role="search">
+      <div class="flex items-center bg-surface-container-lowest border border-outline-variant/60 rounded-xl shadow-sm hover:shadow-md focus-within:shadow-md focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all p-2 pl-5 group">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-on-surface-variant/60 group-focus-within:text-primary transition-colors shrink-0">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+        </svg>
+        <label for="hero-search" class="sr-only">Rechercher un droit, une loi ou un thème</label>
+        <input id="hero-search" name="q" type="search" placeholder="Ex : « bail commercial », « divorce », « article 230 »…" class="flex-1 bg-transparent border-none outline-none px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 text-base w-full" />
+        <button type="submit" class="bg-primary text-on-primary px-6 py-3 rounded-lg text-sm font-semibold hover:bg-primary-container transition-transform active:scale-95 shrink-0">Rechercher</button>
       </div>
+    </form>
 
-      <!-- Action Cards (Right) -->
-      <div class="lg:col-span-6 grid gap-6 animate-fade-in-up animation-delay-200 relative">
-        
-        <!-- Decoration lines behind cards -->
-        <div class="absolute -left-6 top-10 bottom-10 w-px bg-gradient-to-b from-transparent via-outline-variant/30 to-transparent hidden lg:block"></div>
-
-        <!-- Card: App Mobile -->
-        <a href="/produits#mobile" class="group block bg-surface-container-lowest border border-surface-variant rounded-2xl p-6 md:p-8 hover:border-secondary/40 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
-          <div class="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300 text-secondary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-          </div>
-          
-          <div class="flex items-start gap-5">
-            <div class="w-14 h-14 rounded-xl bg-surface-container flex items-center justify-center text-on-surface shrink-0 group-hover:bg-primary group-hover:text-on-primary transition-colors duration-300">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
-            </div>
-            <div>
-              <h2 class="text-xl font-bold text-on-surface mb-2 group-hover:text-primary transition-colors">L'Application Mobile</h2>
-              <p class="text-on-surface-variant text-sm leading-relaxed">
-                Le droit congolais dans votre poche. Conçue pour les citoyens souhaitant comprendre et faire valoir leurs droits simplement.
-              </p>
-            </div>
-          </div>
+    <div class="mt-6 flex flex-wrap items-center justify-center gap-x-2 gap-y-2 text-sm">
+      <span class="text-on-surface-variant">Ou parcourez :</span>
+      {quickLinks.map((link) => (
+        <a href={link.href} class="inline-flex items-center px-3 py-1.5 rounded-full border border-surface-variant text-on-surface hover:border-primary/40 hover:text-primary transition-colors font-medium">
+          {link.label}
         </a>
-
-        <!-- Card: Plateforme Pro -->
-        <a href="https://app.mibeko.fr/" target="_blank" rel="noopener noreferrer" class="group block bg-surface-container-lowest border border-surface-variant rounded-2xl p-6 md:p-8 hover:border-primary/40 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative overflow-hidden ml-0 lg:ml-8">
-          <div class="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300 text-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-          </div>
-
-          <div class="flex items-start gap-5">
-            <div class="w-14 h-14 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center shrink-0 group-hover:bg-secondary group-hover:text-on-secondary transition-colors duration-300">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-            </div>
-            <div>
-              <div class="flex items-center gap-2 mb-2">
-                <h2 class="text-xl font-bold text-on-surface group-hover:text-primary transition-colors">La Plateforme Pro</h2>
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary uppercase tracking-wider">Disponible</span>
-              </div>
-              <p class="text-on-surface-variant text-sm leading-relaxed">
-                Recherche sémantique avancée, veille OHADA automatisée et génération de documents pour les professionnels du droit.
-              </p>
-            </div>
-          </div>
-        </a>
-
-      </div>
-
+      ))}
     </div>
   </div>
 </section>

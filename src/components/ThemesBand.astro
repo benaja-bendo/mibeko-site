@@ -1,0 +1,42 @@
+---
+import ThemeIcon from './ThemeIcon.astro';
+import { fetchThemes, themePath, type ThemeSummary } from '../lib/api';
+
+let themes: ThemeSummary[] = [];
+try {
+  themes = await fetchThemes();
+} catch {
+  themes = [];
+}
+---
+
+{themes.length > 0 && (
+  <section class="py-20 md:py-28 bg-background">
+    <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-2xl mb-12 animate-fade-in-up">
+        <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-3">Par votre situation</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-4">Que vivez-vous en ce moment ?</h2>
+        <p class="text-lg text-on-surface-variant font-serif leading-relaxed">
+          Le droit, rangé par situation de vie plutôt que par code. Entrez par ce qui vous concerne.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {themes.map((theme) => (
+          <a
+            href={themePath(theme.slug)}
+            class="group flex flex-col gap-3 p-5 rounded-2xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:-translate-y-1 hover:shadow-md transition-all"
+          >
+            <span class="w-11 h-11 rounded-xl bg-primary/8 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors">
+              <ThemeIcon name={theme.icon} class="w-5 h-5" />
+            </span>
+            <span class="text-sm font-bold text-on-surface group-hover:text-primary transition-colors leading-snug">{theme.name}</span>
+            {theme.documents_count > 0 && (
+              <span class="text-xs text-outline mt-auto">{theme.documents_count} texte{theme.documents_count > 1 ? 's' : ''}</span>
+            )}
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+)}

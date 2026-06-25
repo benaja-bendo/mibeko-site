@@ -2,18 +2,24 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import HomeHero from '../components/HomeHero.astro';
+import ThemesBand from '../components/ThemesBand.astro';
+import IntentionPillars from '../components/IntentionPillars.astro';
+import AudienceSplit from '../components/AudienceSplit.astro';
 import WhyMibeko from '../components/WhyMibeko.astro';
 import LatestUpdates from '../components/LatestUpdates.astro';
 import CTASection from '../components/CTASection.astro';
 import Footer from '../components/Footer.astro';
 ---
 
-<Layout title="Mibeko — Vos droits, simplifiés. | Plateforme juridique du Congo">
+<Layout title="Mibeko — Le droit congolais, clair et à portée de main">
 	<Header />
 	<main id="main" class="flex-grow">
 		<HomeHero />
-		<WhyMibeko />
+		<ThemesBand />
+		<IntentionPillars />
+		<AudienceSplit />
 		<LatestUpdates />
+		<WhyMibeko />
 		<CTASection />
 	</main>
 	<Footer />

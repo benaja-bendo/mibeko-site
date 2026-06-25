@@ -1,0 +1,51 @@
+---
+const pillars = [
+  {
+    href: '/codes',
+    eyebrow: 'Codes & lois',
+    title: 'Trouver un texte',
+    description: 'Les codes, lois et textes officiels du Congo et de l\'OHADA, consultables article par article.',
+    icon: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>',
+  },
+  {
+    href: '/demarches',
+    eyebrow: 'Démarches',
+    title: 'Suivre une démarche',
+    description: 'Comment faire concrètement, étape par étape, avec les documents à réunir.',
+    icon: '<path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>',
+  },
+  {
+    href: '/ressources',
+    eyebrow: 'Guides',
+    title: 'Comprendre un sujet',
+    description: 'Des explications claires, en français simple, reliées aux textes officiels.',
+    icon: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>',
+  },
+];
+---
+
+<section class="py-20 md:py-28 bg-surface-container-low border-y border-surface-variant/50">
+  <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mb-12 animate-fade-in-up">
+      <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-3">Que cherchez-vous à faire ?</p>
+      <h2 class="text-3xl md:text-4xl font-bold text-on-surface tracking-tight">Trois façons d'utiliser Mibeko</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {pillars.map((p) => (
+        <a href={p.href} class="group flex flex-col p-7 md:p-8 rounded-2xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+          <span class="w-12 h-12 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center mb-5 group-hover:bg-primary group-hover:text-on-primary transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={p.icon}></svg>
+          </span>
+          <span class="text-xs font-semibold uppercase tracking-wider text-outline mb-2">{p.eyebrow}</span>
+          <h3 class="text-xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors">{p.title}</h3>
+          <p class="text-sm text-on-surface-variant font-serif leading-relaxed mb-6 flex-grow">{p.description}</p>
+          <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-primary mt-auto">
+            Explorer
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1 transition-transform"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+          </span>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>

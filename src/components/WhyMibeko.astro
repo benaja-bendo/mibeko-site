@@ -1,4 +1,7 @@
 ---
+import { Image } from 'astro:assets';
+import imgEquipe from '../assets/images/equipe-professionnels.webp';
+
 const reasons = [
   {
     title: 'Sources Officielles',
@@ -36,6 +39,11 @@ const reasons = [
         <p class="text-inverse-primary text-lg font-serif leading-relaxed mb-8 max-w-md">
           Développé avec le soutien de juristes congolais, Mibeko allie l'exigence de la pratique du droit à une technologie de pointe.
         </p>
+
+        <div class="relative rounded-2xl overflow-hidden border border-on-primary/15 shadow-xl max-w-md">
+          <Image src={imgEquipe} alt="Des juristes congolais collaborent autour d'un dossier" width={900} loading="eager" class="w-full h-auto object-cover aspect-[16/10]" />
+          <div class="absolute inset-0 bg-primary/10 mix-blend-multiply pointer-events-none"></div>
+        </div>
       </div>
 
       <!-- Reasons Grid -->

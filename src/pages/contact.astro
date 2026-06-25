@@ -1,8 +1,12 @@
 ---
+export const prerender = false;
+
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import PageHeader from '../components/PageHeader.astro';
 import Footer from '../components/Footer.astro';
+
+const status = Astro.url.searchParams.get('status');
 
 const infos = [
   {
@@ -18,9 +22,9 @@ const infos = [
     icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>`,
   },
   {
-    label: 'Espace Pro',
-    value: 'Demander une démo',
-    href: 'app.mibeko.fr',
+    label: 'Professionnels',
+    value: 'Demander une démo de l\'espace Pro',
+    href: 'https://app.mibeko.fr/',
     icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>`,
   },
 ];
@@ -28,17 +32,17 @@ const infos = [
 
 <Layout
 	title="Contact — Mibeko"
-	description="Une question, un partenariat, une démo de l'offre professionnelle ? Contactez l'équipe Mibeko. Nous répondons sous 48 heures ouvrées."
+	description="Une question sur vos droits, un partenariat ou une démo de l'offre professionnelle ? Écrivez à l'équipe Mibeko. Réponse sous 48 heures ouvrées."
 >
 	<Header />
 	<main id="main" class="flex-grow">
 		<PageHeader
 			eyebrow="Contact"
-			title="Parlons de vos besoins"
-			subtitle="Citoyen, professionnel du droit ou partenaire : écrivez-nous. Nous répondons généralement sous 48 heures ouvrées."
+			title="Une question ? Écrivez-nous"
+			subtitle="Citoyen, professionnel du droit, entreprise ou institution : nous sommes là. Réponse généralement sous 48 heures ouvrées."
 		/>
 
-		<section class="py-16 md:py-20 bg-background">
+		<section id="contact" class="py-16 md:py-20 bg-background">
 			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-16">
 				<!-- Infos -->
 				<div class="lg:col-span-2 flex flex-col gap-6">
@@ -58,46 +62,74 @@ const infos = [
 
 					<div class="mt-2 p-5 rounded-xl bg-surface-container-low border border-surface-variant">
 						<p class="text-sm text-on-surface-variant leading-relaxed">
-							<strong class="text-on-surface">Mibeko</strong> est une plateforme LegalTech qui démocratise l'accès au droit en République du Congo et dans l'espace OHADA.
+							<strong class="text-on-surface">Besoin d'un texte précis ?</strong> Avant de nous écrire, la réponse est peut-être déjà dans le fonds : <a href="/recherche" class="text-secondary font-medium hover:underline">la recherche</a> couvre tous les textes publiés.
 						</p>
 					</div>
 				</div>
 
 				<!-- Form -->
 				<div class="lg:col-span-3">
-					<form id="contact-form" class="bg-white border border-surface-variant rounded-xl p-6 md:p-8 flex flex-col gap-5">
+					{status === 'ok' && (
+						<div class="mb-6 flex items-start gap-3 p-5 rounded-xl bg-primary/10 border border-primary/20">
+							<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary shrink-0 mt-0.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="m9 11 3 3L22 4"></path></svg>
+							<div>
+								<p class="font-semibold text-on-surface">Message envoyé</p>
+								<p class="text-sm text-on-surface-variant">Merci, nous avons bien reçu votre message et vous répondrons rapidement.</p>
+							</div>
+						</div>
+					)}
+					{status === 'invalid' && (
+						<div class="mb-6 flex items-start gap-3 p-5 rounded-xl bg-secondary/10 border border-secondary/20">
+							<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-secondary shrink-0 mt-0.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" x2="12" y1="9" y2="13"></line><line x1="12" x2="12.01" y1="17" y2="17"></line></svg>
+							<div>
+								<p class="font-semibold text-on-surface">Vérifiez votre message</p>
+								<p class="text-sm text-on-surface-variant">Un e-mail valide et un message d'au moins 10 caractères sont nécessaires. Corrigez les champs ci-dessous, puis renvoyez.</p>
+							</div>
+						</div>
+					)}
+					{status === 'error' && (
+						<div class="mb-6 flex items-start gap-3 p-5 rounded-xl bg-secondary/10 border border-secondary/20">
+							<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-secondary shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg>
+							<div>
+								<p class="font-semibold text-on-surface">L'envoi a échoué</p>
+								<p class="text-sm text-on-surface-variant">Un problème technique nous a empêchés d'enregistrer votre message. Réessayez dans un instant, ou écrivez-nous directement à <a href="mailto:contact@mibeko.fr" class="text-secondary font-medium hover:underline">contact@mibeko.fr</a>.</p>
+							</div>
+						</div>
+					)}
+
+					<form action="/api/contact" method="post" class="bg-white border border-surface-variant rounded-xl p-6 md:p-8 flex flex-col gap-5">
 						<div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
 							<div class="flex flex-col gap-2">
 								<label for="name" class="text-sm font-medium text-on-surface">Nom complet</label>
-								<input id="name" name="name" type="text" required class="h-11 px-4 rounded border border-outline-variant bg-white text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
+								<input id="name" name="name" type="text" required maxlength="120" class="h-11 px-4 rounded border border-outline-variant bg-white text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
 							</div>
 							<div class="flex flex-col gap-2">
 								<label for="email" class="text-sm font-medium text-on-surface">E-mail</label>
-								<input id="email" name="email" type="email" required class="h-11 px-4 rounded border border-outline-variant bg-white text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
+								<input id="email" name="email" type="email" required maxlength="180" class="h-11 px-4 rounded border border-outline-variant bg-white text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
 							</div>
 						</div>
 
 						<div class="flex flex-col gap-2">
 							<label for="profile" class="text-sm font-medium text-on-surface">Vous êtes</label>
 							<select id="profile" name="profile" class="h-11 px-4 rounded border border-outline-variant bg-white text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
-								<option>Un particulier</option>
-								<option>Un professionnel du droit</option>
-								<option>Un partenaire / une institution</option>
-								<option>Autre</option>
+								<option value="citoyen">Un particulier</option>
+								<option value="professionnel">Un professionnel du droit</option>
+								<option value="entreprise">Une entreprise ou institution</option>
+								<option value="autre">Autre</option>
 							</select>
 						</div>
 
 						<div class="flex flex-col gap-2">
 							<label for="message" class="text-sm font-medium text-on-surface">Message</label>
-							<textarea id="message" name="message" rows="5" required class="px-4 py-3 rounded border border-outline-variant bg-white text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-y"></textarea>
+							<textarea id="message" name="message" rows="5" required minlength="10" maxlength="5000" class="px-4 py-3 rounded border border-outline-variant bg-white text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-y"></textarea>
 						</div>
 
 						<button type="submit" class="inline-flex items-center justify-center h-12 px-6 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">
 							Envoyer le message
 						</button>
 
-						<p id="form-note" class="text-xs text-on-surface-variant">
-							En envoyant ce formulaire, votre logiciel de messagerie s'ouvrira avec votre message pré-rempli à destination de contact@mibeko.fr.
+						<p class="text-xs text-on-surface-variant">
+							Vos données ne servent qu'à traiter votre demande, conformément à la loi n°29-2019 sur la protection des données personnelles.
 						</p>
 					</form>
 				</div>
@@ -106,18 +138,3 @@ const infos = [
 	</main>
 	<Footer />
 </Layout>
-
-<script>
-	const form = document.getElementById('contact-form') as HTMLFormElement | null;
-	form?.addEventListener('submit', (e) => {
-		e.preventDefault();
-		const data = new FormData(form);
-		const name = String(data.get('name') ?? '');
-		const email = String(data.get('email') ?? '');
-		const profile = String(data.get('profile') ?? '');
-		const message = String(data.get('message') ?? '');
-		const subject = encodeURIComponent(`Contact Mibeko — ${name} (${profile})`);
-		const body = encodeURIComponent(`Nom : ${name}\nE-mail : ${email}\nProfil : ${profile}\n\n${message}`);
-		window.location.href = `mailto:contact@mibeko.fr?subject=${subject}&body=${body}`;
-	});
-</script>

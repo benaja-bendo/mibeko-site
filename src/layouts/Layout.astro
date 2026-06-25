@@ -5,26 +5,53 @@ interface Props {
 	title: string;
 	description?: string;
 	image?: string;
+	ogType?: string;
+	canonical?: string;
+	jsonLd?: Record<string, unknown>[];
+	noindex?: boolean;
 }
 
 const {
 	title,
 	description = "Mibeko : la plateforme juridique du Congo et de l'espace OHADA. Recherchez, comprenez et agissez sur vos droits — pour les citoyens comme pour les professionnels du droit.",
 	image = '/logo.svg',
+	ogType = 'website',
+	canonical: canonicalProp,
+	jsonLd = [],
+	noindex = false,
 } = Astro.props;
 
-const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
+const canonical = canonicalProp ?? new URL(Astro.url.pathname, siteOrigin).href;
+const siteRoot = new URL('/', siteOrigin).href;
 const siteName = 'Mibeko';
 
 const orgJsonLd = {
 	'@context': 'https://schema.org',
 	'@type': 'Organization',
 	name: 'Mibeko',
-	url: canonical,
-	logo: new URL('/logo.svg', Astro.site ?? Astro.url.origin).href,
+	url: siteRoot,
+	logo: new URL('/logo.svg', siteOrigin).href,
 	description,
 	slogan: 'Vos droits, simplifiés.',
 	areaServed: 'CG',
+};
+
+// Boîte de recherche Google (sitelinks searchbox) → page /recherche.
+const websiteJsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'WebSite',
+	name: 'Mibeko',
+	url: siteRoot,
+	inLanguage: 'fr',
+	potentialAction: {
+		'@type': 'SearchAction',
+		target: {
+			'@type': 'EntryPoint',
+			urlTemplate: `${siteRoot}recherche?q={search_term_string}`,
+		},
+		'query-input': 'required name=search_term_string',
+	},
 };
 ---
 
@@ -36,13 +63,14 @@ const orgJsonLd = {
 		<link rel="icon" type="image/svg+xml" href="/logo.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<link rel="canonical" href={canonical} />
+		{noindex && <meta name="robots" content="noindex, follow" />}
 
 		<title>{title}</title>
 		<meta name="description" content={description} />
 		<meta name="theme-color" content="#03271a" />
 
 		<!-- Open Graph -->
-		<meta property="og:type" content="website" />
+		<meta property="og:type" content={ogType} />
 		<meta property="og:site_name" content={siteName} />
 		<meta property="og:title" content={title} />
 		<meta property="og:description" content={description} />
@@ -62,6 +90,10 @@ const orgJsonLd = {
 		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
 
 		<script type="application/ld+json" set:html={JSON.stringify(orgJsonLd)} />
+		<script type="application/ld+json" set:html={JSON.stringify(websiteJsonLd)} />
+		{jsonLd.map((schema) => (
+			<script type="application/ld+json" set:html={JSON.stringify(schema)} />
+		))}
 	</head>
 	<body class="antialiased min-h-screen flex flex-col selection:bg-primary selection:text-on-primary">
 		<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-on-primary focus:rounded">

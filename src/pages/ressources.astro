@@ -3,140 +3,155 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import CTASection from '../components/CTASection.astro';
 import Footer from '../components/Footer.astro';
-import { articles, categories } from '../data/articles';
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
 
-// Séparer le premier article (à mettre en avant) du reste
-const featuredArticle = articles[0];
-const restArticles = articles.slice(1);
+const guides = (await getCollection('guides', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.publishedDate.getTime() - a.data.publishedDate.getTime(),
+);
+
+const featured = guides.find((g) => g.data.featured) ?? guides[0];
+const rest = featured ? guides.filter((g) => g.id !== featured.id) : guides;
+const categories = ['Tout', ...Array.from(new Set(guides.map((g) => g.data.category)))];
+
+const dateFmt = (d: Date) => new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
 ---
 
 <Layout
-	title="Ressources & actualités juridiques — Mibeko"
-	description="Veille juridique, guides pratiques et actualités du droit congolais et OHADA. Comprenez vos droits grâce à des explications claires, en français simple."
+	title="Guides juridiques — Mibeko"
+	description="Guides pratiques et repères du droit congolais et OHADA, expliqués en français simple. Comprenez vos droits, puis consultez les textes officiels dans le fonds Mibeko."
 >
 	<Header />
 	<main id="main" class="flex-grow">
-		
-		<!-- Hero Section Ressources -->
+
 		<section class="pt-20 pb-12 md:pt-28 md:pb-16 bg-background relative overflow-hidden">
-      <!-- Decor -->
       <div class="absolute inset-0 pointer-events-none z-0">
         <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-secondary/5 rounded-[100%] blur-3xl"></div>
       </div>
-
 			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center animate-fade-in-up">
         <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-4">Mibeko Insights</p>
-				<h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-on-surface tracking-tight mb-6">
-          Actualités & Guides Juridiques
-        </h1>
+				<h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-on-surface tracking-tight mb-6">Guides juridiques</h1>
 				<p class="text-lg md:text-xl text-on-surface-variant font-serif max-w-2xl mx-auto leading-relaxed">
-          La veille juridique du Congo et de l'espace OHADA. Décryptée pour les professionnels, simplifiée pour tous.
+          Le droit du Congo et de l'espace OHADA, expliqué simplement — puis relié aux textes officiels du fonds.
         </p>
 			</div>
 		</section>
 
-		<!-- Filters -->
-		<section class="pb-12 bg-background sticky top-[79px] z-40 backdrop-blur-md bg-background/90 border-b border-surface-variant/40">
-			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap justify-center gap-2 md:gap-3">
-				{categories.map((cat, i) => (
-					<button class:list={[
-						"inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-all duration-300",
-						i === 0 
-              ? "bg-primary text-on-primary shadow-md hover:bg-primary-container" 
-              : "bg-surface-container-lowest border border-surface-variant text-on-surface hover:border-primary/30 hover:text-primary"
-					]}>
-            {cat}
-          </button>
-				))}
-			</div>
-		</section>
+		{guides.length === 0 ? (
+			<section class="py-24 text-center">
+				<p class="text-on-surface-variant">Les premiers guides arrivent bientôt.</p>
+			</section>
+		) : (
+			<>
+				<section class="pb-12 bg-background sticky top-[79px] z-40 backdrop-blur-md bg-background/90 border-b border-surface-variant/40">
+					<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap justify-center gap-2 md:gap-3" data-filters>
+						{categories.map((cat, i) => (
+							<button
+								type="button"
+								data-filter={cat}
+								class:list={[
+									"filter-btn inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-all duration-300",
+									i === 0
+										? "bg-primary text-on-primary shadow-md"
+										: "bg-surface-container-lowest border border-surface-variant text-on-surface hover:border-primary/30 hover:text-primary"
+								]}
+							>{cat}</button>
+						))}
+					</div>
+				</section>
 
-		<!-- Articles Section -->
-		<section class="py-16 md:py-24 bg-surface-container-low">
-			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
-				
-        <!-- Featured Article -->
-        <article class="mb-16 md:mb-24 bg-surface-container-lowest rounded-3xl border border-surface-variant overflow-hidden group hover:shadow-xl hover:border-primary/30 transition-all duration-500 animate-fade-in-up">
-          <div class="grid grid-cols-1 lg:grid-cols-2">
-            <div class="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
-              <div class="flex items-center gap-3 mb-6">
-                <span class="inline-flex items-center px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-bold tracking-wide uppercase">
-                  À la une • {featuredArticle.tag}
-                </span>
-                <span class="text-sm text-on-surface-variant font-medium">{featuredArticle.date}</span>
+				<section class="py-16 md:py-24 bg-surface-container-low">
+					<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+
+						{featured && (
+							<article data-card data-category={featured.data.category} class="mb-16 md:mb-24 bg-surface-container-lowest rounded-3xl border border-surface-variant overflow-hidden group hover:shadow-xl hover:border-primary/30 transition-all duration-500 animate-fade-in-up relative">
+								<div class="grid grid-cols-1 lg:grid-cols-2">
+									<div class="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+										<div class="flex items-center gap-3 mb-6">
+											<span class="inline-flex items-center px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-bold tracking-wide uppercase">À la une • {featured.data.category}</span>
+											<span class="text-sm text-on-surface-variant font-medium">{dateFmt(featured.data.publishedDate)}</span>
+										</div>
+										<h2 class="text-3xl md:text-4xl font-bold text-on-surface mb-6 leading-tight group-hover:text-primary transition-colors">
+											<a href={`/ressources/${featured.id}`} class="before:absolute before:inset-0">{featured.data.title}</a>
+										</h2>
+										<p class="text-lg text-on-surface-variant font-serif leading-relaxed mb-8">{featured.data.description}</p>
+										<div class="inline-flex items-center gap-2 text-primary font-semibold mt-auto">
+											Lire le guide
+											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-2 transition-transform duration-300"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+										</div>
+									</div>
+									<div class="relative bg-primary/5 border-l border-surface-variant/50 overflow-hidden min-h-[300px] lg:min-h-full">
+										{featured.data.cover && (
+											<Image src={featured.data.cover} alt={featured.data.title} width={1120} loading="eager" class="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700 ease-out" />
+										)}
+										<div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+									</div>
+								</div>
+							</article>
+						)}
+
+						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+							{rest.map((guide) => (
+								<article data-card data-category={guide.data.category} class="bg-surface-container-lowest border border-surface-variant rounded-2xl flex flex-col hover:border-secondary/40 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 group relative overflow-hidden">
+									{guide.data.cover && (
+										<div class="w-full h-48 overflow-hidden bg-surface-container-low border-b border-surface-variant relative">
+											<Image src={guide.data.cover} alt={guide.data.title} width={720} loading="eager" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" />
+										</div>
+									)}
+									<div class="p-6 md:p-8 flex flex-col flex-grow">
+										<div class="flex items-center justify-between gap-3 mb-5">
+											<span class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-semibold uppercase tracking-wider group-hover:bg-secondary/10 group-hover:text-secondary transition-colors">{guide.data.category}</span>
+											<span class="text-xs text-outline font-medium">{dateFmt(guide.data.publishedDate)}</span>
+										</div>
+										<h3 class="text-xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors leading-snug">
+											<a href={`/ressources/${guide.id}`} class="before:absolute before:inset-0">{guide.data.title}</a>
+										</h3>
+										<p class="text-sm text-on-surface-variant font-serif leading-relaxed mb-6 flex-grow line-clamp-3">{guide.data.description}</p>
+										<div class="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-secondary">
+											Lire le guide
+											<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1.5 transition-transform duration-300"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+										</div>
+									</div>
+								</article>
+							))}
+						</div>
+
+						<div class="mt-20 text-center animate-fade-in-up">
+              <div class="inline-flex flex-col items-center justify-center p-8 border border-dashed border-outline-variant/60 rounded-2xl bg-background max-w-2xl mx-auto">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-outline mb-4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <h4 class="text-lg font-bold text-on-surface mb-2">Vous cherchez un texte précis ?</h4>
+                <p class="text-sm text-on-surface-variant mb-6">Au-delà des guides, tout le fonds juridique est consultable et recherchable.</p>
+                <a href="/codes" class="inline-flex items-center h-10 px-5 bg-surface-container text-on-surface font-semibold rounded hover:bg-surface-container-high transition-colors text-sm">Parcourir le fonds</a>
               </div>
-              <h2 class="text-3xl md:text-4xl font-bold text-on-surface mb-6 leading-tight group-hover:text-primary transition-colors">
-                <a href={`/ressources/${featuredArticle.id}`} class="before:absolute before:inset-0">
-                  {featuredArticle.title}
-                </a>
-              </h2>
-              <p class="text-lg text-on-surface-variant font-serif leading-relaxed mb-8">
-                {featuredArticle.description}
-              </p>
-              <div class="inline-flex items-center gap-2 text-primary font-semibold mt-auto">
-                Lire l'article complet
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-2 transition-transform duration-300"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-              </div>
-            </div>
-            <!-- Decorative Visual for Featured -->
-            <div class="relative bg-primary/5 border-l border-surface-variant/50 overflow-hidden min-h-[300px] lg:min-h-full">
-              <img src={featuredArticle.imageUrl} alt={featuredArticle.title} class="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700 ease-out" />
-              <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-            </div>
-          </div>
-        </article>
+						</div>
+					</div>
+				</section>
+			</>
+		)}
 
-        <!-- Grid Articles -->
-				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-					{restArticles.map((article, index) => (
-						<article class={`bg-surface-container-lowest border border-surface-variant rounded-2xl flex flex-col hover:border-secondary/40 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 group animate-fade-in-up animation-delay-${(index % 3 + 1) * 100} relative overflow-hidden`}>
-              {article.imageUrl && (
-                <div class="w-full h-48 overflow-hidden bg-surface-container-low border-b border-surface-variant relative">
-                  <img src={article.imageUrl} alt={article.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" />
-                  <div class="absolute inset-0 bg-[url('/noise.svg')] opacity-10 mix-blend-overlay"></div>
-                </div>
-              )}
-							<div class="p-6 md:p-8 flex flex-col flex-grow">
-                <div class="flex items-center justify-between gap-3 mb-5">
-                  <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-semibold uppercase tracking-wider group-hover:bg-secondary/10 group-hover:text-secondary transition-colors">
-                    {article.tag}
-                  </span>
-                  <span class="text-xs text-outline font-medium">{article.date}</span>
-                </div>
-                <h3 class="text-xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors leading-snug">
-                  <a href={`/ressources/${article.id}`} class="before:absolute before:inset-0">
-                    {article.title}
-                  </a>
-                </h3>
-                <p class="text-sm text-on-surface-variant font-serif leading-relaxed mb-6 flex-grow line-clamp-3">
-                  {article.description}
-                </p>
-                <div class="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-secondary">
-                  Lire l'article
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1.5 transition-transform duration-300"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-                </div>
-              </div>
-						</article>
-					))}
-				</div>
-
-				<div class="mt-20 text-center animate-fade-in-up">
-          <div class="inline-flex flex-col items-center justify-center p-8 border border-dashed border-outline-variant/60 rounded-2xl bg-background max-w-2xl mx-auto">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-outline mb-4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-            <h4 class="text-lg font-bold text-on-surface mb-2">Vous cherchez un sujet précis ?</h4>
-            <p class="text-sm text-on-surface-variant mb-6">Notre équipe juridique enrichit la base Mibeko chaque semaine.</p>
-            <a href="/contact" class="inline-flex items-center h-10 px-5 bg-surface-container text-on-surface font-semibold rounded hover:bg-surface-container-high transition-colors text-sm">
-              Suggérer un article
-            </a>
-          </div>
-				</div>
-			</div>
-		</section>
-
-		<CTASection
-			title="Ne manquez aucune évolution du droit"
-			text="Avec Mibeko, recevez les actualités juridiques qui vous concernent directement dans votre espace."
-		/>
+		<CTASection title="Ne manquez aucune évolution du droit" text="Avec Mibeko, recevez les actualités juridiques qui vous concernent directement dans votre espace." />
 	</main>
 	<Footer />
 </Layout>
+
+<script>
+	const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('.filter-btn'));
+	const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-card]'));
+	const active = ['bg-primary', 'text-on-primary', 'shadow-md'];
+	const idle = ['bg-surface-container-lowest', 'border', 'border-surface-variant', 'text-on-surface'];
+
+	buttons.forEach((btn) => {
+		btn.addEventListener('click', () => {
+			const filter = btn.dataset.filter ?? 'Tout';
+			buttons.forEach((b) => {
+				const on = b === btn;
+				active.forEach((c) => b.classList.toggle(c, on));
+				idle.forEach((c) => b.classList.toggle(c, !on));
+			});
+			cards.forEach((card) => {
+				const show = filter === 'Tout' || card.dataset.category === filter;
+				card.classList.toggle('hidden', !show);
+			});
+		});
+	});
+</script>
