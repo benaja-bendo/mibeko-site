@@ -1,0 +1,224 @@
+---
+export const prerender = false;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DocumentTree from '../../../components/DocumentTree.astro';
+import { fetchPublicDocument, buildTree, documentPath, pdfProxyUrl } from '../../../lib/api';
+
+const { doc } = Astro.params;
+const payload = doc ? await fetchPublicDocument(doc) : null;
+const notFound = !payload;
+
+if (notFound) {
+  Astro.response.status = 404;
+}
+
+const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
+const document = payload?.document;
+const articles = payload?.articles ?? [];
+const tree = buildTree(payload?.structure);
+const sectionCount = (payload?.structure?.nodes ?? []).length;
+const hasPdf = Boolean(payload?.has_pdf);
+const pdfUrl = document && hasPdf ? pdfProxyUrl(document.id) : null;
+const pdfDownloadUrl = document && hasPdf ? pdfProxyUrl(document.id, { download: true }) : null;
+
+const typeName = document?.type?.name ?? 'Texte juridique';
+const selfUrl = document ? new URL(documentPath(document.slug), siteOrigin).href : '';
+
+const dateFmt = (iso?: string | null) =>
+  iso ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso)) : null;
+
+const journal = document?.official_journal;
+const journalDate = journal?.publication_date
+  ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(journal.publication_date))
+  : null;
+
+const scopeLabel: Record<string, string> = {
+  national: 'National',
+  ohada: 'OHADA',
+  communautaire: 'Communautaire',
+};
+
+const legislationLd = document
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'Legislation',
+      name: document.titre_officiel,
+      legislationType: typeName,
+      legislationJurisdiction: { '@type': 'AdministrativeArea', name: 'République du Congo' },
+      inLanguage: 'fr',
+      url: selfUrl,
+      ...(document.reference_nor ? { legislationIdentifier: document.reference_nor } : {}),
+      ...(document.date_publication ? { datePublished: document.date_publication } : {}),
+    }
+  : null;
+
+const breadcrumbLd = document
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Accueil', item: new URL('/', siteOrigin).href },
+        { '@type': 'ListItem', position: 2, name: 'Textes officiels', item: new URL('/textes', siteOrigin).href },
+        { '@type': 'ListItem', position: 3, name: document.titre_officiel, item: selfUrl },
+      ],
+    }
+  : null;
+
+const jsonLd = [legislationLd, breadcrumbLd].filter(Boolean) as Record<string, unknown>[];
+
+const btnPrimary = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary text-on-primary font-semibold text-sm hover:bg-primary-container transition-colors';
+const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl border border-surface-variant bg-surface-container-lowest text-on-surface font-semibold text-sm hover:border-primary/40 transition-colors';
+const btnAccent = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl border border-secondary/40 bg-secondary/5 text-secondary font-semibold text-sm hover:bg-secondary/10 transition-colors';
+---
+
+<Layout
+  title={notFound ? 'Texte introuvable — Mibeko' : `${document!.titre_officiel} — Mibeko`}
+  description={notFound
+    ? "Ce texte n'est pas disponible dans le fonds Mibeko."
+    : `${document!.titre_officiel} — ${typeName} de la République du Congo. ${articles.length} articles, consultables librement sur Mibeko.`}
+  ogType="article"
+  canonical={selfUrl || undefined}
+  jsonLd={jsonLd}
+>
+  <Header />
+  <main id="main" class="flex-grow bg-background">
+    {notFound ? (
+      <section class="max-w-[700px] mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
+        <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-4">Erreur 404</p>
+        <h1 class="text-3xl md:text-4xl font-bold text-on-surface mb-6">Ce texte est introuvable</h1>
+        <a href="/textes" class="inline-flex items-center h-11 px-6 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">
+          Parcourir le fonds juridique
+        </a>
+      </section>
+    ) : (
+      <div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+
+        <nav aria-label="Fil d'Ariane" class="text-sm text-on-surface-variant mb-5 flex flex-wrap items-center gap-1.5">
+          <a href="/" class="hover:text-primary transition-colors">Accueil</a>
+          <span class="text-outline">/</span>
+          <a href="/textes" class="hover:text-primary transition-colors">Textes officiels</a>
+          <span class="text-outline">/</span>
+          <span class="text-on-surface font-medium line-clamp-1">{document!.titre_officiel}</span>
+        </nav>
+
+        <!-- Bandeau-titre (masthead) -->
+        <header class="relative overflow-hidden rounded-3xl border border-surface-variant bg-surface-container-lowest p-6 sm:p-8 md:p-10 mb-6">
+          <svg aria-hidden="true" class="hidden sm:block absolute -right-8 -top-10 text-primary/[0.04] pointer-events-none" width="280" height="280" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="m5 21 1-9 6-4 6 4 1 9"></path><path d="M12 8V3"></path><path d="M9 3h6"></path><path d="M8 12h8"></path><path d="M8 16h8"></path></svg>
+          <div class="relative max-w-[44rem]">
+            <div class="flex flex-wrap items-center gap-2 mb-4">
+              <span class="inline-flex items-center px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-bold tracking-wide uppercase">{typeName}</span>
+              {document!.legal_scope && scopeLabel[document!.legal_scope] && (
+                <span class="inline-flex items-center px-3 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-medium">{scopeLabel[document!.legal_scope]}</span>
+              )}
+              {document!.date_publication && <span class="text-xs sm:text-sm text-on-surface-variant">Publié le {dateFmt(document!.date_publication)}</span>}
+              {document!.reference_nor && <span class="text-xs sm:text-sm text-outline">Réf. {document!.reference_nor}</span>}
+            </div>
+
+            <h1 class="font-serif text-[1.75rem] leading-[1.15] sm:text-4xl md:text-[2.6rem] md:leading-[1.1] font-semibold text-on-surface tracking-tight mb-5">{document!.titre_officiel}</h1>
+
+            <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-on-surface-variant mb-6">
+              <span class="inline-flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-outline"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
+                <span><span class="font-semibold text-on-surface">{articles.length}</span> articles</span>
+              </span>
+              {sectionCount > 0 && (
+                <span class="inline-flex items-center gap-1.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-outline"><line x1="8" x2="21" y1="6" y2="6"></line><line x1="8" x2="21" y1="12" y2="12"></line><line x1="8" x2="21" y1="18" y2="18"></line><line x1="3" x2="3.01" y1="6" y2="6"></line><line x1="3" x2="3.01" y1="12" y2="12"></line><line x1="3" x2="3.01" y1="18" y2="18"></line></svg>
+                  <span><span class="font-semibold text-on-surface">{sectionCount}</span> divisions</span>
+                </span>
+              )}
+              {document!.institution?.nom && (
+                <span class="inline-flex items-center gap-1.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-outline"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path></svg>
+                  {document!.institution.nom}
+                </span>
+              )}
+            </div>
+
+            {journal && (
+              <div class="inline-flex items-start gap-2.5 rounded-xl border border-secondary/20 bg-secondary/[0.06] px-3.5 py-2.5 mb-6">
+                <svg class="shrink-0 mt-0.5 text-secondary" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8V6Z"></path></svg>
+                <p class="text-sm text-on-surface-variant leading-snug">
+                  <span class="text-on-surface font-semibold">Source officielle</span> · {journal.title}{journalDate ? ` — ${journalDate}` : ''}
+                </p>
+              </div>
+            )}
+
+            <div class="flex flex-wrap gap-2.5">
+              {pdfUrl && (
+                <a href="#pdf-original" class={`${btnPrimary} lg:hidden`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v5h5"></path></svg>
+                  Voir le PDF original
+                </a>
+              )}
+              {pdfDownloadUrl && (
+                <a href={pdfDownloadUrl} class={btnGhost}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>
+                  Télécharger le PDF
+                </a>
+              )}
+              <a href="https://app.mibeko.fr/" target="_blank" rel="noopener noreferrer" class={btnAccent}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path></svg>
+                Expliquer avec l'IA
+              </a>
+            </div>
+          </div>
+        </header>
+
+        <!-- Lecteur : sommaire navigable + PDF original (côte à côte sur desktop) -->
+        <div class:list={['grid gap-6', hasPdf ? 'lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]' : '']}>
+
+          <section aria-label="Sommaire" class="rounded-2xl border border-surface-variant bg-surface-container-lowest overflow-hidden">
+            <div class="flex items-center gap-2 h-12 px-4 border-b border-surface-variant bg-surface-container-low">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-secondary"><line x1="8" x2="21" y1="6" y2="6"></line><line x1="8" x2="21" y1="12" y2="12"></line><line x1="8" x2="21" y1="18" y2="18"></line><line x1="3" x2="3.01" y1="6" y2="6"></line><line x1="3" x2="3.01" y1="12" y2="12"></line><line x1="3" x2="3.01" y1="18" y2="18"></line></svg>
+              <span class="text-xs font-bold uppercase tracking-[0.08em] text-on-surface-variant">Sommaire</span>
+            </div>
+            {tree.length > 0 ? (
+              <div class="p-2 sm:p-3 lg:max-h-[76vh] lg:overflow-y-auto">
+                <DocumentTree nodes={tree} slug={document!.slug} />
+              </div>
+            ) : (
+              <p class="p-6 text-on-surface-variant italic">Aucun article publié pour ce texte.</p>
+            )}
+          </section>
+
+          {pdfUrl && (
+            <aside id="pdf-original" class="lg:sticky lg:top-24 lg:self-start scroll-mt-24">
+              <div class="rounded-2xl border border-surface-variant overflow-hidden bg-surface-container-lowest">
+                <div class="flex items-center gap-2 h-12 px-4 border-b border-surface-variant bg-surface-container-low">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-secondary"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v5h5"></path></svg>
+                  <span class="text-xs font-bold uppercase tracking-[0.08em] text-on-surface-variant flex-1">PDF original</span>
+                  <a href={pdfUrl} target="_blank" rel="noopener noreferrer" aria-label="Ouvrir le PDF dans un nouvel onglet" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg>
+                  </a>
+                </div>
+                <!-- Desktop : intégration directe -->
+                <iframe
+                  src={pdfUrl}
+                  title={`PDF original — ${document!.titre_officiel}`}
+                  loading="lazy"
+                  class="hidden lg:block w-full h-[72vh] bg-surface-container-low"
+                ></iframe>
+                <!-- Mobile : ouverture native (rendu PDF embarqué peu fiable sur mobile) -->
+                <a href={pdfUrl} target="_blank" rel="noopener noreferrer" class="lg:hidden flex items-center gap-4 p-5 hover:bg-surface-container-low transition-colors">
+                  <span class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-secondary/10 text-secondary shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v5h5"></path></svg>
+                  </span>
+                  <span class="flex flex-col">
+                    <span class="font-semibold text-on-surface">Ouvrir le PDF original</span>
+                    <span class="text-sm text-on-surface-variant">Le document source, tel que publié.</span>
+                  </span>
+                </a>
+              </div>
+            </aside>
+          )}
+        </div>
+
+      </div>
+    )}
+  </main>
+  <Footer />
+</Layout>

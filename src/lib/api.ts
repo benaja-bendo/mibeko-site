@@ -57,9 +57,44 @@ export interface CurrentArticle {
   related?: RelatedText[];
 }
 
+/** Référence légère d'un article dans le sommaire (numéro seul, sans texte). */
+export interface StructureArticleRef {
+  number: string;
+  order: number;
+}
+
+/** Nœud de structure brut (à plat) renvoyé par l'API. */
+export interface StructureNodeRaw {
+  id: string;
+  parent_id: string | null;
+  type: string | null;
+  number: string | null;
+  title: string | null;
+  order: number;
+  articles: StructureArticleRef[];
+}
+
+export interface PublicStructure {
+  nodes: StructureNodeRaw[];
+  orphan_articles: StructureArticleRef[];
+}
+
+/** Nœud de sommaire imbriqué (reconstruit côté client par {@link buildTree}). */
+export interface TreeNode {
+  id: string;
+  type: string | null;
+  number: string | null;
+  title: string | null;
+  order: number;
+  articles: StructureArticleRef[];
+  children: TreeNode[];
+}
+
 export interface PublicDocument {
   document: DocumentMeta;
   articles: ArticleIndexItem[];
+  structure?: PublicStructure;
+  has_pdf?: boolean;
   current_article: CurrentArticle | null;
 }
 
@@ -67,6 +102,22 @@ interface Envelope<T> {
   success: boolean;
   message: string | null;
   data: T;
+}
+
+interface PaginatedEnvelope<T> extends Envelope<T> {
+  pagination?: {
+    total: number;
+    per_page: number;
+    current_page: number;
+    last_page: number;
+  };
+}
+
+export interface PaginationMeta {
+  total: number;
+  perPage: number;
+  currentPage: number;
+  lastPage: number;
 }
 
 /**
@@ -106,25 +157,130 @@ export async function fetchPublicDocument(
   return data;
 }
 
+export interface DocumentListFilters {
+  /** Code du type de texte (CODE, LOI, ARRETE, DECRET…). */
+  type?: string;
+  /** Périmètre juridique (national, ohada, communautaire). */
+  scope?: string;
+  /** Année de publication minimale (incluse). */
+  yearFrom?: number;
+  /** Année de publication maximale (incluse). */
+  yearTo?: number;
+  /** Champ de tri (préfixe `-` pour décroissant). */
+  sort?: string;
+  page?: number;
+  perPage?: number;
+}
+
+export interface DocumentListResult {
+  items: DocumentMeta[];
+  meta: PaginationMeta;
+}
+
 /**
- * Liste les documents publiés du fonds (catalogue `/codes`). Non paginé pour
- * l'instant (limité à `perPage`) ; à paginer quand le fonds grandira.
+ * Liste paginée et filtrée des documents publiés du fonds (catalogue `/textes`).
+ * Les filtres (type, périmètre, années) et la pagination sont délégués à l'API
+ * (`allowedFilters` côté Laravel). Le tri par défaut est alphabétique.
  */
-export async function fetchPublishedDocuments(perPage = 100, sort = 'titre_officiel'): Promise<DocumentMeta[]> {
+export async function fetchPublishedDocuments(filters: DocumentListFilters = {}): Promise<DocumentListResult> {
+  const { type, scope, yearFrom, yearTo, sort = 'titre_officiel', page = 1, perPage = 24 } = filters;
+
   const url = new URL(`${API_BASE}/legal-documents`);
   url.searchParams.set('filter[curation_status]', 'published');
+  if (type) url.searchParams.set('filter[type_code]', type);
+  if (scope) url.searchParams.set('filter[legal_scope]', scope);
+  if (yearFrom) url.searchParams.set('filter[date_from]', `${yearFrom}-01-01`);
+  if (yearTo) url.searchParams.set('filter[date_to]', `${yearTo}-12-31`);
   url.searchParams.set('sort', sort);
   url.searchParams.set('per_page', String(perPage));
+  url.searchParams.set('page', String(page));
 
   const res = await fetch(url, { headers: { Accept: 'application/json' } });
   if (!res.ok) {
     throw new Error(`API ${res.status} sur le catalogue`);
   }
 
-  const json = (await res.json()) as Envelope<DocumentMeta[]>;
-  // Garde-fou : ne renvoie que les documents adressables (slug présent), pour
-  // ne jamais générer de lien `/codes/undefined` (ex. API pas encore migrée).
-  return json.data.filter((doc) => Boolean(doc.slug));
+  const json = (await res.json()) as PaginatedEnvelope<DocumentMeta[]>;
+  const p = json.pagination;
+  return {
+    // Garde-fou : ne renvoie que les documents adressables (slug présent), pour
+    // ne jamais générer de lien `/textes/undefined` (ex. doc ingéré sans slug).
+    items: json.data.filter((doc) => Boolean(doc.slug)),
+    meta: {
+      total: p?.total ?? json.data.length,
+      perPage: p?.per_page ?? perPage,
+      currentPage: p?.current_page ?? page,
+      lastPage: p?.last_page ?? 1,
+    },
+  };
+}
+
+export interface DocumentTypeOption {
+  code: string;
+  name: string;
+}
+
+/**
+ * Types de texte du référentiel, pour alimenter le filtre « type » de `/textes`.
+ * Best-effort : renvoie `[]` en cas d'erreur (le filtre disparaît, la page reste).
+ */
+export async function fetchDocumentTypes(): Promise<DocumentTypeOption[]> {
+  try {
+    const res = await fetch(`${API_BASE}/document-types`, { headers: { Accept: 'application/json' } });
+    if (!res.ok) return [];
+    const json = (await res.json()) as Envelope<Array<{ code: string; nom?: string; name?: string }>>;
+    return json.data
+      .map((t) => ({ code: t.code, name: t.name ?? t.nom ?? t.code }))
+      .filter((t) => Boolean(t.code));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Reconstruit l'arbre imbriqué (sommaire) à partir de la structure plate de
+ * l'API. Les nœuds racine et les articles orphelins sont fusionnés et triés
+ * par `order` pour respecter l'ordre d'affichage (préambule en tête, etc.).
+ */
+export function buildTree(structure?: PublicStructure): TreeNode[] {
+  if (!structure) return [];
+
+  const byId = new Map<string, TreeNode>();
+  for (const node of structure.nodes) {
+    byId.set(node.id, { ...node, children: [] });
+  }
+
+  const roots: TreeNode[] = [];
+  for (const node of structure.nodes) {
+    const current = byId.get(node.id)!;
+    const parent = node.parent_id ? byId.get(node.parent_id) : null;
+    if (parent) {
+      parent.children.push(current);
+    } else {
+      roots.push(current);
+    }
+  }
+
+  // Articles rattachés directement au document (actes courts sans structure) :
+  // on les expose comme nœuds-feuilles « article » au niveau racine.
+  for (const article of structure.orphan_articles) {
+    roots.push({
+      id: `orphan-${article.number}`,
+      type: 'ARTICLE',
+      number: article.number,
+      title: null,
+      order: article.order,
+      articles: [article],
+      children: [],
+    });
+  }
+
+  const sortRec = (nodes: TreeNode[]): TreeNode[] => {
+    nodes.sort((a, b) => a.order - b.order);
+    for (const n of nodes) sortRec(n.children);
+    return nodes;
+  };
+  return sortRec(roots);
 }
 
 export interface SitemapEntry {
@@ -245,10 +401,21 @@ export async function submitContact(payload: ContactPayload): Promise<{ ok: bool
 
 /** Construit le chemin canonique d'un document. */
 export function documentPath(slug: string): string {
-  return `/codes/${slug}`;
+  return `/textes/${slug}`;
 }
 
 /** Construit le chemin canonique d'un article. */
 export function articlePath(slug: string, number: string): string {
-  return `/codes/${slug}/article-${encodeURIComponent(number)}`;
+  return `/textes/${slug}/article-${encodeURIComponent(number)}`;
+}
+
+/**
+ * URL du PDF d'origine (proxy API). `download=true` force le téléchargement ;
+ * sinon le PDF s'affiche en ligne (intégrable en <iframe> sur le site, cf.
+ * l'en-tête `frame-ancestors` du PdfProxyController).
+ */
+export function pdfProxyUrl(documentId: string, opts: { download?: boolean } = {}): string {
+  const url = new URL(`${API_BASE}/legal-documents/${documentId}/pdf`);
+  if (opts.download) url.searchParams.set('download', 'true');
+  return url.href;
 }

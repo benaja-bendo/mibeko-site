@@ -16,7 +16,7 @@
  * note mémoire `code_penal_reliability` / `parsing_improvements_plan`.
  *
  * Les retours à la ligne sont préservés : le corps de l'article est rendu en
- * `white-space: pre-wrap` (cf. `pages/codes/[doc]/[article].astro`).
+ * `white-space: pre-wrap` (cf. `pages/textes/[doc]/[article].astro`).
  */
 
 /** Chiffres et signes en exposant → caractères Unicode (km^2 → km²). */

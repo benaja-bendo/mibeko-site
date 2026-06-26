@@ -1,0 +1,97 @@
+---
+import type { TreeNode } from '../lib/api';
+import { articlePath } from '../lib/api';
+
+interface Props {
+  nodes: TreeNode[];
+  slug: string;
+  activeNumber?: string;
+  level?: number;
+}
+
+const { nodes, slug, activeNumber, level = 0 } = Astro.props;
+
+/** Le sous-arbre contient-il l'article actif ? (pour déplier la bonne branche) */
+const subtreeHasActive = (node: TreeNode): boolean => {
+  if (activeNumber && node.articles.some((a) => a.number === activeNumber)) return true;
+  return node.children.some(subtreeHasActive);
+};
+
+/**
+ * Regroupe les articles-feuilles (orphelins) consécutifs en une seule grille de
+ * puces, et conserve les nœuds structurels comme sections dépliables. Rend un
+ * sommaire dense et scannable plutôt qu'une longue liste verticale.
+ */
+type Segment = { kind: 'articles'; items: { number: string }[] } | { kind: 'node'; node: TreeNode };
+const segments: Segment[] = [];
+for (const n of nodes) {
+  if (n.type === 'ARTICLE' && n.number) {
+    const last = segments[segments.length - 1];
+    if (last && last.kind === 'articles') {
+      last.items.push({ number: n.number });
+    } else {
+      segments.push({ kind: 'articles', items: [{ number: n.number }] });
+    }
+  } else {
+    segments.push({ kind: 'node', node: n });
+  }
+}
+
+const eyebrow = (node: TreeNode) => [node.type, node.number].filter(Boolean).join(' ');
+const chipBase = 'inline-flex items-center h-9 px-3 rounded-lg border text-xs font-semibold transition-colors';
+const chipIdle = 'border-surface-variant bg-surface-container-lowest text-on-surface-variant hover:border-primary/50 hover:text-primary';
+const chipActive = 'border-secondary/50 bg-secondary/10 text-secondary';
+---
+
+<div class={`mibeko-tree ${level > 0 ? 'mt-0.5' : 'space-y-1'}`}>
+  {segments.map((seg) =>
+    seg.kind === 'articles' ? (
+      <div class="flex flex-wrap gap-1.5 px-1 py-1">
+        {seg.items.map((a) => (
+          <a
+            href={articlePath(slug, a.number)}
+            aria-current={a.number === activeNumber ? 'true' : undefined}
+            class:list={[chipBase, a.number === activeNumber ? chipActive : chipIdle]}
+          >
+            Art. {a.number}
+          </a>
+        ))}
+      </div>
+    ) : (
+      <details open={level === 0 || subtreeHasActive(seg.node)} class="rounded-lg">
+        <summary class="flex items-start gap-2 py-2 px-2.5 rounded-lg cursor-pointer hover:bg-surface-container select-none">
+          <svg class="tree-chevron mt-1 shrink-0 text-outline" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+          <span class="flex flex-col gap-0.5 min-w-0">
+            {eyebrow(seg.node) && <span class="text-[11px] font-bold uppercase tracking-[0.08em] text-secondary">{eyebrow(seg.node)}</span>}
+            {seg.node.title && <span class="text-sm font-medium text-on-surface leading-snug">{seg.node.title}</span>}
+          </span>
+        </summary>
+        <div class="pl-3 ml-3 border-l border-surface-variant">
+          {seg.node.articles.length > 0 && (
+            <div class="flex flex-wrap gap-1.5 px-1 py-1.5">
+              {seg.node.articles.map((a) => (
+                <a
+                  href={articlePath(slug, a.number)}
+                  aria-current={a.number === activeNumber ? 'true' : undefined}
+                  class:list={[chipBase, a.number === activeNumber ? chipActive : chipIdle]}
+                >
+                  Art. {a.number}
+                </a>
+              ))}
+            </div>
+          )}
+          {seg.node.children.length > 0 && (
+            <Astro.self nodes={seg.node.children} slug={slug} activeNumber={activeNumber} level={level + 1} />
+          )}
+        </div>
+      </details>
+    ),
+  )}
+</div>
+
+<style>
+  .mibeko-tree summary { list-style: none; }
+  .mibeko-tree summary::-webkit-details-marker { display: none; }
+  .mibeko-tree details[open] > summary .tree-chevron { transform: rotate(90deg); }
+  .mibeko-tree .tree-chevron { transition: transform 0.18s ease; }
+</style>

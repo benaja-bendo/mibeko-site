@@ -5,7 +5,7 @@ import { fetchSitemap, fetchThemes, documentPath, articlePath, themePath } from 
 export const prerender = false;
 
 // Pages stables du site.
-const STATIC_PATHS = ['/', '/produits', '/codes', '/demarches', '/ressources', '/themes', '/contact', '/cgu', '/confidentialite', '/mentions-legales'];
+const STATIC_PATHS = ['/', '/produits', '/textes', '/demarches', '/ressources', '/themes', '/contact', '/cgu', '/confidentialite', '/mentions-legales'];
 
 const escapeXml = (value: string): string =>
   value.replace(/[<>&'"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' }[c]!));

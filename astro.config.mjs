@@ -11,6 +11,14 @@ import node from '@astrojs/node';
 export default defineConfig({
   site: 'https://mibeko.fr',
   adapter: node({ mode: 'standalone' }),
+  // Renommage du fonds juridique `/codes` → `/textes` (le répertoire mêle
+  // codes, lois, arrêtés, décrets). Redirections 301 pour préserver le SEO et
+  // les liens existants. Le `[...rest]` couvre les pages document et article.
+  redirects: {
+    '/codes': '/textes',
+    '/codes/[doc]': '/textes/[doc]',
+    '/codes/[doc]/[article]': '/textes/[doc]/[article]',
+  },
   // Traefik termine le TLS : la connexion proxy → conteneur Astro est en HTTP
   // clair, donc le `checkOrigin` natif reconstruit `http://mibeko.fr` et rejette
   // le `Origin: https://mibeko.fr` du navigateur (faux positif → 403). On le
