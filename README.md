@@ -1,51 +1,86 @@
-# Mibeko - Site Vitrine
+# Site public Mibeko
 
-Ce dépôt contient le code source du site vitrine officiel de **Mibeko**, la première plateforme d'intelligence juridique en République du Congo.
+> Statut : à jour au 2 juillet 2026 · portail public du droit congolais (site vitrine + fonds juridique consultable), servi en SSR sur `mibeko.fr`.
 
-## 🚀 À propos du projet
+Ce dépôt contient le code du **site public Mibeko**, un des cinq dépôts de l'écosystème Mibeko. Il cible le **citoyen et la diaspora** de la République du **Congo-Brazzaville** (droit national, OHADA, CEMAC), par opposition au dashboard professionnel (`mibeko-front`) réservé aux avocats et juristes. Le domaine de production est **`mibeko.fr`**.
 
-Mibeko a pour mission de démocratiser l'accès au droit congolais grâce à l'intelligence artificielle (vectorisation sémantique, RAG) et à une application mobile accessible 100% hors-ligne. 
+Contrairement à ce que décrivaient d'anciennes versions de ce fichier, le site n'est **pas** une simple landing page one-page : c'est un portail complet qui expose le fonds juridique en lecture libre, article par article, autour de trois piliers de contenu.
 
-Ce site web sert de **Landing Page** (One-Page) pour :
-- Présenter les fonctionnalités clés de l'application (Recherche IA, Mode Hors-Ligne, Alertes).
-- Rediriger les utilisateurs vers les applications mobiles (App Store, Google Play).
-- Expliquer la mission et la technologie derrière l'entreprise.
-- Informer les différents publics (Professionnels du droit, Étudiants, Citoyens).
+## Stack technique
 
-Le site est construit avec **[Astro](https://astro.build/)** pour garantir des performances optimales (génération de site statique par défaut, vitesse de chargement extrêmement rapide) et un SEO de premier plan.
+- **Astro 7** (`astro@^7.0.2`) en **rendu à la demande (SSR)** via l'adaptateur `@astrojs/node` (mode `standalone`). Le rendu SSR est activé page par page avec `export const prerender = false` pour tout ce qui dépend de l'API ; les pages purement éditoriales restent pré-rendues.
+- **Tailwind CSS v4** (plugin Vite `@tailwindcss/vite`), les tokens de couleur du design system étant exposés comme utilitaires (`bg-primary`, `text-on-surface`, `border-surface-variant`…).
+- **Node ≥ 22.12** requis.
+- **Collections de contenu Astro** (markdown local, chargeur `glob`) pour les guides et les démarches.
+- **API Laravel** (`api.mibeko.fr`, base configurable par `MIBEKO_API_URL`) pour le fonds juridique, la recherche, les thèmes et le relais du formulaire de contact.
 
-## 📁 Structure du projet
+## Les trois piliers
+
+Le site s'organise autour de trois piliers de contenu, complétés par la recherche et les thèmes de vie :
+
+1. **Le fonds juridique — `/textes`** (anciennement `/codes`, redirigé en 301). Répertoire filtré et paginé des textes officiels publiés (codes, lois, arrêtés, décrets, national / OHADA / communautaire), puis un lecteur article par article. Données servies par l'API en SSR.
+2. **Les guides — `/ressources`.** Contenu éditorial (collection `guides`, markdown local) expliquant le droit en français simple, relié au fonds.
+3. **Les démarches — `/demarches`.** Parcours « comment faire X au Congo » pas à pas (collection `demarches`, markdown local avec étapes structurées).
+
+À cela s'ajoutent la **recherche** plein-texte du fonds (`/recherche`) et les **thèmes de vie** (`/themes`), qui permettent d'entrer dans le droit par situation (famille, travail, logement, entreprise…) plutôt que par le nom d'un code.
+
+L'arborescence complète, les routes dynamiques et le fonctionnement du lecteur sont décrits dans [`docs/architecture-site.md`](./docs/architecture-site.md).
+
+## Design
+
+Le design suit une esthétique institutionnelle et sobre (« Corporate Minimalism »), pensée pour de longues sessions de lecture et une identité congolaise.
+
+- **Palette forêt** : vert profond primaire (`#03271A`), terracotta secondaire (`#8F4C31`), fond crème (`#FCF9F8`), neutres charbon. Le `theme-color` du navigateur est `#03271A`.
+- **Typographie** : **Inter** pour l'interface et les titres, **Source Serif 4** pour le contenu légal (articles, textes longs). Polices chargées via Google Fonts.
+
+Le système de design complet (tokens, échelles typographiques, composants) est documenté dans [`docs/design-system.md`](./docs/design-system.md).
+
+## Structure du projet
 
 ```text
 mibeko-site/
-├── public/            # Ressources statiques (favicon, etc.)
+├── public/                 # Assets statiques (logo.svg, robots.txt…)
 ├── src/
-│   ├── components/    # Composants d'interface modulaires (Header, Hero, Features, About, Audience, Footer)
-│   ├── layouts/       # Layouts globaux (Layout.astro incluant le CSS global et la typo Montserrat)
-│   └── pages/         # Pages de l'application (index.astro rassemble tous les composants)
-├── package.json       # Dépendances et scripts NPM
-└── astro.config.mjs   # Configuration d'Astro
+│   ├── components/         # Composants Astro (Header, Footer, HomeHero, DocumentTree, ThemeIcon…)
+│   ├── content/            # Collections markdown : guides/ et demarches/
+│   ├── content.config.ts   # Schémas typés des collections (Zod)
+│   ├── layouts/            # Layout.astro (SEO, Open Graph, JSON-LD, fonts)
+│   ├── lib/                # api.ts (client API Laravel), sanitize.ts (nettoyage OCR/LaTeX)
+│   ├── pages/              # Routes du site (voir docs/architecture-site.md)
+│   └── styles/             # global.css
+├── astro.config.mjs        # SSR node, site mibeko.fr, redirections 301 /codes → /textes
+├── package.json
+└── docs/                   # Documentation technique (design-system, architecture)
 ```
 
-## 🎨 Design System
+## Configuration
 
-Le design est conçu pour être institutionnel, rassurant et moderne, conformément au `DESIGN.md` :
-- **Couleur Dominante** : Bleu Marine (`#0A192F`, `#112240`, `#233554`) - Évoque la confiance et le sérieux.
-- **Couleur d'Accentuation** : Or/Jaune (`#D4AF37`) - Symbole traditionnel de la Justice.
-- **Couleurs Secondaires** : Blanc et Gris clair pour la clarté de l'interface.
-- **Typographie** : Montserrat (sans-serif) - Rendu moderne et excellente lisibilité sur écran.
+La seule variable d'environnement requise est l'URL de base de l'API Laravel :
 
-## 🧞 Commandes utiles
+```bash
+cp .env.example .env
+# MIBEKO_API_URL=http://localhost:8000/api/v1   (API Laravel locale)
+```
 
-Toutes les commandes doivent être exécutées depuis le répertoire `mibeko-site`.
+La priorité de résolution est : `process.env` (runtime, injecté au conteneur en prod) > `import.meta.env` (build/dev) > défaut production (`https://api.mibeko.fr/api/v1`). Laisser la variable vide en local reviendrait à taper la production ; elle est donc à renseigner.
 
-| Commande                  | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installe les dépendances du projet               |
-| `npm run dev`             | Lance le serveur de développement local (`localhost:4321`) |
-| `npm run build`           | Construit le site optimisé pour la production dans `./dist/` |
-| `npm run preview`         | Prévisualise le build de production en local     |
+## Commandes
 
-## 🌍 Déploiement
+Toutes les commandes s'exécutent depuis `mibeko-site/`.
 
-Le site généré par la commande `npm run build` est entièrement statique. Les fichiers générés dans le dossier `dist/` peuvent être déployés sur n'importe quel hébergeur (Nginx, Apache, Vercel, Netlify, Cloudflare Pages). Le domaine principal cible de la production est `mibeko.fr` / `mibeko.cg`.
+| Commande | Action |
+| :--- | :--- |
+| `npm install` | Installe les dépendances |
+| `npm run dev` | Serveur de développement local (`localhost:4321`) |
+| `npm run build` | Build de production (SSR node) dans `./dist/` |
+| `npm run preview` | Prévisualise le build de production |
+
+## Déploiement
+
+Le site est déployé en **SSR** (serveur Node autonome, pas un export statique) : le build produit un serveur dans `dist/` lancé par le conteneur. En production, il est servi derrière **Traefik** (qui termine le TLS). Comme le proxy communique en HTTP clair avec le conteneur, le `checkOrigin` natif d'Astro est désactivé dans `astro.config.mjs` et un contrôle d'origine explicite (header `Origin`/`Referer`) est refait dans les routes POST (`src/pages/api/contact.ts`). Le domaine de production est `mibeko.fr` (les anciens domaines `mibeko.app` et `mibeko.cg` sont abandonnés).
+
+## Documentation
+
+- [`docs/README.md`](./docs/README.md) — index de la documentation.
+- [`docs/design-system.md`](./docs/design-system.md) — système de design.
+- [`docs/architecture-site.md`](./docs/architecture-site.md) — arborescence et rendu du site.
