@@ -72,6 +72,7 @@ Toutes les commandes s'exécutent depuis `mibeko-site/`.
 | :--- | :--- |
 | `npm install` | Installe les dépendances |
 | `npm run dev` | Serveur de développement local (`localhost:4321`) |
+| `npm run check` | Vérification statique (`astro check` : types + templates), aussi exécutée en CI avant le build Docker |
 | `npm run build` | Build de production (SSR node) dans `./dist/` |
 | `npm run preview` | Prévisualise le build de production |
 
