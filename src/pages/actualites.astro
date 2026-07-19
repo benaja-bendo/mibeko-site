@@ -1,0 +1,197 @@
+---
+export const prerender = false;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import NewsletterForm from '../components/NewsletterForm.astro';
+import {
+  fetchPublishedDocuments,
+  documentPath,
+  type DocumentMeta,
+  type PaginationMeta,
+} from '../lib/api';
+
+// « Fil » éditorial : les derniers textes ajoutés au fonds. On réutilise le
+// catalogue trié du plus récent au plus ancien. `date_publication` étant souvent
+// absent côté données, l'API classe alors par date d'ajout — ce qui correspond
+// bien à un flux d'actualités (« ce qui vient d'arriver dans le fonds »).
+const params = Astro.url.searchParams;
+const page = Math.max(1, Number(params.get('page') ?? '1') || 1);
+const PER_PAGE = 20;
+
+let documents: DocumentMeta[] = [];
+let meta: PaginationMeta = { total: 0, perPage: PER_PAGE, currentPage: 1, lastPage: 1 };
+let loadError = false;
+
+try {
+  const result = await fetchPublishedDocuments({ sort: '-date_publication', page, perPage: PER_PAGE });
+  documents = result.items;
+  meta = result.meta;
+} catch {
+  loadError = true;
+}
+
+const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
+
+const dateLong = (iso?: string | null) =>
+  iso ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso)) : null;
+
+const scopeLabel: Record<string, string> = {
+  national: 'National',
+  ohada: 'OHADA',
+  communautaire: 'Communautaire',
+};
+
+// Tagline NEUTRE construite uniquement à partir des métadonnées disponibles —
+// aucun résumé ni contenu juridique inventé.
+function metaLine(doc: DocumentMeta): string {
+  const parts: string[] = [];
+  if (doc.type?.name) parts.push(doc.type.name);
+  const signed = dateLong(doc.date_signature);
+  const published = dateLong(doc.date_publication);
+  if (published) parts.push(`publié le ${published}`);
+  else if (signed) parts.push(`signé le ${signed}`);
+  if (doc.reference_nor) parts.push(`réf. ${doc.reference_nor}`);
+  if (typeof doc.articles_count === 'number' && doc.articles_count > 0) {
+    parts.push(`${doc.articles_count} article${doc.articles_count > 1 ? 's' : ''}`);
+  }
+  return parts.join(' · ');
+}
+
+/** Construit une URL `/actualites` en surchargeant la page. */
+const pageUrl = (p: number) => (p <= 1 ? '/actualites' : `/actualites?page=${p}`);
+
+const canonical = new URL(page > 1 ? `/actualites?page=${page}` : '/actualites', siteOrigin).href;
+
+// JSON-LD CollectionPage : liste des textes de la page courante.
+const collectionLd = documents.length > 0
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: 'Actualités juridiques — Mibeko',
+      description: "Les derniers textes officiels ajoutés au fonds juridique de la République du Congo et de l'espace OHADA.",
+      inLanguage: 'fr',
+      url: canonical,
+      mainEntity: {
+        '@type': 'ItemList',
+        itemListElement: documents.map((doc, i) => ({
+          '@type': 'ListItem',
+          position: (page - 1) * PER_PAGE + i + 1,
+          url: new URL(documentPath(doc.slug), siteOrigin).href,
+          name: doc.titre_officiel,
+        })),
+      },
+    }
+  : null;
+
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Accueil', item: new URL('/', siteOrigin).href },
+    { '@type': 'ListItem', position: 2, name: 'Actualités', item: new URL('/actualites', siteOrigin).href },
+  ],
+};
+
+const jsonLd = [collectionLd, breadcrumbLd].filter(Boolean) as Record<string, unknown>[];
+---
+
+<Layout
+  title="Actualités juridiques du Congo — les derniers textes | Mibeko"
+  description="Le fil des derniers textes officiels ajoutés au fonds : codes, lois, décrets et arrêtés de la République du Congo et de l'espace OHADA, mis à jour en continu."
+  canonical={canonical}
+  jsonLd={jsonLd}
+>
+  <Header />
+  <main id="main" class="flex-grow bg-background">
+
+    <section class="pt-20 pb-8 md:pt-28 md:pb-10">
+      <div class="max-w-[860px] mx-auto px-4 sm:px-6 lg:px-8">
+        <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-3">Le fonds s'enrichit</p>
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-on-surface tracking-tight mb-4">Actualités juridiques</h1>
+        <p class="text-base md:text-lg text-on-surface-variant font-serif max-w-2xl leading-relaxed">
+          Les derniers textes officiels intégrés au fonds Mibeko, du plus récent au plus ancien. Cliquez pour lire un texte article par article.
+        </p>
+      </div>
+    </section>
+
+    <section class="pb-16">
+      <div class="max-w-[860px] mx-auto px-4 sm:px-6 lg:px-8">
+
+        {loadError ? (
+          <p class="text-on-surface-variant">Le fil d'actualités est momentanément indisponible. Réessayez dans un instant.</p>
+        ) : documents.length === 0 ? (
+          <div class="text-center py-12">
+            <p class="text-lg text-on-surface mb-2">Aucun texte à afficher pour le moment.</p>
+            <p class="text-sm text-on-surface-variant"><a href="/textes" class="text-primary font-semibold hover:underline">Parcourez le fonds juridique</a>.</p>
+          </div>
+        ) : (
+          <>
+            <ol class="flex flex-col gap-4">
+              {documents.map((doc) => (
+                <li>
+                  <a
+                    href={documentPath(doc.slug)}
+                    class="block bg-surface-container-lowest border border-surface-variant rounded-2xl p-5 sm:p-6 hover:border-primary/40 hover:shadow-md transition-all group"
+                  >
+                    <div class="flex items-center gap-2 mb-3 flex-wrap">
+                      <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-secondary/10 text-secondary text-xs font-bold uppercase tracking-wide">
+                        {doc.type?.name ?? 'Texte'}
+                      </span>
+                      {doc.legal_scope && scopeLabel[doc.legal_scope] && (
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-medium">
+                          {scopeLabel[doc.legal_scope]}
+                        </span>
+                      )}
+                    </div>
+                    <h2 class="text-lg sm:text-xl font-bold text-on-surface group-hover:text-primary transition-colors leading-snug mb-2">
+                      {doc.titre_officiel}
+                    </h2>
+                    {metaLine(doc) && (
+                      <p class="text-sm text-on-surface-variant">{metaLine(doc)}</p>
+                    )}
+                  </a>
+                </li>
+              ))}
+            </ol>
+
+            {meta.lastPage > 1 && (
+              <nav class="mt-10 flex items-center justify-between gap-4" aria-label="Pagination">
+                {meta.currentPage > 1 ? (
+                  <a href={pageUrl(meta.currentPage - 1)} rel="prev" class="inline-flex items-center gap-2 h-11 px-4 sm:px-5 rounded-lg border border-surface-variant text-on-surface font-semibold text-sm hover:border-primary/40 hover:text-primary transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+                    <span class="hidden sm:inline">Plus récents</span>
+                  </a>
+                ) : <span></span>}
+                <span class="text-sm text-on-surface-variant">Page {meta.currentPage} sur {meta.lastPage}</span>
+                {meta.currentPage < meta.lastPage ? (
+                  <a href={pageUrl(meta.currentPage + 1)} rel="next" class="inline-flex items-center gap-2 h-11 px-4 sm:px-5 rounded-lg border border-surface-variant text-on-surface font-semibold text-sm hover:border-primary/40 hover:text-primary transition-all">
+                    <span class="hidden sm:inline">Plus anciens</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                  </a>
+                ) : <span></span>}
+              </nav>
+            )}
+          </>
+        )}
+      </div>
+    </section>
+
+    <!-- Capture : rester informé des prochains textes -->
+    <section class="pb-20">
+      <div class="max-w-[860px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="rounded-2xl border border-surface-variant bg-surface-container-low p-6 sm:p-8">
+          <h2 class="text-xl font-bold text-on-surface mb-2">Suivre les nouveautés</h2>
+          <p class="text-on-surface-variant mb-6 max-w-xl">
+            Recevez les nouveaux textes et guides par e-mail. Une fois par mois, sans spam.
+          </p>
+          <div class="max-w-md">
+            <NewsletterForm source="actualites" />
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Layout>

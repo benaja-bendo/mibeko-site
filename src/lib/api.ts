@@ -27,8 +27,12 @@ export interface DocumentMeta {
   reference_nor: string | null;
   type_code: string | null;
   legal_scope: string;
+  /** Statut juridique (« vigueur », « abrogé »…) exposé par l'API. */
+  statut?: string | null;
   date_publication: string | null;
   date_signature: string | null;
+  /** Nombre d'articles publiés (présent sur la liste `legal-documents`). */
+  articles_count?: number | null;
   institution?: { nom?: string; sigle?: string } | null;
   type?: { code: string; name: string } | null;
   official_journal?: { id: string; title: string; publication_date: string | null } | null;

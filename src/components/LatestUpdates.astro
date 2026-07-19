@@ -5,7 +5,7 @@ import { fetchPublishedDocuments, documentPath, type DocumentMeta } from '../lib
 // d'API indisponible, la section se masque (pas de contenu factice).
 let documents: DocumentMeta[] = [];
 try {
-  documents = await fetchPublishedDocuments(3, '-date_publication');
+  ({ items: documents } = await fetchPublishedDocuments({ perPage: 3, sort: '-date_publication' }));
 } catch {
   documents = [];
 }
@@ -29,8 +29,8 @@ const dateFmt = (iso?: string | null) =>
             Derniers textes publiés
           </h2>
         </div>
-        <a href="/textes" class="text-sm font-semibold text-secondary hover:text-primary transition-colors inline-flex items-center gap-1 group mt-4 sm:mt-0">
-          Explorer le fonds
+        <a href="/actualites" class="text-sm font-semibold text-secondary hover:text-primary transition-colors inline-flex items-center gap-1 group mt-4 sm:mt-0">
+          Voir toutes les actualités
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1 transition-transform">
             <path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path>
           </svg>
