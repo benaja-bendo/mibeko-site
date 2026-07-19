@@ -180,11 +180,11 @@ const related = current?.related ?? [];
 
             {(document!.themes && document!.themes.length > 0) && (
               <div class="mt-10 flex flex-wrap items-center gap-2">
-                <span class="text-sm text-on-surface-variant">Thèmes :</span>
+                <span class="text-sm text-on-surface-variant">Situations :</span>
                 {document!.themes.map((theme) => (
-                  <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-medium">
+                  <a href={`/themes/${theme.slug}`} class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-medium hover:bg-secondary/10 hover:text-secondary transition-colors">
                     {theme.name}
-                  </span>
+                  </a>
                 ))}
               </div>
             )}
@@ -229,26 +229,32 @@ const related = current?.related ?? [];
               ) : <span></span>}
             </nav>
 
-            <!-- Mur de conversion : lire est public, agir demande un compte -->
+            <!-- Pour aller plus loin : orientation citoyenne (guides / démarches
+                 / app), avec une mention pro discrète en pied. -->
             <aside class="mt-16 rounded-2xl border border-surface-variant bg-surface-container-low p-6 sm:p-8 md:p-10">
-              <h2 class="text-xl font-bold text-on-surface mb-2">Aller plus loin avec cet article</h2>
+              <h2 class="text-xl font-bold text-on-surface mb-2">Pour aller plus loin</h2>
               <p class="text-on-surface-variant font-serif mb-8 max-w-xl">
-                La lecture du fonds est libre. Pour l'expliquer avec l'assistant Mibeko IA, le suivre ou le classer dans un dossier, créez votre espace.
+                Ce texte s'applique à des situations concrètes. Comprenez-le en français clair et passez à l'action.
               </p>
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <a href="https://app.mibeko.fr/" target="_blank" rel="noopener noreferrer" class="flex flex-col gap-2 p-5 rounded-xl border border-surface-variant bg-surface-container-lowest hover:border-secondary/40 hover:shadow-md transition-all group">
-                  <span class="text-secondary font-bold">Expliquer avec l'IA</span>
-                  <span class="text-sm text-on-surface-variant">Mibeko IA décrypte l'article en langage clair.</span>
+                <a href="/ressources" class="flex flex-col gap-2 p-5 rounded-xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:shadow-md transition-all group">
+                  <span class="text-primary font-bold">Lire un guide</span>
+                  <span class="text-sm text-on-surface-variant">Les grands principes, expliqués sans jargon.</span>
                 </a>
-                <a href="https://app.mibeko.fr/" target="_blank" rel="noopener noreferrer" class="flex flex-col gap-2 p-5 rounded-xl border border-surface-variant bg-surface-container-lowest hover:border-secondary/40 hover:shadow-md transition-all group">
-                  <span class="text-secondary font-bold">Ajouter à un dossier</span>
-                  <span class="text-sm text-on-surface-variant">Rassemblez vos textes par affaire.</span>
+                <a href="/demarches" class="flex flex-col gap-2 p-5 rounded-xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:shadow-md transition-all group">
+                  <span class="text-primary font-bold">Suivre une démarche</span>
+                  <span class="text-sm text-on-surface-variant">Le pas-à-pas, avec les documents à réunir.</span>
                 </a>
-                <a href="/produits#mobile" class="flex flex-col gap-2 p-5 rounded-xl border border-surface-variant bg-surface-container-lowest hover:border-secondary/40 hover:shadow-md transition-all group">
-                  <span class="text-secondary font-bold">Lire hors-ligne</span>
-                  <span class="text-sm text-on-surface-variant">L'app mobile et les alertes Journal Officiel.</span>
+                <a href="/produits#mobile" class="flex flex-col gap-2 p-5 rounded-xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:shadow-md transition-all group">
+                  <span class="text-primary font-bold">Emporter l'app</span>
+                  <span class="text-sm text-on-surface-variant">Tout le droit congolais dans votre poche.</span>
                 </a>
               </div>
+              <p class="mt-6 text-sm text-on-surface-variant">
+                Vous êtes un professionnel du droit ?
+                <a href="/tarifs" class="text-secondary font-semibold hover:underline">Découvrez l'espace Pro</a>
+                (assistant IA, dossiers, échéances).
+              </p>
             </aside>
 
           </article>

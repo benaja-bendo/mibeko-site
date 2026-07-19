@@ -41,6 +41,29 @@ const scopeLabel: Record<string, string> = {
   communautaire: 'Communautaire',
 };
 
+const statutLabel: Record<string, string> = {
+  vigueur: 'En vigueur',
+  abroge: 'Abrogé',
+  abrogé: 'Abrogé',
+  suspendu: 'Suspendu',
+};
+
+// Chapeau éditorial : phrase NEUTRE construite uniquement à partir des
+// métadonnées disponibles (type, date, statut) — aucune phrase juridique
+// inventée. On décrit ce que Mibeko sait du texte, pas ce qu'il dit.
+const signedDate = dateFmt(document?.date_signature);
+const publishedDate = dateFmt(document?.date_publication);
+const chapeauParts: string[] = [];
+if (document) {
+  chapeauParts.push(`Ce ${typeName.toLowerCase()}`);
+  if (document.institution?.nom) chapeauParts.push(`émane de ${document.institution.nom}`);
+  if (publishedDate) chapeauParts.push(`a été publié le ${publishedDate}`);
+  else if (signedDate) chapeauParts.push(`a été signé le ${signedDate}`);
+}
+const chapeau = chapeauParts.length > 1 ? `${chapeauParts.join(', ')}.` : '';
+const statutText = document?.statut ? (statutLabel[document.statut] ?? document.statut) : null;
+const themes = document?.themes ?? [];
+
 const legislationLd = document
   ? {
       '@context': 'https://schema.org',
@@ -71,7 +94,6 @@ const jsonLd = [legislationLd, breadcrumbLd].filter(Boolean) as Record<string, u
 
 const btnPrimary = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary text-on-primary font-semibold text-sm hover:bg-primary-container transition-colors';
 const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl border border-surface-variant bg-surface-container-lowest text-on-surface font-semibold text-sm hover:border-primary/40 transition-colors';
-const btnAccent = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl border border-secondary/40 bg-secondary/5 text-secondary font-semibold text-sm hover:bg-secondary/10 transition-colors';
 ---
 
 <Layout
@@ -104,7 +126,7 @@ const btnAccent = 'inline-flex items-center justify-center gap-2 h-11 px-5 round
           <span class="text-on-surface font-medium line-clamp-1">{document!.titre_officiel}</span>
         </nav>
 
-        <!-- Bandeau-titre (masthead) -->
+        <!-- Bandeau-titre (masthead) + chapeau éditorial -->
         <header class="relative overflow-hidden rounded-3xl border border-surface-variant bg-surface-container-lowest p-6 sm:p-8 md:p-10 mb-6">
           <svg aria-hidden="true" class="hidden sm:block absolute -right-8 -top-10 text-primary/[0.04] pointer-events-none" width="280" height="280" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="m5 21 1-9 6-4 6 4 1 9"></path><path d="M12 8V3"></path><path d="M9 3h6"></path><path d="M8 12h8"></path><path d="M8 16h8"></path></svg>
           <div class="relative max-w-[44rem]">
@@ -113,11 +135,17 @@ const btnAccent = 'inline-flex items-center justify-center gap-2 h-11 px-5 round
               {document!.legal_scope && scopeLabel[document!.legal_scope] && (
                 <span class="inline-flex items-center px-3 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-medium">{scopeLabel[document!.legal_scope]}</span>
               )}
-              {document!.date_publication && <span class="text-xs sm:text-sm text-on-surface-variant">Publié le {dateFmt(document!.date_publication)}</span>}
+              {statutText && (
+                <span class="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">{statutText}</span>
+              )}
               {document!.reference_nor && <span class="text-xs sm:text-sm text-outline">Réf. {document!.reference_nor}</span>}
             </div>
 
-            <h1 class="font-serif text-[1.75rem] leading-[1.15] sm:text-4xl md:text-[2.6rem] md:leading-[1.1] font-semibold text-on-surface tracking-tight mb-5">{document!.titre_officiel}</h1>
+            <h1 class="font-serif text-[1.75rem] leading-[1.15] sm:text-4xl md:text-[2.6rem] md:leading-[1.1] font-semibold text-on-surface tracking-tight mb-4">{document!.titre_officiel}</h1>
+
+            {chapeau && (
+              <p class="text-base sm:text-lg text-on-surface-variant font-serif leading-relaxed mb-5">{chapeau}</p>
+            )}
 
             <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-on-surface-variant mb-6">
               <span class="inline-flex items-center gap-1.5">
@@ -130,92 +158,123 @@ const btnAccent = 'inline-flex items-center justify-center gap-2 h-11 px-5 round
                   <span><span class="font-semibold text-on-surface">{sectionCount}</span> divisions</span>
                 </span>
               )}
-              {document!.institution?.nom && (
+              {(publishedDate || signedDate) && (
                 <span class="inline-flex items-center gap-1.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-outline"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-4"></path></svg>
-                  {document!.institution.nom}
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-outline"><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg>
+                  {publishedDate ? `Publié le ${publishedDate}` : `Signé le ${signedDate}`}
                 </span>
               )}
             </div>
 
+            {themes.length > 0 && (
+              <div class="flex flex-wrap items-center gap-2 mb-6">
+                <span class="text-sm text-on-surface-variant">Situations :</span>
+                {themes.map((theme) => (
+                  <a href={`/themes/${theme.slug}`} class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-medium hover:bg-secondary/10 hover:text-secondary transition-colors">
+                    {theme.name}
+                  </a>
+                ))}
+              </div>
+            )}
+
             {journal && (
-              <div class="inline-flex items-start gap-2.5 rounded-xl border border-secondary/20 bg-secondary/[0.06] px-3.5 py-2.5 mb-6">
+              <div class="inline-flex items-start gap-2.5 rounded-xl border border-secondary/20 bg-secondary/[0.06] px-3.5 py-2.5">
                 <svg class="shrink-0 mt-0.5 text-secondary" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8V6Z"></path></svg>
                 <p class="text-sm text-on-surface-variant leading-snug">
                   <span class="text-on-surface font-semibold">Source officielle</span> · {journal.title}{journalDate ? ` — ${journalDate}` : ''}
                 </p>
               </div>
             )}
-
-            <div class="flex flex-wrap gap-2.5">
-              {pdfUrl && (
-                <a href="#pdf-original" class={`${btnPrimary} lg:hidden`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v5h5"></path></svg>
-                  Voir le PDF original
-                </a>
-              )}
-              {pdfDownloadUrl && (
-                <a href={pdfDownloadUrl} class={btnGhost}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>
-                  Télécharger le PDF
-                </a>
-              )}
-              <a href="https://app.mibeko.fr/" target="_blank" rel="noopener noreferrer" class={btnAccent}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path></svg>
-                Expliquer avec l'IA
-              </a>
-            </div>
           </div>
         </header>
 
-        <!-- Lecteur : sommaire navigable + PDF original (côte à côte sur desktop) -->
-        <div class:list={['grid gap-6', hasPdf ? 'lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]' : '']}>
+        <!-- Pour aller plus loin : orientation citoyenne (guides + démarches) -->
+        <section aria-label="Pour aller plus loin" class="mb-6 rounded-2xl border border-surface-variant bg-surface-container-low p-5 sm:p-6">
+          <h2 class="text-lg font-bold text-on-surface mb-1">Pour aller plus loin</h2>
+          <p class="text-sm text-on-surface-variant mb-4">Comprenez ce texte en français clair, ou suivez la démarche correspondante pas à pas.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <a href="/ressources" class="flex items-start gap-3 p-4 rounded-xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:shadow-sm transition-all group">
+              <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
+              </span>
+              <span class="flex flex-col">
+                <span class="font-semibold text-on-surface group-hover:text-primary transition-colors">Lire les guides</span>
+                <span class="text-sm text-on-surface-variant">Les grands principes, sans jargon.</span>
+              </span>
+            </a>
+            <a href="/demarches" class="flex items-start gap-3 p-4 rounded-xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:shadow-sm transition-all group">
+              <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+              </span>
+              <span class="flex flex-col">
+                <span class="font-semibold text-on-surface group-hover:text-primary transition-colors">Suivre une démarche</span>
+                <span class="text-sm text-on-surface-variant">Le pas-à-pas et les documents à réunir.</span>
+              </span>
+            </a>
+          </div>
+        </section>
 
-          <section aria-label="Sommaire" class="rounded-2xl border border-surface-variant bg-surface-container-lowest overflow-hidden">
-            <div class="flex items-center gap-2 h-12 px-4 border-b border-surface-variant bg-surface-container-low">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-secondary"><line x1="8" x2="21" y1="6" y2="6"></line><line x1="8" x2="21" y1="12" y2="12"></line><line x1="8" x2="21" y1="18" y2="18"></line><line x1="3" x2="3.01" y1="6" y2="6"></line><line x1="3" x2="3.01" y1="12" y2="12"></line><line x1="3" x2="3.01" y1="18" y2="18"></line></svg>
-              <span class="text-xs font-bold uppercase tracking-[0.08em] text-on-surface-variant">Sommaire</span>
+        <!-- Sommaire (navigable) -->
+        <section aria-label="Sommaire" class="rounded-2xl border border-surface-variant bg-surface-container-lowest overflow-hidden mb-6">
+          <div class="flex items-center gap-2 h-12 px-4 border-b border-surface-variant bg-surface-container-low">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-secondary"><line x1="8" x2="21" y1="6" y2="6"></line><line x1="8" x2="21" y1="12" y2="12"></line><line x1="8" x2="21" y1="18" y2="18"></line><line x1="3" x2="3.01" y1="6" y2="6"></line><line x1="3" x2="3.01" y1="12" y2="12"></line><line x1="3" x2="3.01" y1="18" y2="18"></line></svg>
+            <span class="text-xs font-bold uppercase tracking-[0.08em] text-on-surface-variant">Sommaire</span>
+          </div>
+          {tree.length > 0 ? (
+            <div class="p-2 sm:p-3">
+              <DocumentTree nodes={tree} slug={document!.slug} />
             </div>
-            {tree.length > 0 ? (
-              <div class="p-2 sm:p-3 lg:max-h-[76vh] lg:overflow-y-auto">
-                <DocumentTree nodes={tree} slug={document!.slug} />
-              </div>
-            ) : (
-              <p class="p-6 text-on-surface-variant italic">Aucun article publié pour ce texte.</p>
-            )}
-          </section>
-
-          {pdfUrl && (
-            <aside id="pdf-original" class="lg:sticky lg:top-24 lg:self-start scroll-mt-24">
-              <div class="rounded-2xl border border-surface-variant overflow-hidden bg-surface-container-lowest">
-                <div class="flex items-center gap-2 h-12 px-4 border-b border-surface-variant bg-surface-container-low">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-secondary"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v5h5"></path></svg>
-                  <span class="text-xs font-bold uppercase tracking-[0.08em] text-on-surface-variant flex-1">PDF original</span>
-                  <a href={pdfUrl} target="_blank" rel="noopener noreferrer" aria-label="Ouvrir le PDF dans un nouvel onglet" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg>
-                  </a>
-                </div>
-                <!-- Desktop : intégration directe -->
-                <iframe
-                  src={pdfUrl}
-                  title={`PDF original — ${document!.titre_officiel}`}
-                  loading="lazy"
-                  class="hidden lg:block w-full h-[72vh] bg-surface-container-low"
-                ></iframe>
-                <!-- Mobile : ouverture native (rendu PDF embarqué peu fiable sur mobile) -->
-                <a href={pdfUrl} target="_blank" rel="noopener noreferrer" class="lg:hidden flex items-center gap-4 p-5 hover:bg-surface-container-low transition-colors">
-                  <span class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-secondary/10 text-secondary shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v5h5"></path></svg>
-                  </span>
-                  <span class="flex flex-col">
-                    <span class="font-semibold text-on-surface">Ouvrir le PDF original</span>
-                    <span class="text-sm text-on-surface-variant">Le document source, tel que publié.</span>
-                  </span>
-                </a>
-              </div>
-            </aside>
+          ) : (
+            <p class="p-6 text-on-surface-variant italic">Aucun article publié pour ce texte.</p>
           )}
-        </div>
+        </section>
+
+        <!-- PDF original : replié par défaut (plus d'iframe sticky d'entrée) -->
+        {pdfUrl && (
+          <details id="pdf-original" class="group rounded-2xl border border-surface-variant bg-surface-container-lowest overflow-hidden scroll-mt-24">
+            <summary class="flex items-center gap-3 h-14 px-4 sm:px-5 cursor-pointer list-none select-none hover:bg-surface-container-low transition-colors">
+              <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-secondary/10 text-secondary shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v5h5"></path></svg>
+              </span>
+              <span class="flex flex-col flex-1">
+                <span class="font-semibold text-on-surface">Voir le PDF original</span>
+                <span class="text-sm text-on-surface-variant">Le document source, tel que publié.</span>
+              </span>
+              <svg class="text-on-surface-variant transition-transform group-open:rotate-180 shrink-0" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+            </summary>
+            <div class="border-t border-surface-variant">
+              <!-- Desktop : intégration directe (chargée seulement à l'ouverture) -->
+              <iframe
+                src={pdfUrl}
+                title={`PDF original — ${document!.titre_officiel}`}
+                loading="lazy"
+                class="hidden lg:block w-full h-[80vh] bg-surface-container-low"
+              ></iframe>
+              <!-- Mobile : ouverture native (rendu PDF embarqué peu fiable sur mobile) -->
+              <div class="lg:hidden flex flex-col gap-3 p-5">
+                <a href={pdfUrl} target="_blank" rel="noopener noreferrer" class={btnPrimary}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg>
+                  Ouvrir le PDF dans un nouvel onglet
+                </a>
+                {pdfDownloadUrl && (
+                  <a href={pdfDownloadUrl} class={btnGhost}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>
+                    Télécharger le PDF
+                  </a>
+                )}
+              </div>
+            </div>
+          </details>
+        )}
+
+        {pdfDownloadUrl && (
+          <div class="hidden lg:flex mt-4 flex-wrap gap-2.5">
+            <a href={pdfDownloadUrl} class={btnGhost}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>
+              Télécharger le PDF
+            </a>
+          </div>
+        )}
 
       </div>
     )}
