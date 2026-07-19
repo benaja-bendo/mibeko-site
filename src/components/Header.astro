@@ -1,9 +1,12 @@
 ---
+// Navigation citoyenne : le site est d'abord un portail d'accès au droit. Le
+// SaaS pro est relégué à une entrée discrète (« Professionnels » → /tarifs).
 const navLinks = [
-  { href: '/textes', label: 'Textes officiels' },
+  { href: '/themes', label: 'Situations' },
   { href: '/demarches', label: 'Démarches' },
   { href: '/ressources', label: 'Guides' },
-  { href: '/contact', label: 'Contact' },
+  { href: '/textes', label: 'Textes officiels' },
+  { href: '/actualites', label: 'Actualités' },
 ];
 
 const pathname = Astro.url.pathname;
@@ -38,21 +41,20 @@ const isActive = (href: string) =>
       ))}
     </nav>
 
-    <!-- Actions (Desktop) -->
+    <!-- Actions (Desktop) : recherche + entrée pro discrète (lien texte) -->
     <div class="hidden md:flex items-center gap-6">
       <a href="/recherche" aria-label="Rechercher" class="text-on-surface-variant hover:text-primary transition-colors">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line></svg>
       </a>
-      <a href="/produits" class="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors">
-        L'application
-      </a>
       <a
-        href="https://app.mibeko.fr/"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="inline-flex items-center justify-center h-10 px-5 text-sm font-medium text-on-primary bg-primary rounded hover:bg-primary-container transition-colors"
+        href="/tarifs"
+        aria-current={pathname.startsWith('/tarifs') ? 'page' : undefined}
+        class:list={[
+          'text-sm font-medium transition-colors',
+          pathname.startsWith('/tarifs') ? 'text-primary' : 'text-on-surface-variant hover:text-primary',
+        ]}
       >
-        Espace pro
+        Professionnels
       </a>
     </div>
 
@@ -95,16 +97,8 @@ const isActive = (href: string) =>
       <a href="/recherche" class="py-3 text-base font-medium border-b border-surface-variant/40 transition-colors text-on-surface-variant hover:text-primary">
         Rechercher
       </a>
-      <a href="/produits" class="py-3 text-base font-medium border-b border-surface-variant/40 transition-colors text-on-surface-variant hover:text-primary">
-        L'application
-      </a>
-      <a
-        href="https://app.mibeko.fr/"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="mt-4 inline-flex items-center justify-center h-11 px-5 text-sm font-medium text-on-primary bg-primary rounded hover:bg-primary-container transition-colors"
-      >
-        Espace pro
+      <a href="/tarifs" class="py-3 text-base font-medium border-b border-surface-variant/40 transition-colors text-on-surface-variant hover:text-primary">
+        Professionnels
       </a>
     </nav>
   </div>
