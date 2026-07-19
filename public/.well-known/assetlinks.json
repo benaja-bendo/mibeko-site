@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "cg.mibeko.app",
+      "sha256_cert_fingerprints": [
+        "4C:11:49:0C:93:10:68:06:DC:00:3C:89:F4:63:74:00:B7:FF:B7:A0:70:5D:C7:B6:F7:29:5D:5A:FE:83:12:A1"
+      ]
+    }
+  }
+]
