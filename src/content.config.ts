@@ -24,6 +24,11 @@ const guides = defineCollection({
       featured: z.boolean().default(false),
       // Requête pré-remplie vers la recherche du fonds (« pour aller plus loin »).
       fondsQuery: z.string().optional(),
+      // Lien DIRECT vers un texte du fonds (slug d'un document publié) quand le
+      // guide porte sur un texte précis. Mapping factuel vérifié à la main ;
+      // sinon on retombe sur la recherche (`fondsQuery`). Ne renseigner qu'un
+      // slug réellement publié (sinon lien mort → garder undefined).
+      fondsSlug: z.string().optional(),
     }),
 });
 
@@ -50,6 +55,9 @@ const demarches = defineCollection({
       draft: z.boolean().default(false),
       featured: z.boolean().default(false),
       fondsQuery: z.string().optional(),
+      // Lien direct vers un texte du fonds (slug publié), cf. commentaire côté
+      // guides. Fallback recherche si absent.
+      fondsSlug: z.string().optional(),
       steps: z
         .array(
           z.object({

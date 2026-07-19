@@ -5,6 +5,7 @@ import CTASection from '../../components/CTASection.astro';
 import Footer from '../../components/Footer.astro';
 import { Image } from 'astro:assets';
 import { getCollection, render } from 'astro:content';
+import { documentPath } from '../../lib/api';
 
 export async function getStaticPaths() {
   const guides = await getCollection('guides', ({ data }) => !data.draft);
@@ -18,6 +19,9 @@ const { data } = guide;
 const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
 const canonical = new URL(`/ressources/${guide.id}`, siteOrigin).href;
 const dateFmt = (d: Date) => new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+// Lien vers le fonds : direct si le guide cible un texte publié précis
+// (`fondsSlug`), sinon recherche pré-remplie (`fondsQuery`).
+const directTextHref = data.fondsSlug ? documentPath(data.fondsSlug) : null;
 const fondsHref = `/recherche?q=${encodeURIComponent(data.fondsQuery ?? data.category)}`;
 
 const articleLd = {
@@ -81,7 +85,11 @@ const articleLd = {
           <h2 class="text-lg font-bold text-on-surface mb-2">Consultez les textes officiels</h2>
           <p class="text-sm text-on-surface-variant mb-6">Ce guide explique les grands principes. Pour le détail, accédez aux textes en vigueur dans le fonds Mibeko.</p>
           <div class="flex flex-wrap gap-3">
-            <a href={fondsHref} class="inline-flex items-center h-10 px-5 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors text-sm">Rechercher dans le fonds</a>
+            {directTextHref ? (
+              <a href={directTextHref} class="inline-flex items-center h-10 px-5 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors text-sm">Lire le texte de référence</a>
+            ) : (
+              <a href={fondsHref} class="inline-flex items-center h-10 px-5 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors text-sm">Rechercher dans le fonds</a>
+            )}
             <a href="/textes" class="inline-flex items-center h-10 px-5 bg-surface-container text-on-surface font-semibold rounded hover:bg-surface-container-high transition-colors text-sm">Parcourir les textes officiels</a>
           </div>
         </div>

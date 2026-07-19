@@ -5,6 +5,7 @@ category: "Droit de la famille"
 publishedDate: 2026-04-15
 cover: ../../assets/images/article-divorce-famille.webp
 fondsQuery: "code de la famille divorce"
+fondsSlug: "code-de-la-famille-de-1984"
 ---
 
 Le **divorce** met fin au mariage et règle ses conséquences. Le Code de la famille en fixe les conditions et la procédure, dans un domaine où chaque situation est particulière.

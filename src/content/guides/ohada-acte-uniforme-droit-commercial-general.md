@@ -6,6 +6,7 @@ publishedDate: 2026-05-12
 cover: ../../assets/images/article-ohada-rccm.webp
 featured: true
 fondsQuery: "acte uniforme droit commercial général"
+fondsSlug: "acte-uniforme-portant-droit-commercial-general"
 ---
 
 L'**Acte uniforme relatif au droit commercial général (AUDCG)** est l'un des textes fondateurs de l'OHADA, l'Organisation pour l'harmonisation en Afrique du droit des affaires. Il s'applique directement en République du Congo, comme dans les autres États membres, et fixe des règles communes pour exercer une activité commerciale.

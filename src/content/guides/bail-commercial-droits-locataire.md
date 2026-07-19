@@ -5,6 +5,7 @@ category: "Droit commercial"
 publishedDate: 2026-03-20
 cover: ../../assets/images/article-bail-commercial.webp
 fondsQuery: "bail commercial OHADA"
+fondsSlug: "acte-uniforme-portant-droit-commercial-general"
 ---
 
 Le **bail commercial** lie un propriétaire et l'exploitant d'un fonds de commerce. Dans l'espace OHADA, il est encadré par l'Acte uniforme relatif au droit commercial général, qui protège notamment la stabilité de l'exploitation.
