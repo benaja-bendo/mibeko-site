@@ -14,7 +14,7 @@ interface Props {
 const {
 	title,
 	description = "Mibeko : la plateforme juridique du Congo et de l'espace OHADA. Recherchez, comprenez et agissez sur vos droits — pour les citoyens comme pour les professionnels du droit.",
-	image = '/logo.svg',
+	image = '/og-default.png',
 	ogType = 'website',
 	canonical: canonicalProp,
 	jsonLd = [],
@@ -25,6 +25,13 @@ const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
 const canonical = canonicalProp ?? new URL(Astro.url.pathname, siteOrigin).href;
 const siteRoot = new URL('/', siteOrigin).href;
 const siteName = 'Mibeko';
+
+// Image de partage en URL ABSOLUE (exigée par WhatsApp/Facebook) : accepte un
+// chemin relatif comme une URL déjà absolue. Les dimensions/type ne sont
+// déclarés que pour l'image par défaut (1200×630 PNG connue) — une image
+// custom passée par la page peut avoir un tout autre format.
+const ogImage = new URL(image, siteOrigin).href;
+const isDefaultOgImage = Astro.props.image === undefined;
 
 const orgJsonLd = {
 	'@context': 'https://schema.org',
@@ -75,14 +82,17 @@ const websiteJsonLd = {
 		<meta property="og:title" content={title} />
 		<meta property="og:description" content={description} />
 		<meta property="og:url" content={canonical} />
-		<meta property="og:image" content={image} />
+		<meta property="og:image" content={ogImage} />
+		{isDefaultOgImage && <meta property="og:image:width" content="1200" />}
+		{isDefaultOgImage && <meta property="og:image:height" content="630" />}
+		{isDefaultOgImage && <meta property="og:image:type" content="image/png" />}
 		<meta property="og:locale" content="fr_FR" />
 
 		<!-- Twitter -->
 		<meta name="twitter:card" content="summary_large_image" />
 		<meta name="twitter:title" content={title} />
 		<meta name="twitter:description" content={description} />
-		<meta name="twitter:image" content={image} />
+		<meta name="twitter:image" content={ogImage} />
 
 		<!-- Google Fonts: Inter & Source Serif 4 -->
 		<link rel="preconnect" href="https://fonts.googleapis.com">

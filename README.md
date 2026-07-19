@@ -39,7 +39,7 @@ Le système de design complet (tokens, échelles typographiques, composants) est
 
 ```text
 mibeko-site/
-├── public/                 # Assets statiques (logo.svg, robots.txt…)
+├── public/                 # Assets statiques (logo.svg, og-default.png, robots.txt…)
 ├── src/
 │   ├── components/         # Composants Astro (Header, Footer, HomeHero, DocumentTree, ThemeIcon…)
 │   ├── content/            # Collections markdown : guides/ et demarches/
