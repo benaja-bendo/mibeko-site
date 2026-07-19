@@ -7,6 +7,8 @@ import IntentionPillars from '../components/IntentionPillars.astro';
 import AudienceSplit from '../components/AudienceSplit.astro';
 import WhyMibeko from '../components/WhyMibeko.astro';
 import LatestUpdates from '../components/LatestUpdates.astro';
+import NewsletterForm from '../components/NewsletterForm.astro';
+import WhatsAppChannel from '../components/WhatsAppChannel.astro';
 import CTASection from '../components/CTASection.astro';
 import Footer from '../components/Footer.astro';
 ---
@@ -14,11 +16,32 @@ import Footer from '../components/Footer.astro';
 <Layout title="Mibeko — Le droit congolais, clair et à portée de main">
 	<Header />
 	<main id="main" class="flex-grow">
+		{/* Portail citoyen : accès au droit en tête (recherche + situations +
+		    intentions + actualités). La plaquette produit descend ensuite. */}
 		<HomeHero />
 		<ThemesBand />
 		<IntentionPillars />
-		<AudienceSplit />
 		<LatestUpdates />
+
+		{/* Capture d'audience (newsletter + canal WhatsApp si configuré) */}
+		<section class="py-16 md:py-24 bg-surface-container-low border-y border-surface-variant/50">
+			<div class="max-w-[720px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
+				<p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-3">Rester informé</p>
+				<h2 class="text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-4">Le droit bouge. Restez à jour.</h2>
+				<p class="text-on-surface-variant font-serif text-lg leading-relaxed mb-8 max-w-xl mx-auto">
+					Recevez les nouveaux textes officiels, guides et démarches directement par e-mail. Une fois par mois, sans spam.
+				</p>
+				<div class="max-w-md mx-auto text-left">
+					<NewsletterForm source="home" />
+				</div>
+				<div class="mt-6 flex justify-center">
+					<WhatsAppChannel />
+				</div>
+			</div>
+		</section>
+
+		{/* Plaquette produit, reléguée après le contenu citoyen */}
+		<AudienceSplit />
 		<WhyMibeko />
 		<CTASection />
 	</main>
