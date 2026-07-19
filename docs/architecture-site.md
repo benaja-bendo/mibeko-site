@@ -34,7 +34,11 @@ Le `Layout.astro` global gère `<head>` : titre, description, canonical, Open Gr
 │   /mentions-legales
 ├── /404                       Page d'erreur
 ├── /api/contact               Endpoint POST — relais du formulaire vers l'API (SSR)
-└── /sitemap.xml               Sitemap généré à la demande (SSR)
+└── /sitemap.xml               Index de sitemaps généré à la demande (SSR), qui référence
+    ├── /sitemap-pages.xml     les pages stables + thèmes de vie,
+    ├── /sitemap-guides.xml    les guides,
+    ├── /sitemap-demarches.xml les démarches,
+    └── /sitemap-textes.xml    et le fonds juridique (documents + articles)
 ```
 
 La navigation principale (`Header.astro`) expose quatre entrées — **Textes officiels** (`/textes`), **Démarches** (`/demarches`), **Guides** (`/ressources`), **Contact** (`/contact`) — plus une icône de recherche (`/recherche`), un lien `/produits` et un bouton vers l'espace pro (`app.mibeko.fr`).
@@ -74,4 +78,4 @@ Entrée du droit **par situation** plutôt que par nom de code (famille, travail
 
 Le client d'API (`src/lib/api.ts`) centralise tous les appels serveur-à-serveur vers Laravel : documents et articles (`fetchPublicDocument`), catalogue (`fetchPublishedDocuments`), types (`fetchDocumentTypes`), recherche (`fetchLibrarySearch`), thèmes (`fetchThemes`, `fetchThemeDocuments`), plan du sitemap (`fetchSitemap`), proxy PDF (`pdfProxyUrl`) et relais de contact (`submitContact`). Les enveloppes de réponse sont normalisées, les contenus légaux passent par `sanitizeLegalText`, et les chemins canoniques sont produits par `documentPath` / `articlePath` / `themePath`.
 
-Le référencement est natif : chaque page pertinente émet du JSON-LD, `robots.txt` autorise l'indexation et pointe le sitemap, et `sitemap.xml.ts` génère à la demande l'ensemble des URL — pages statiques, guides, démarches, thèmes, puis tous les documents et articles du fonds (via `fetchSitemap`), avec dégradation gracieuse si l'API est momentanément indisponible.
+Le référencement est natif : chaque page pertinente émet du JSON-LD, `robots.txt` autorise l'indexation et pointe le sitemap. `sitemap.xml.ts` sert un **index de sitemaps** (le fonds pouvant atteindre des dizaines de milliers d'URL) qui référence quatre sous-sitemaps générés à la demande — `sitemap-pages.xml` (pages stables + thèmes), `sitemap-guides.xml`, `sitemap-demarches.xml` et `sitemap-textes.xml` (documents et articles via `fetchSitemap`) — avec dégradation gracieuse si l'API est momentanément indisponible (helpers partagés dans `src/lib/sitemap.ts`).

@@ -45,7 +45,7 @@ mibeko-site/
 │   ├── content/            # Collections markdown : guides/ et demarches/
 │   ├── content.config.ts   # Schémas typés des collections (Zod)
 │   ├── layouts/            # Layout.astro (SEO, Open Graph, JSON-LD, fonts)
-│   ├── lib/                # api.ts (client API Laravel), sanitize.ts (nettoyage OCR/LaTeX)
+│   ├── lib/                # api.ts (client API Laravel), sanitize.ts (nettoyage OCR/LaTeX), sitemap.ts (helpers sitemaps)
 │   ├── pages/              # Routes du site (voir docs/architecture-site.md)
 │   └── styles/             # global.css
 ├── astro.config.mjs        # SSR node, site mibeko.fr, redirections 301 /codes → /textes
