@@ -26,6 +26,14 @@ const canonical = canonicalProp ?? new URL(Astro.url.pathname, siteOrigin).href;
 const siteRoot = new URL('/', siteOrigin).href;
 const siteName = 'Mibeko';
 
+// Mesure d'audience Umami (auto-hébergé, cookieless). Injectée UNIQUEMENT si les
+// deux variables publiques sont définies. `PUBLIC_UMAMI_URL` = origine de base
+// (https://stats.mibeko.fr) SANS /script.js — le front l'ajoute. Défaut absent
+// → rien n'est chargé (convention partagée avec mibeko-front).
+const umamiBase = (import.meta.env.PUBLIC_UMAMI_URL as string | undefined)?.replace(/\/$/, '');
+const umamiWebsiteId = import.meta.env.PUBLIC_UMAMI_WEBSITE_ID as string | undefined;
+const umamiEnabled = Boolean(umamiBase && umamiWebsiteId);
+
 // Image de partage en URL ABSOLUE (exigée par WhatsApp/Facebook) : accepte un
 // chemin relatif comme une URL déjà absolue. Les dimensions/type ne sont
 // déclarés que pour l'image par défaut (1200×630 PNG connue) — une image
@@ -104,6 +112,11 @@ const websiteJsonLd = {
 		{jsonLd.map((schema) => (
 			<script type="application/ld+json" set:html={JSON.stringify(schema)} />
 		))}
+
+		{/* Mesure d'audience anonyme (Umami, sans cookies) — seulement si configurée */}
+		{umamiEnabled && (
+			<script is:inline defer src={`${umamiBase}/script.js`} data-website-id={umamiWebsiteId}></script>
+		)}
 	</head>
 	<body class="antialiased min-h-screen flex flex-col selection:bg-primary selection:text-on-primary">
 		<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-on-primary focus:rounded">
