@@ -93,10 +93,15 @@ const pageTitle = hasQuery ? `« ${query} » — Recherche` : 'Rechercher dans l
               })}
             </ul>
             <div class="mt-10 rounded-2xl border border-surface-variant bg-surface-container-low p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <p class="text-sm text-on-surface-variant">Besoin d'une synthèse ou d'une explication de ces textes ?</p>
-              <a href="https://app.mibeko.fr/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center h-10 px-5 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors text-sm shrink-0">
-                Demander à Mibeko IA
-              </a>
+              <p class="text-sm text-on-surface-variant">Vous ne trouvez pas ? Explorez le fonds par thème ou lisez nos guides.</p>
+              <div class="flex flex-wrap gap-3 shrink-0">
+                <a href="/themes" class="inline-flex items-center h-10 px-5 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors text-sm">
+                  Parcourir par situation
+                </a>
+                <a href="/ressources" class="inline-flex items-center h-10 px-5 border border-surface-variant text-on-surface font-semibold rounded hover:bg-surface-container transition-colors text-sm">
+                  Lire les guides
+                </a>
+              </div>
             </div>
           </>
         )}
