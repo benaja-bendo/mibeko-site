@@ -399,6 +399,28 @@ export async function submitContact(payload: ContactPayload): Promise<{ ok: bool
   return { ok: res.ok, status: res.status };
 }
 
+export interface NewsletterPayload {
+  email: string;
+  source?: string;
+}
+
+/**
+ * Inscrit une adresse à la newsletter via l'API (`POST /newsletter-subscriptions`).
+ * Contrat : 204 (ok, idempotent), 422 (e-mail invalide). Appel serveur-à-serveur
+ * (relais SSR), donc pas de CORS. On expose le statut brut pour distinguer
+ * « déjà inscrit » (204 idempotent) d'une erreur de validation (422).
+ */
+export async function submitNewsletter(
+  payload: NewsletterPayload,
+): Promise<{ ok: boolean; status: number }> {
+  const res = await fetch(`${API_BASE}/newsletter-subscriptions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return { ok: res.ok, status: res.status };
+}
+
 /** Construit le chemin canonique d'un document. */
 export function documentPath(slug: string): string {
   return `/textes/${slug}`;

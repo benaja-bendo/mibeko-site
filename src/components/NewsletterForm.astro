@@ -1,0 +1,145 @@
+---
+/**
+ * Formulaire d'inscription à la newsletter (îlot progressif).
+ *
+ * Poste en fetch same-origin vers `/api/newsletter` (relais SSR → API Laravel,
+ * contrat `POST /newsletter-subscriptions` → 204/422). Aucun rechargement : les
+ * messages succès / déjà inscrit / erreur s'affichent en place. Sans JS, le
+ * `<form>` retombe sur un POST natif vers le même endpoint (dégradation propre).
+ *
+ * Props :
+ *  - source   : origine de l'inscription (transmise à l'API, ex. « home », « footer »).
+ *  - variant  : 'light' (fond clair) ou 'onPrimary' (fond foncé, ex. footer).
+ *  - title / description : libellés optionnels (masqués si absents).
+ */
+interface Props {
+  source?: string;
+  variant?: 'light' | 'onPrimary';
+  title?: string;
+  description?: string;
+  compact?: boolean;
+}
+
+const { source = 'site', variant = 'light', title, description, compact = false } = Astro.props;
+const onPrimary = variant === 'onPrimary';
+
+// Identifiant unique pour lier plusieurs instances (home + footer) sans collision.
+const uid = `nl-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<form
+  class="newsletter-form"
+  data-newsletter
+  data-source={source}
+  method="post"
+  action="/api/newsletter"
+>
+  {/* Transmis aussi par le POST natif (sans JS) ; l'îlot JS utilise data-source. */}
+  <input type="hidden" name="source" value={source} />
+  {title && (
+    <p class:list={['font-sans font-semibold', compact ? 'text-sm mb-1' : 'text-base mb-1.5', onPrimary ? 'text-on-primary' : 'text-on-surface']}>
+      {title}
+    </p>
+  )}
+  {description && (
+    <p class:list={['leading-relaxed', compact ? 'text-xs mb-3' : 'text-sm mb-4', onPrimary ? 'text-inverse-primary' : 'text-on-surface-variant']}>
+      {description}
+    </p>
+  )}
+
+  <label for={`${uid}-email`} class="sr-only">Votre adresse e-mail</label>
+  <div class="flex flex-col sm:flex-row gap-2.5">
+    <input
+      id={`${uid}-email`}
+      name="email"
+      type="email"
+      required
+      autocomplete="email"
+      placeholder="vous@exemple.cg"
+      class:list={[
+        'flex-1 min-w-0 h-11 rounded-lg px-4 text-sm outline-none transition-colors',
+        onPrimary
+          ? 'bg-on-primary/10 border border-on-primary/25 text-on-primary placeholder:text-inverse-primary/60 focus:border-on-primary/60'
+          : 'bg-surface-container-lowest border border-outline-variant/60 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary focus:ring-2 focus:ring-primary/20',
+      ]}
+    />
+    <button
+      type="submit"
+      data-submit
+      class:list={[
+        'inline-flex items-center justify-center h-11 px-5 rounded-lg text-sm font-semibold transition-colors shrink-0 disabled:opacity-70 disabled:cursor-not-allowed',
+        onPrimary
+          ? 'bg-on-primary text-primary hover:bg-surface-container-low'
+          : 'bg-primary text-on-primary hover:bg-primary-container',
+      ]}
+    >
+      S'inscrire
+    </button>
+  </div>
+
+  <!-- Message de retour (rempli par JS, rôle live pour l'accessibilité) -->
+  <p
+    data-feedback
+    role="status"
+    aria-live="polite"
+    class:list={['hidden mt-3 text-sm', onPrimary ? 'text-inverse-primary' : 'text-on-surface-variant']}
+  ></p>
+
+  <p class:list={['mt-3 text-xs leading-relaxed', onPrimary ? 'text-inverse-primary/70' : 'text-outline']}>
+    Pas de spam. Vous pouvez vous désinscrire à tout moment. Voir notre
+    <a href="/confidentialite" class:list={['underline hover:no-underline', onPrimary ? 'text-inverse-primary' : 'text-on-surface-variant']}>politique de confidentialité</a>.
+  </p>
+</form>
+
+<script>
+  const MESSAGES: Record<string, string> = {
+    ok: 'Merci ! Votre inscription est bien prise en compte.',
+    invalid: "Cette adresse e-mail semble invalide. Vérifiez-la et réessayez.",
+    error: "L'inscription est momentanément indisponible. Réessayez dans un instant.",
+  };
+
+  document.querySelectorAll<HTMLFormElement>('form[data-newsletter]').forEach((form) => {
+    const emailInput = form.querySelector<HTMLInputElement>('input[name="email"]');
+    const button = form.querySelector<HTMLButtonElement>('[data-submit]');
+    const feedback = form.querySelector<HTMLElement>('[data-feedback]');
+    if (!emailInput || !button || !feedback) return;
+
+    const show = (state: 'ok' | 'invalid' | 'error') => {
+      feedback.textContent = MESSAGES[state] ?? MESSAGES.error;
+      feedback.classList.remove('hidden');
+      // Teinte le message selon le résultat sans dépendre du variant.
+      feedback.classList.toggle('text-error', state !== 'ok');
+    };
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const email = emailInput.value.trim();
+      if (!email) return;
+
+      button.disabled = true;
+      feedback.classList.add('hidden');
+
+      try {
+        const res = await fetch('/api/newsletter', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, source: form.dataset.source ?? 'site' }),
+        });
+        let state: 'ok' | 'invalid' | 'error' = 'error';
+        try {
+          const data = (await res.json()) as { status?: string };
+          if (data.status === 'ok') state = 'ok';
+          else if (data.status === 'invalid') state = 'invalid';
+        } catch {
+          state = res.ok ? 'ok' : 'error';
+        }
+        show(state);
+        if (state === 'ok') form.reset();
+      } catch {
+        show('error');
+      } finally {
+        button.disabled = false;
+      }
+    });
+  });
+</script>

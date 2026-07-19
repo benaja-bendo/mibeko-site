@@ -1,4 +1,6 @@
 ---
+import NewsletterForm from './NewsletterForm.astro';
+
 const year = new Date().getFullYear();
 
 const columns = [
@@ -35,28 +37,29 @@ const columns = [
 <footer class="bg-primary text-on-primary pt-12 md:pt-16 mt-auto">
   <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
     <div class="grid grid-cols-2 md:grid-cols-5 gap-8 md:gap-12">
-      <!-- Brand -->
+      <!-- Brand + newsletter -->
       <div class="col-span-2 flex flex-col gap-4">
         <a href="/" class="flex items-center gap-2 w-fit">
           <img src="/logo.svg" alt="" class="w-6 h-6 brightness-0 invert" />
           <span class="font-sans font-bold text-lg tracking-tight">Mibeko</span>
         </a>
         <p class="text-inverse-primary text-sm leading-relaxed max-w-xs">
-          Vos droits, simplifiés. La plateforme juridique du Congo et de l'espace OHADA.
+          Le droit congolais, clair et à portée de main. Textes officiels, guides et démarches — pour tous les citoyens.
         </p>
+
+        <div class="mt-2 max-w-sm">
+          <NewsletterForm
+            source="footer"
+            variant="onPrimary"
+            title="Restez informé"
+            description="Les nouveaux textes et guides, une fois par mois. Rien d'autre."
+            compact
+          />
+        </div>
+
+        {/* Seul canal de contact réel à ce jour : l'e-mail. Rajouter les réseaux
+            sociaux ici uniquement quand les comptes officiels existeront. */}
         <div class="flex gap-3 mt-2">
-          <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="w-9 h-9 rounded-full border border-inverse-primary/40 flex items-center justify-center text-inverse-primary hover:text-white hover:border-white transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
-              <rect x="2" y="9" width="4" height="12"></rect>
-              <circle cx="4" cy="4" r="2"></circle>
-            </svg>
-          </a>
-          <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="w-9 h-9 rounded-full border border-inverse-primary/40 flex items-center justify-center text-inverse-primary hover:text-white hover:border-white transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-            </svg>
-          </a>
           <a href="mailto:contact@mibeko.fr" aria-label="E-mail" class="w-9 h-9 rounded-full border border-inverse-primary/40 flex items-center justify-center text-inverse-primary hover:text-white hover:border-white transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect width="20" height="16" x="2" y="4" rx="2"></rect>
