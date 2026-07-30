@@ -3,15 +3,19 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import PageHeader from '../components/PageHeader.astro';
 import Footer from '../components/Footer.astro';
-import NewsletterForm from '../components/NewsletterForm.astro';
 import { Image } from 'astro:assets';
 import imgAppMobile from '../assets/images/produit-app-mobile.webp';
 import imgPlateformePro from '../assets/images/produit-plateforme-pro.webp';
 
+// Liens stores (app cg.mibeko.app publiée sur les deux stores).
+// ID App Store vérifié via https://itunes.apple.com/lookup?bundleId=cg.mibeko.app
+const playStoreUrl = 'https://play.google.com/store/apps/details?id=cg.mibeko.app';
+const appStoreUrl = 'https://apps.apple.com/app/id6768865781';
+
 const mobileFeatures = [
   {
     title: 'Tout le droit, expliqué simplement',
-    description: 'Constitution, codes, lois et textes OHADA, en français clair et avec leur source officielle.',
+    description: 'Constitution, codes, lois et textes OHADA, avec leur source officielle — consultables même hors connexion.',
     icon: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>`,
   },
   {
@@ -20,9 +24,9 @@ const mobileFeatures = [
     icon: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>`,
   },
   {
-    title: 'Vos démarches, pas à pas',
-    description: 'Suivez une démarche étape par étape, avec les documents à réunir et la base légale.',
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>`,
+    title: 'Le Journal officiel, suivi',
+    description: 'Parcourez les derniers numéros du Journal officiel et les textes qu\'ils publient, depuis votre téléphone.',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8V6Z"></path></svg>`,
   },
   {
     title: 'Vos dossiers, au même endroit',
@@ -83,18 +87,17 @@ const proFeatures = [
 							<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
 						</div>
 
-						<a href="https://play.google.com/store/apps/details?id=cg.mibeko.app" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2.5 h-12 px-6 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">
-							<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22.018 13.298l-3.919 2.218-3.515-3.493 3.543-3.521 3.891 2.202a1.49 1.49 0 0 1 0 2.594zM1.337.924a1.486 1.486 0 0 0-.112.568v21.017c0 .217.045.419.124.6l11.155-11.087L1.337.924zm12.207 10.065l3.258-3.238L3.45.195a1.466 1.466 0 0 0-.946-.179l11.04 10.973zm0 2.067l-11 10.933c.298.036.612-.016.906-.183l13.324-7.54-3.23-3.21z"/></svg>
-							Télécharger sur Google Play
-						</a>
-						<p class="mt-3 text-sm text-outline">Disponible sur Android.</p>
-
-						<!-- Liste d'attente iOS -->
-						<div class="mt-6 rounded-2xl border border-surface-variant bg-surface-container-lowest p-5">
-							<p class="text-sm font-semibold text-on-surface mb-1">Bientôt sur iPhone</p>
-							<p class="text-sm text-on-surface-variant mb-4">Laissez votre e-mail : nous vous préviendrons dès que l'app iOS sera disponible.</p>
-							<NewsletterForm source="ios-waitlist" />
+						<div class="flex flex-col sm:flex-row gap-3">
+							<a href={playStoreUrl} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2.5 h-12 px-6 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">
+								<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22.018 13.298l-3.919 2.218-3.515-3.493 3.543-3.521 3.891 2.202a1.49 1.49 0 0 1 0 2.594zM1.337.924a1.486 1.486 0 0 0-.112.568v21.017c0 .217.045.419.124.6l11.155-11.087L1.337.924zm12.207 10.065l3.258-3.238L3.45.195a1.466 1.466 0 0 0-.946-.179l11.04 10.973zm0 2.067l-11 10.933c.298.036.612-.016.906-.183l13.324-7.54-3.23-3.21z"/></svg>
+								Google Play
+							</a>
+							<a href={appStoreUrl} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2.5 h-12 px-6 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">
+								<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.56-1.701"/></svg>
+								App Store
+							</a>
 						</div>
+						<p class="mt-3 text-sm text-outline">Disponible sur Android et iPhone.</p>
 					</div>
 
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -176,10 +179,11 @@ const proFeatures = [
 			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
 				<h2 class="text-3xl md:text-4xl font-bold text-on-surface mb-4">Commencez dès aujourd'hui</h2>
 				<p class="text-on-surface-variant font-serif text-lg mb-8 max-w-2xl mx-auto">
-					L'application citoyenne est sur Google Play et l'espace professionnel est disponible sur le web. Vous pouvez aussi consulter tout le fonds librement.
+					L'application citoyenne est sur Google Play et l'App Store, et l'espace professionnel est disponible sur le web. Vous pouvez aussi consulter tout le fonds librement.
 				</p>
 				<div class="flex flex-col sm:flex-row gap-3 justify-center">
-					<a href="https://play.google.com/store/apps/details?id=cg.mibeko.app" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center h-12 px-8 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">Télécharger l'application</a>
+					<a href={playStoreUrl} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center h-12 px-8 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">Google Play</a>
+					<a href={appStoreUrl} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center h-12 px-8 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">App Store</a>
 					<a href="https://app.mibeko.fr/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center h-12 px-8 border border-outline-variant/70 text-on-surface font-semibold rounded hover:bg-surface-container transition-colors">Accéder à l'espace pro</a>
 				</div>
 			</div>
