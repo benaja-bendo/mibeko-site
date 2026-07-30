@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "G2VC572UTM.cg.mibeko.app",
+        "paths": ["/textes/*"]
+      }
+    ]
+  }
+}
