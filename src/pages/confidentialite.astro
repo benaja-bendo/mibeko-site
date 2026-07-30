@@ -1,22 +1,29 @@
 ---
+// ⚠️ BROUILLON À FAIRE VALIDER PAR UN JURISTE AVANT MISE EN LIGNE.
+// Cette page est l'URL de confidentialité déclarée dans les consoles
+// Google Play (Data Safety) et Apple (App Privacy) : son URL doit rester
+// STABLE (/confidentialite) et son contenu doit refléter EXACTEMENT la
+// collecte réelle de l'app mobile v1.1 (Firebase Analytics — désactivable
+// in-app —, Crashlytics, token push FCM/APNs, export GET /v1/profile/export,
+// suppression DELETE /v1/profile). Toute évolution de la collecte doit être
+// répercutée ici AVANT la release correspondante.
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import PageHeader from '../components/PageHeader.astro';
 import Footer from '../components/Footer.astro';
 ---
 
-<Layout title="Politique de confidentialité — Mibeko" description="Politique de confidentialité et de protection des données personnelles de Mibeko.">
+<Layout title="Politique de confidentialité — Mibeko" description="Politique de confidentialité et de protection des données personnelles de Mibeko : données collectées, finalités, durées de conservation et droits des utilisateurs.">
 	<Header />
 	<main id="main" class="flex-grow">
-		<PageHeader eyebrow="Légal" title="Politique de confidentialité" subtitle="Dernière mise à jour : juin 2026" />
+		<PageHeader eyebrow="Légal" title="Politique de confidentialité" subtitle="Dernière mise à jour : juillet 2026" />
 		<section class="py-12 md:py-16 bg-background">
 			<div class="max-w-[760px] mx-auto px-4 sm:px-6 lg:px-8 legal-prose">
-				<!-- <div class="p-4 rounded-lg bg-secondary-container/20 border border-secondary-container/40 mb-8">
-					<p class="text-sm text-on-secondary-container">⚠️ Modèle à compléter et à faire valider par un conseil juridique avant la mise en ligne définitive.</p>
-				</div> -->
-
 				<p>
 					Mibeko accorde une importance fondamentale à la protection de votre vie privée. La présente politique décrit comment nous collectons, utilisons et protégeons vos données personnelles, conformément à la <strong>loi n°29-2019 du 10 octobre 2019</strong> relative à la protection des données à caractère personnel en République du Congo.
+				</p>
+				<p>
+					Elle s'applique à l'ensemble du service Mibeko : le site <strong>mibeko.fr</strong>, l'espace professionnel <strong>app.mibeko.fr</strong> et les <strong>applications mobiles</strong> Mibeko pour Android et iOS (le « Service »).
 				</p>
 
 				<h2>1. Responsable du traitement</h2>
@@ -24,57 +31,88 @@ import Footer from '../components/Footer.astro';
 					Le responsable du traitement est <strong>Mibeko</strong>, startup, dont le siège est situé à Pointe-Noire, République du Congo. Contact : <a href="mailto:contact@mibeko.fr">contact@mibeko.fr</a>.
 				</p>
 
-				<h2>2. Données collectées</h2>
+				<h2>2. Données collectées et finalités</h2>
+
+				<h3>2.1 Données de compte</h3>
+				<p>
+					Lorsque vous créez un compte, nous collectons votre <strong>nom</strong>, votre <strong>adresse e-mail</strong> et votre <strong>profil</strong> (particulier / professionnel). Si vous complétez votre profil professionnel, nous collectons également votre <strong>numéro de téléphone</strong>, votre <strong>profession</strong> et le nom de votre <strong>structure</strong> — ces champs restent facultatifs. Votre mot de passe est stocké sous forme chiffrée (hachée) : nous n'y avons jamais accès en clair. Ces données servent à fournir le Service, sécuriser votre compte et gérer notre relation avec vous.
+				</p>
+
+				<h3>2.2 Contenu utilisateur</h3>
+				<p>
+					Les <strong>dossiers</strong>, <strong>favoris</strong>, <strong>conversations avec l'assistant</strong> et préférences que vous créez dans le Service sont enregistrés sur nos serveurs afin d'être synchronisés entre vos appareils. Ce contenu vous appartient : vous pouvez l'exporter et le supprimer à tout moment (voir la section « Vos droits »).
+				</p>
+
+				<h3>2.3 Statistiques d'usage (application mobile)</h3>
+				<p>
+					L'application mobile utilise <strong>Google Firebase Analytics</strong> pour mesurer l'usage des fonctionnalités : écrans consultés, fonctionnalités utilisées, événements techniques. Ces événements sont <strong>anonymisés</strong> et ne contiennent <strong>jamais le contenu de vos recherches juridiques</strong> ni celui de vos échanges avec l'assistant. Ils nous servent uniquement à comprendre ce qui est utile et à améliorer l'application.
+				</p>
+				<p>
+					Ce partage est <strong>désactivable à tout moment</strong> dans l'application : <em>Profil → « Partage de statistiques anonymes »</em>. La désactivation prend effet immédiatement.
+				</p>
+
+				<h3>2.4 Diagnostics et rapports de plantage</h3>
+				<p>
+					L'application mobile utilise <strong>Google Firebase Crashlytics</strong> pour recueillir des rapports de plantage : modèle d'appareil, version du système et de l'application, trace technique de l'erreur. Ces rapports servent exclusivement à identifier et corriger les pannes.
+				</p>
+
+				<h3>2.5 Notifications</h3>
+				<p>
+					Si vous activez les notifications, l'application enregistre un <strong>jeton de notification</strong> (token push) et un <strong>identifiant d'appareil</strong>, nécessaires à l'acheminement technique des notifications (Firebase Cloud Messaging sur Android, service de notifications Apple sur iOS). Ils ne servent à aucune autre finalité.
+				</p>
+
+				<h3>2.6 Mesure d'audience du site web</h3>
+				<p>
+					Le site mibeko.fr n'utilise <strong>aucun cookie de traçage publicitaire</strong>. Seuls des cookies ou stockages strictement nécessaires au fonctionnement technique peuvent être déposés (par exemple pour maintenir votre session sur les espaces connectés). Si une mesure d'audience est activée, elle repose sur une solution <strong>respectueuse de la vie privée et sans cookies</strong> (Umami, auto-hébergé) : statistiques agrégées et anonymes, sans possibilité de vous identifier. Si des cookies de mesure d'audience devaient être introduits à l'avenir, ils seraient soumis à votre consentement préalable et cette politique serait mise à jour.
+				</p>
+
+				<h2>3. Base légale</h2>
+				<p>
+					Les traitements reposent, selon les cas, sur l'exécution du contrat (fourniture du Service : compte, contenu utilisateur, notifications que vous activez) ou sur l'intérêt légitime de Mibeko à améliorer, sécuriser et fiabiliser la plateforme (statistiques d'usage anonymes, diagnostics, sécurité). Les statistiques d'usage sont actives par défaut et <strong>désactivables à tout moment en un geste</strong> depuis l'application (<em>Profil → « Partage de statistiques anonymes »</em>) ; elles ne sont jamais rattachées à votre identité.
+				</p>
+
+				<h2>4. Durées de conservation</h2>
 				<ul>
-					<li><strong>Données d'identification</strong> : nom, adresse e-mail, profil (particulier / professionnel) ;</li>
-					<li><strong>Données d'usage</strong> : recherches effectuées, pages consultées, préférences ;</li>
-					<li><strong>Données techniques</strong> : type d'appareil, données de connexion, pour la sécurité et l'amélioration du Service.</li>
+					<li><strong>Compte et contenu utilisateur</strong> : conservés tant que votre compte est actif. En cas de suppression du compte, les données sont effacées ; les copies de sauvegarde techniques sont purgées dans un délai maximal de 90 jours.</li>
+					<li><strong>Statistiques d'usage</strong> (Firebase Analytics) : 14 mois au maximum.</li>
+					<li><strong>Rapports de plantage</strong> (Crashlytics) : 90 jours.</li>
+					<li><strong>Jeton de notification et identifiant d'appareil</strong> : jusqu'à la désactivation des notifications, la déconnexion ou la désinstallation de l'application.</li>
 				</ul>
 
-				<h2>3. Finalités</h2>
+				<h2>5. Partage des données</h2>
+				<p>
+					Vos données ne sont <strong>jamais vendues</strong> et ne servent à <strong>aucun ciblage publicitaire</strong> : pas de publicité dans le Service, pas de suivi publicitaire entre applications, pas de profilage commercial.
+				</p>
+				<p>
+					Elles peuvent être partagées uniquement avec des <strong>sous-traitants techniques</strong> agissant pour notre compte et tenus à des obligations de confidentialité :
+				</p>
 				<ul>
-					<li>Fournir et améliorer le Service (recherche, assistant, consultation des textes) ;</li>
-					<li>Gérer votre compte et nos relations avec vous ;</li>
-					<li>Assurer la sécurité de la plateforme ;</li>
-					<li>Vous informer, avec votre consentement, des actualités juridiques pertinentes.</li>
+					<li><strong>Google Firebase</strong> (Analytics, Crashlytics, Cloud Messaging) : statistiques d'usage anonymisées, rapports de plantage et acheminement des notifications. Ces données sont traitées sur les serveurs de Google, qui peuvent être situés hors de la République du Congo ;</li>
+					<li><strong>Hébergement</strong> : Infomaniak Network SA (Genève, Suisse), qui héberge les serveurs applicatifs et bases de données de la plateforme.</li>
 				</ul>
-
-				<h2>4. Base légale</h2>
 				<p>
-					Les traitements reposent, selon les cas, sur votre consentement, l'exécution du contrat (fourniture du Service) ou l'intérêt légitime de Mibeko à sécuriser et améliorer la plateforme.
+					Vos données peuvent enfin être communiquées si la loi l'exige, sur demande d'une autorité compétente.
 				</p>
 
-				<h2>5. Conservation</h2>
+				<h2>6. Vos droits</h2>
 				<p>
-					Vos données sont conservées pendant la durée nécessaire aux finalités décrites, puis supprimées ou anonymisées conformément à la réglementation applicable.
+					Vous disposez d'un droit d'accès, de rectification, d'effacement, d'opposition et de portabilité de vos données. Concrètement :
 				</p>
-
-				<h2>6. Partage des données</h2>
-				<p>
-					Vos données ne sont jamais vendues. Elles peuvent être partagées avec des prestataires techniques agissant pour notre compte (hébergement, sécurité), tenus à des obligations de confidentialité.
-				</p>
+				<ul>
+					<li><strong>Exporter vos données</strong> : depuis l'application, <em>Profil → « Exporter mes données »</em> vous remet une copie de vos données (compte, dossiers, favoris) ;</li>
+					<li><strong>Supprimer votre compte</strong> : depuis l'application, <em>Profil → « Supprimer mon compte »</em>. La suppression est définitive et entraîne l'effacement de vos données dans les conditions décrites à la section 4 ;</li>
+					<li><strong>Désactiver les statistiques d'usage</strong> : <em>Profil → « Partage de statistiques anonymes »</em> ;</li>
+					<li><strong>Toute autre demande</strong> : écrivez à <a href="mailto:contact@mibeko.fr">contact@mibeko.fr</a>. Vous pouvez également saisir l'autorité compétente en matière de protection des données personnelles.</li>
+				</ul>
 
 				<h2>7. Sécurité</h2>
 				<p>
-					Nous mettons en œuvre des mesures techniques et organisationnelles appropriées (chiffrement, contrôle d'accès) pour protéger vos données contre tout accès non autorisé, perte ou altération.
+					Nous mettons en œuvre des mesures techniques et organisationnelles appropriées (chiffrement des échanges, mots de passe hachés, contrôle d'accès, journalisation) pour protéger vos données contre tout accès non autorisé, perte ou altération.
 				</p>
 
-				<h2>8. Vos droits</h2>
+				<h2>8. Modifications</h2>
 				<p>
-					Vous disposez d'un droit d'accès, de rectification, d'effacement, d'opposition et de portabilité de vos données. Pour exercer ces droits, écrivez à <a href="mailto:contact@mibeko.fr">contact@mibeko.fr</a>. Vous pouvez également saisir l'autorité compétente en matière de protection des données.
-				</p>
-
-				<h2>9. Cookies et mesure d'audience</h2>
-				<p>
-					Le site n'utilise <strong>aucun cookie de traçage publicitaire</strong>. Seuls des cookies ou stockages strictement nécessaires au fonctionnement technique du Service peuvent être déposés (par exemple pour maintenir votre session sur les espaces connectés).
-				</p>
-				<p>
-					Si une <strong>mesure d'audience</strong> est activée, elle repose sur une solution <strong>respectueuse de la vie privée et sans cookies</strong> (Umami, auto-hébergé) : elle produit des statistiques agrégées et anonymes, <strong>sans déposer de cookie</strong> ni permettre de vous identifier. Aucune donnée n'est partagée avec des tiers à des fins publicitaires. Si des cookies de mesure d'audience devaient être introduits à l'avenir, ils seraient soumis à votre consentement préalable et cette politique serait mise à jour.
-				</p>
-
-				<h2>10. Modifications</h2>
-				<p>
-					Cette politique peut être mise à jour. Toute modification substantielle vous sera communiquée par les moyens appropriés.
+					Cette politique peut être mise à jour, notamment lorsque de nouvelles fonctionnalités modifient les données collectées. Toute modification substantielle vous sera communiquée par les moyens appropriés (application, site ou e-mail), et la date de mise à jour en tête de page sera actualisée.
 				</p>
 			</div>
 		</section>
