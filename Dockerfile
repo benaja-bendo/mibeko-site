@@ -10,6 +10,15 @@ RUN npm ci
 # Copie du reste du code source
 COPY . .
 
+# PUBLIC_* est un préfixe Astro/Vite : ces variables sont inlinées dans le
+# bundle CLIENT au moment du build (jamais lisibles depuis process.env au
+# runtime, contrairement à MIBEKO_API_URL) — doivent donc être des build-args,
+# pas des variables du .env runtime du docker-compose.
+ARG PUBLIC_UMAMI_URL
+ARG PUBLIC_UMAMI_WEBSITE_ID
+ENV PUBLIC_UMAMI_URL=$PUBLIC_UMAMI_URL
+ENV PUBLIC_UMAMI_WEBSITE_ID=$PUBLIC_UMAMI_WEBSITE_ID
+
 # Build SSR (adapter @astrojs/node, mode standalone)
 # → produit dist/server/entry.mjs (serveur Node) + dist/client (assets)
 RUN npm run build
