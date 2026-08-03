@@ -117,3 +117,29 @@ export function sanitizeLegalText(input: string | null | undefined): string | nu
 
   return s;
 }
+
+/**
+ * Affichage d'un numéro d'article.
+ *
+ * L'ingestion suffixe en `_doublon_N` les numéros qui entrent en collision au
+ * sein d'un même document, pour satisfaire la contrainte d'unicité
+ * `uq_articles_document_numero`. Ces collisions ne sont presque jamais des
+ * duplications : ce sont des actes distincts réunis dans un même document
+ * (le Code Bleu OHADA enchaîne des actes uniformes qui redémarrent tous à
+ * l'article 1). Le numéro juridiquement exact est donc celui d'avant le
+ * suffixe — la division parente (LIVRE, TITRE) lève l'ambiguïté à l'écran.
+ *
+ * Le suffixe reste dans la donnée et dans les URL : il identifie l'article.
+ * Seul l'affichage est nettoyé. Le vrai correctif est en amont (segmenter le
+ * document en actes), voir `docs/pipeline/README.md`.
+ */
+export function displayArticleNumber(input: string): string;
+export function displayArticleNumber(input: null | undefined): null | undefined;
+export function displayArticleNumber(input: string | null): string | null;
+export function displayArticleNumber(input: string | null | undefined): string | null | undefined {
+  if (input == null) {
+    return input;
+  }
+
+  return input.replace(/_doublon_\d+$/, '');
+}
