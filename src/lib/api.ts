@@ -31,6 +31,7 @@ export interface DocumentMeta {
   statut?: string | null;
   date_publication: string | null;
   date_signature: string | null;
+  date_entree_vigueur: string | null;
   /** Nombre d'articles publiés (présent sur la liste `legal-documents`). */
   articles_count?: number | null;
   institution?: { nom?: string; sigle?: string } | null;
