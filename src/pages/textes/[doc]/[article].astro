@@ -5,6 +5,8 @@ import Layout from '../../../layouts/Layout.astro';
 import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
 import DocumentTree from '../../../components/DocumentTree.astro';
+import ShareActions from '../../../components/ShareActions.astro';
+import OpenInAppBanner from '../../../components/OpenInAppBanner.astro';
 import { fetchPublicDocument, buildTree, documentPath, articlePath } from '../../../lib/api';
 import { displayArticleNumber } from '../../../lib/sanitize';
 
@@ -49,8 +51,15 @@ const pageTitle = document && current
   : 'Texte introuvable';
 
 const typeName = document?.type?.name ?? 'Texte juridique';
-const selfUrl = document && current ? new URL(articlePath(document.slug, current.number), siteOrigin).href : '';
+const selfPath = document && current ? articlePath(document.slug, current.number) : '';
+const selfUrl = selfPath ? new URL(selfPath, siteOrigin).href : '';
 const docUrl = document ? new URL(documentPath(document.slug), siteOrigin).href : '';
+
+// Libellé de partage : ce qu'un destinataire doit lire pour situer le texte
+// sans avoir à ouvrir le lien.
+const shareTitle = document && current
+  ? `Article ${displayArticleNumber(current.number)} — ${document.titre_officiel}`
+  : '';
 
 const dateFmt = (iso?: string | null) =>
   iso ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso)) : null;
@@ -103,6 +112,7 @@ const related = current?.related ?? [];
   ogType="article"
   canonical={selfUrl || undefined}
   jsonLd={jsonLd}
+  appArgument={selfUrl || undefined}
 >
   <Header />
   <main id="main" class="flex-grow bg-background">
@@ -190,6 +200,8 @@ const related = current?.related ?? [];
               </div>
             )}
 
+            <ShareActions url={selfUrl} title={shareTitle} heading="Partager cet article" />
+
             <!-- Maillage interne : textes liés (publiés uniquement) -->
             {related.length > 0 && (
               <section class="mt-12">
@@ -265,4 +277,10 @@ const related = current?.related ?? [];
     )}
   </main>
   <Footer />
+  {!notFound && (
+    <OpenInAppBanner
+      path={selfPath}
+      label={`Article ${displayArticleNumber(current!.number)} — ${document!.titre_officiel}`}
+    />
+  )}
 </Layout>

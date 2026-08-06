@@ -9,6 +9,12 @@ interface Props {
 	canonical?: string;
 	jsonLd?: Record<string, unknown>[];
 	noindex?: boolean;
+	/**
+	 * URL transmise à l'app iOS par la Smart App Banner quand l'utilisateur
+	 * appuie sur « Ouvrir » : sans elle, l'app démarre sur l'accueil et perd le
+	 * texte que la personne était en train de lire.
+	 */
+	appArgument?: string;
 }
 
 const {
@@ -19,6 +25,7 @@ const {
 	canonical: canonicalProp,
 	jsonLd = [],
 	noindex = false,
+	appArgument,
 } = Astro.props;
 
 const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
@@ -85,8 +92,14 @@ const websiteJsonLd = {
 		<meta name="theme-color" content="#03271a" />
 
 		{/* Smart App Banner iOS — propose l'app Mibeko (cg.mibeko.app) dans Safari.
-		    ID App Store vérifié via https://itunes.apple.com/lookup?bundleId=cg.mibeko.app */}
-		<meta name="apple-itunes-app" content="app-id=6768865781" />
+		    ID App Store vérifié via https://itunes.apple.com/lookup?bundleId=cg.mibeko.app
+		    `app-argument` transporte la page courante jusqu'à l'app (reçue par
+		    `onOpenURL` côté Swift) : c'est ce qui fait atterrir le lecteur sur le
+		    bon article et non sur l'accueil. */}
+		<meta
+			name="apple-itunes-app"
+			content={appArgument ? `app-id=6768865781, app-argument=${appArgument}` : 'app-id=6768865781'}
+		/>
 
 		<!-- Open Graph -->
 		<meta property="og:type" content={ogType} />

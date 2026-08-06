@@ -1,0 +1,160 @@
+---
+/**
+ * Actions de partage d'un texte juridique (page document ou page article).
+ *
+ * Trois canaux, dans l'ordre d'usage réel au Congo :
+ *  1. le partage natif du système (`navigator.share`) — mobile surtout ;
+ *  2. WhatsApp, premier canal de diffusion du pays ;
+ *  3. la copie du lien, pour le courriel et les conclusions.
+ *
+ * Le lien partagé est TOUJOURS l'URL publique `https://mibeko.fr/textes/…` :
+ * c'est elle qui est déclarée en App Link Android et en Universal Link iOS, donc
+ * elle ouvre l'application quand le destinataire l'a installée, et le site
+ * sinon. Ne jamais partager un lien `mibeko://` : il ne mène nulle part chez
+ * qui n'a pas l'app.
+ *
+ * Dégradation sans JavaScript : seul WhatsApp reste (c'est un vrai lien), les
+ * deux boutons pilotés par script restent masqués plutôt que de mentir sur une
+ * action qui ne se produirait pas.
+ */
+interface Props {
+  /** URL publique absolue du texte partagé. */
+  url: string;
+  /** Titre lisible, repris dans le message de partage. */
+  title: string;
+  /** Intitulé de la section. */
+  heading?: string;
+}
+
+const { url, title, heading = 'Partager ce texte' } = Astro.props;
+
+// Message commun au partage natif et à WhatsApp : le titre, puis le lien sur
+// sa propre ligne (les aperçus WhatsApp/Signal se déclenchent mieux ainsi).
+const shareText = `${title}\n${url}`;
+const whatsappHref = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+
+const btn =
+  'inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-surface-variant bg-surface-container-lowest text-on-surface font-semibold text-sm hover:border-primary/40 hover:text-primary transition-colors';
+---
+
+<section
+  aria-label={heading}
+  class="mt-10 rounded-2xl border border-surface-variant bg-surface-container-low p-5 sm:p-6"
+  data-share
+  data-share-url={url}
+  data-share-title={title}
+  data-share-text={shareText}
+>
+  <h2 class="text-base font-bold text-on-surface mb-1">{heading}</h2>
+  <p class="text-sm text-on-surface-variant mb-4">
+    Le lien ouvre l'application Mibeko si elle est installée, et cette page sinon.
+  </p>
+
+  <div class="flex flex-wrap gap-2.5">
+    <!-- Partage natif : révélé par le script uniquement si l'appareil le supporte. -->
+    <button type="button" class={`${btn} hidden`} data-share-native>
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line></svg>
+      Partager
+    </button>
+
+    <a href={whatsappHref} target="_blank" rel="noopener noreferrer" class={btn}>
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884a9.82 9.82 0 0 1 6.987 2.896 9.83 9.83 0 0 1 2.893 6.994c-.003 5.45-4.437 9.885-9.884 9.885M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .104 5.359.101 11.945c0 2.096.549 4.14 1.595 5.945L0 24l6.305-1.654a11.9 11.9 0 0 0 5.683 1.448h.005c6.585 0 11.946-5.359 11.949-11.945a11.9 11.9 0 0 0-3.421-8.4"></path></svg>
+      WhatsApp
+    </a>
+
+    <!-- Copie : révélée par le script (l'API presse-papiers n'existe qu'en
+         contexte sécurisé, et un bouton inerte serait un mensonge). -->
+    <button type="button" class={`${btn} hidden`} data-share-copy>
+      <span class="inline-flex items-center gap-2" data-copy-idle>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+        Copier le lien
+      </span>
+      <span class="hidden items-center gap-2 text-primary" data-copy-done>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+        Lien copié
+      </span>
+    </button>
+  </div>
+
+  <p class="sr-only" aria-live="polite" data-share-status></p>
+</section>
+
+<script>
+  // Un seul écouteur par bloc de partage — la page peut en contenir plusieurs.
+  document.querySelectorAll<HTMLElement>('[data-share]').forEach((root) => {
+    const url = root.dataset.shareUrl ?? window.location.href;
+    const title = root.dataset.shareTitle ?? document.title;
+    const text = root.dataset.shareText ?? url;
+    const status = root.querySelector<HTMLElement>('[data-share-status]');
+
+    const nativeBtn = root.querySelector<HTMLButtonElement>('[data-share-native]');
+    if (nativeBtn && typeof navigator.share === 'function') {
+      nativeBtn.classList.remove('hidden');
+      nativeBtn.addEventListener('click', async () => {
+        try {
+          await navigator.share({ title, text, url });
+        } catch (error) {
+          // AbortError = l'utilisateur a fermé la feuille de partage : ce n'est
+          // pas un échec, on ne dit rien. Le reste est signalé honnêtement.
+          if ((error as DOMException)?.name !== 'AbortError' && status) {
+            status.textContent = "Le partage n'a pas pu s'ouvrir.";
+          }
+        }
+      });
+    }
+
+    // Repli `execCommand` : les WebView intégrées (WhatsApp, Facebook) exposent
+    // souvent une API presse-papiers absente ou refusée. C'est exactement là que
+    // le partage compte le plus, donc on garde le bouton et on bascule sur la
+    // méthode historique plutôt que de le faire disparaître.
+    const legacyCopy = (value: string) => {
+      const field = document.createElement('textarea');
+      field.value = value;
+      field.setAttribute('readonly', '');
+      field.style.position = 'fixed';
+      field.style.opacity = '0';
+      document.body.appendChild(field);
+      field.select();
+      let ok = false;
+      try {
+        ok = document.execCommand('copy');
+      } catch {
+        ok = false;
+      }
+      field.remove();
+      return ok;
+    };
+
+    const copyBtn = root.querySelector<HTMLButtonElement>('[data-share-copy]');
+    if (copyBtn) {
+      copyBtn.classList.remove('hidden');
+      const idle = copyBtn.querySelector<HTMLElement>('[data-copy-idle]');
+      const done = copyBtn.querySelector<HTMLElement>('[data-copy-done]');
+      let resetTimer: number | undefined;
+
+      copyBtn.addEventListener('click', async () => {
+        let copied = false;
+        try {
+          await navigator.clipboard.writeText(url);
+          copied = true;
+        } catch {
+          copied = legacyCopy(url);
+        }
+        if (!copied) {
+          if (status) status.textContent = "Le lien n'a pas pu être copié.";
+          return;
+        }
+        idle?.classList.add('hidden');
+        done?.classList.remove('hidden');
+        done?.classList.add('inline-flex');
+        if (status) status.textContent = 'Lien copié dans le presse-papiers.';
+        window.clearTimeout(resetTimer);
+        resetTimer = window.setTimeout(() => {
+          done?.classList.add('hidden');
+          done?.classList.remove('inline-flex');
+          idle?.classList.remove('hidden');
+        }, 2400);
+      });
+    }
+  });
+</script>

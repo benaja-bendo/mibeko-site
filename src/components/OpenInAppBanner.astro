@@ -1,0 +1,153 @@
+---
+/**
+ * Bandeau « Ouvrir dans l'application » — rattrapage des cas où l'App Link ne
+ * s'est pas déclenché.
+ *
+ * Pourquoi il est nécessaire alors que les App Links / Universal Links sont
+ * déjà configurés : les navigateurs intégrés de WhatsApp, Facebook et Instagram
+ * ouvrent les liens dans leur propre WebView, qui court-circuite le routage
+ * système. Or ces navigateurs sont le premier point d'entrée du trafic partagé.
+ * Sans ce bandeau, un utilisateur qui a l'app reste bloqué sur le site.
+ *
+ * Le bandeau est rendu masqué et n'est révélé que par le script, sur mobile
+ * uniquement : il n'existe donc pas pour Googlebot ni sur ordinateur, et
+ * n'entre pas en concurrence avec la Smart App Banner native d'iOS Safari
+ * (déclarée dans Layout.astro), qui couvre déjà ce cas-là.
+ *
+ * Il ne promet rien : le libellé est « Ouvrir dans l'app », et si l'app est
+ * absente le bouton mène au store — jamais un cul-de-sac.
+ */
+interface Props {
+  /** Chemin public du texte, tel qu'affiché (`/textes/{slug}[/article-{n}]`). */
+  path: string;
+  /** Ligne de contexte affichée sous le titre (nom du texte, article…). */
+  label: string;
+}
+
+const { path, label } = Astro.props;
+
+// Le scheme applicatif reprend le chemin public à l'identique : `/textes/x/y`
+// devient `mibeko://textes/x/y`, motif déjà déclaré côté app (navDeepLink
+// « mibeko://textes/{docSlug}/article-{articleNumber} ») et dans
+// l'AndroidManifest (scheme `mibeko`, host `textes`).
+const appPath = path.replace(/^\//, '');
+const appUri = `mibeko://${appPath}`;
+
+const PLAY_STORE = 'https://play.google.com/store/apps/details?id=cg.mibeko.app';
+const APP_STORE = 'https://apps.apple.com/app/id6768865781';
+
+// Sur Android, l'URI `intent://` est le seul mécanisme fiable : le système
+// ouvre l'app si elle est installée, et bascule seul sur `browser_fallback_url`
+// sinon — sans minuterie ni page blanche.
+const androidIntent =
+  `intent://${appPath}#Intent;scheme=mibeko;package=cg.mibeko.app;` +
+  `S.browser_fallback_url=${encodeURIComponent(PLAY_STORE)};end`;
+---
+
+<div
+  class="hidden fixed inset-x-0 bottom-0 z-50 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+  data-open-in-app
+  data-app-uri={appUri}
+  data-android-intent={androidIntent}
+  data-play-store={PLAY_STORE}
+  data-app-store={APP_STORE}
+  role="complementary"
+  aria-label="Ouvrir dans l'application Mibeko"
+>
+  <div class="flex items-center gap-3 rounded-2xl border border-surface-variant bg-surface-container-lowest p-3 shadow-lg shadow-black/10">
+    <img src="/logo.svg" alt="" width="40" height="40" class="w-10 h-10 rounded-xl shrink-0 object-contain" />
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-bold text-on-surface leading-tight">Application Mibeko</p>
+      <p class="text-xs text-on-surface-variant truncate">{label}</p>
+    </div>
+    <button
+      type="button"
+      class="inline-flex items-center h-9 px-4 rounded-xl bg-primary text-on-primary font-semibold text-sm shrink-0"
+      data-open-in-app-go
+    >
+      Ouvrir
+    </button>
+    <button
+      type="button"
+      class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-on-surface-variant hover:bg-surface-container shrink-0"
+      data-open-in-app-close
+      aria-label="Masquer cette proposition"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  const banner = document.querySelector<HTMLElement>('[data-open-in-app]');
+
+  if (banner) {
+    const ua = navigator.userAgent;
+    const isAndroid = /Android/i.test(ua);
+    // iPadOS 13+ se déclare « Macintosh » : le test tactile le rattrape. Le
+    // garde `!isAndroid` n'est pas cosmétique — sans lui, un appareil dont
+    // l'agent dit Android mais dont `platform` reste « MacIntel » (émulation,
+    // navigateurs exotiques) passait pour un iPad, donc pour Safari iOS, et le
+    // bandeau ne s'affichait jamais.
+    const isIOS =
+      !isAndroid &&
+      (/iPad|iPhone|iPod/.test(ua) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+    // Navigateurs intégrés (WhatsApp, Facebook, Instagram, Messenger) : c'est
+    // exactement la population que ce bandeau existe pour rattraper.
+    const isInApp = /FBAN|FBAV|FB_IAB|Instagram|Line\/|WhatsApp|Twitter/i.test(ua);
+    // Safari iOS « nu » affiche déjà la Smart App Banner d'Apple : y superposer
+    // la nôtre ferait deux bandeaux pour la même proposition.
+    const isPlainSafariIOS = isIOS && !isInApp && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
+
+    // Le masquage vit dans sessionStorage, pas localStorage : rien ne persiste
+    // au-delà de l'onglet (le site ne conserve aucun état utilisateur durable).
+    const DISMISS_KEY = 'mibeko:open-in-app:dismissed';
+    let dismissed = false;
+    try {
+      dismissed = sessionStorage.getItem(DISMISS_KEY) === '1';
+    } catch {
+      // Navigation privée / stockage bloqué : on affiche, sans mémoriser.
+    }
+
+    if ((isAndroid || isIOS) && !isPlainSafariIOS && !dismissed) {
+      banner.classList.remove('hidden');
+      // Le bandeau flotte au-dessus du contenu : on libère la hauteur
+      // correspondante en bas de page pour ne rien masquer.
+      document.body.style.paddingBottom = `${banner.offsetHeight}px`;
+    }
+
+    banner.querySelector('[data-open-in-app-close]')?.addEventListener('click', () => {
+      banner.classList.add('hidden');
+      document.body.style.paddingBottom = '';
+      try {
+        sessionStorage.setItem(DISMISS_KEY, '1');
+      } catch {
+        // Stockage indisponible : le bandeau réapparaîtra, sans conséquence.
+      }
+    });
+
+    banner.querySelector('[data-open-in-app-go]')?.addEventListener('click', () => {
+      if (isAndroid) {
+        // `intent://` gère lui-même le repli vers le Play Store.
+        window.location.href = banner.dataset.androidIntent!;
+        return;
+      }
+
+      // iOS : on tente le scheme, et on ne bascule vers l'App Store que si la
+      // page est toujours au premier plan après le délai — si l'app s'est
+      // ouverte, l'onglet est masqué et la redirection est annulée.
+      const store = banner.dataset.appStore!;
+      const timer = window.setTimeout(() => {
+        if (!document.hidden) window.location.href = store;
+      }, 1500);
+      const cancel = () => {
+        if (document.hidden) window.clearTimeout(timer);
+      };
+      document.addEventListener('visibilitychange', cancel, { once: true });
+      window.addEventListener('pagehide', () => window.clearTimeout(timer), { once: true });
+
+      window.location.href = banner.dataset.appUri!;
+    });
+  }
+</script>

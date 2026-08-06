@@ -5,6 +5,8 @@ import Layout from '../../../layouts/Layout.astro';
 import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
 import DocumentTree from '../../../components/DocumentTree.astro';
+import ShareActions from '../../../components/ShareActions.astro';
+import OpenInAppBanner from '../../../components/OpenInAppBanner.astro';
 import { fetchPublicDocument, buildTree, documentPath, pdfProxyUrl } from '../../../lib/api';
 
 const { doc } = Astro.params;
@@ -25,7 +27,8 @@ const pdfUrl = document && hasPdf ? pdfProxyUrl(document.id) : null;
 const pdfDownloadUrl = document && hasPdf ? pdfProxyUrl(document.id, { download: true }) : null;
 
 const typeName = document?.type?.name ?? 'Texte juridique';
-const selfUrl = document ? new URL(documentPath(document.slug), siteOrigin).href : '';
+const selfPath = document ? documentPath(document.slug) : '';
+const selfUrl = selfPath ? new URL(selfPath, siteOrigin).href : '';
 
 const dateFmt = (iso?: string | null) =>
   iso ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso)) : null;
@@ -116,6 +119,7 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
   ogType="article"
   canonical={selfUrl || undefined}
   jsonLd={jsonLd}
+  appArgument={selfUrl || undefined}
 >
   <Header />
   <main id="main" class="flex-grow bg-background">
@@ -291,8 +295,11 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
           </div>
         )}
 
+        <ShareActions url={selfUrl} title={document!.titre_officiel} heading="Partager ce texte" />
+
       </div>
     )}
   </main>
   <Footer />
+  {!notFound && <OpenInAppBanner path={selfPath} label={document!.titre_officiel} />}
 </Layout>
