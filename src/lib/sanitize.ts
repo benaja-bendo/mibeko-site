@@ -143,3 +143,37 @@ export function displayArticleNumber(input: string | null | undefined): string |
 
   return input.replace(/_doublon_\d+$/, '');
 }
+
+/**
+ * Libellé lisible d'une feuille de contenu juridique.
+ *
+ * Certaines feuilles portent un numéro technique plutôt qu'un vrai numéro
+ * d'article : le préambule (visas, considérants), la formule finale et les
+ * tableaux. Sans ce libellé, le site titre « Article TABLEAU_1 ».
+ *
+ * Jumeau : `mibeko-front/src/shared/lib/legalLabels.ts` (`articleLeafLabel`).
+ *
+ * @param numero  Numéro de la feuille (« 1er », « PREAMBULE », « TABLEAU_2 »).
+ * @param options `short` pour la forme abrégée d'un sommaire (« Art. 1er »).
+ */
+export function articleLeafLabel(
+  numero: string | null | undefined,
+  options: { short?: boolean } = {},
+): string {
+  const value = displayArticleNumber(numero ?? '').trim();
+
+  if (value === 'PREAMBULE') {
+    return 'Préambule';
+  }
+
+  if (value === 'SIGNATURE') {
+    return 'Signature';
+  }
+
+  const table = /^TABLEAU_(\d+)$/.exec(value);
+  if (table) {
+    return options.short ? `Tab. ${table[1]}` : `Tableau ${table[1]}`;
+  }
+
+  return options.short ? `Art. ${value}` : `Article ${value}`;
+}

@@ -6,6 +6,7 @@
  * `MIBEKO_API_URL` ; défaut = production.
  */
 import { sanitizeLegalText } from './sanitize';
+import type { ApiTable } from './tables';
 // Runtime (process.env, SSR Node — configurable sans rebuild) prioritaire sur
 // le build-time (import.meta.env), puis défaut production.
 const runtimeApiUrl = (globalThis as unknown as { process?: { env?: Record<string, string | undefined> } })
@@ -59,6 +60,10 @@ export interface CurrentArticle {
   number: string;
   order: number;
   content: string | null;
+  /** Feuille spéciale : `preamble`, `signature`, `table`. Null pour un article ordinaire. */
+  content_format?: string | null;
+  /** Tableaux structurés portés par l'article (cf. `lib/tables.ts`). */
+  tables?: ApiTable[];
   related?: RelatedText[];
 }
 

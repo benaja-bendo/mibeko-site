@@ -1,0 +1,82 @@
+---
+/**
+ * Corps d'un article juridique : texte officiel et tableaux.
+ *
+ * Un tableau du corpus arrive soit sous forme structurée (`tables`, posé par
+ * l'ingestion), soit encore en HTML MinerU brut dans le texte pour les articles
+ * ingérés avant la normalisation. `articleSegments` absorbe les deux : ce
+ * composant ne rend jamais de HTML fourni par la donnée — il reconstruit la
+ * table à partir de cellules de texte, seule forme sûre pour du contenu OCR.
+ */
+import { articleSegments, type ApiTable } from '../lib/tables';
+
+interface Props {
+  content: string | null | undefined;
+  tables?: ApiTable[] | null;
+}
+
+const { content, tables } = Astro.props;
+const segments = articleSegments(content, tables);
+
+/** Cellule numérique (montant, quantité) : alignée à droite, chiffres tabulaires. */
+const isNumeric = (cell: string) => /^[\d.,\s]*\d[\d.,\s]*\s*(%|FCFA|XAF)?$/i.test(cell.trim());
+---
+
+{segments.length === 0 ? (
+  <p class="text-on-surface-variant italic">Le texte de cet article n'est pas encore disponible.</p>
+) : (
+  segments.map((segment) =>
+    segment.kind === 'text' ? (
+      <div class="font-serif text-on-surface text-base sm:text-lg leading-relaxed whitespace-pre-wrap break-words">
+        {segment.text}
+      </div>
+    ) : (
+      <figure class="my-7 first:mt-0">
+        {segment.table.caption && (
+          <figcaption class="mb-2 text-sm font-semibold text-on-surface font-sans">
+            {segment.table.caption}
+          </figcaption>
+        )}
+        <div
+          class="overflow-x-auto rounded-xl border border-surface-variant bg-surface-container-lowest"
+          tabindex="0"
+          role="region"
+          aria-label={segment.table.caption ?? 'Tableau du texte officiel'}
+        >
+          <table class="w-full border-collapse text-sm font-sans">
+            {segment.table.headers.length > 0 && (
+              <thead>
+                <tr class="bg-surface-container">
+                  {segment.table.headers.map((header) => (
+                    <th
+                      scope="col"
+                      class="px-3 py-2.5 text-left align-bottom font-semibold text-on-surface border-b border-surface-variant whitespace-nowrap"
+                    >
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+            )}
+            <tbody>
+              {segment.table.rows.map((row) => (
+                <tr class="border-b border-surface-variant/60 last:border-b-0">
+                  {row.map((cell) => (
+                    <td
+                      class:list={[
+                        'px-3 py-2 align-top text-on-surface-variant',
+                        isNumeric(cell) ? 'text-right tabular-nums whitespace-nowrap' : '',
+                      ]}
+                    >
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </figure>
+    ),
+  )
+)}

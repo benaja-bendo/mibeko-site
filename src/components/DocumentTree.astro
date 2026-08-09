@@ -1,7 +1,7 @@
 ---
 import type { TreeNode } from '../lib/api';
 import { articlePath } from '../lib/api';
-import { displayArticleNumber } from '../lib/sanitize';
+import { articleLeafLabel } from '../lib/sanitize';
 
 interface Props {
   nodes: TreeNode[];
@@ -54,7 +54,7 @@ const chipActive = 'border-secondary/50 bg-secondary/10 text-secondary';
             aria-current={a.number === activeNumber ? 'true' : undefined}
             class:list={[chipBase, a.number === activeNumber ? chipActive : chipIdle]}
           >
-            Art. {displayArticleNumber(a.number)}
+            {articleLeafLabel(a.number, { short: true })}
           </a>
         ))}
       </div>
@@ -76,7 +76,7 @@ const chipActive = 'border-secondary/50 bg-secondary/10 text-secondary';
                   aria-current={a.number === activeNumber ? 'true' : undefined}
                   class:list={[chipBase, a.number === activeNumber ? chipActive : chipIdle]}
                 >
-                  Art. {displayArticleNumber(a.number)}
+                  {articleLeafLabel(a.number, { short: true })}
                 </a>
               ))}
             </div>

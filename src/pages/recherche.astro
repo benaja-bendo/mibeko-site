@@ -5,7 +5,7 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { fetchLibrarySearch, articlePath, type LibrarySearchResult } from '../lib/api';
-import { displayArticleNumber } from '../lib/sanitize';
+import { articleLeafLabel } from '../lib/sanitize';
 
 const query = (Astro.url.searchParams.get('q') ?? '').trim();
 const hasQuery = query.length >= 2;
@@ -85,7 +85,7 @@ const pageTitle = hasQuery ? `« ${query} » — Recherche` : 'Rechercher dans l
                     >
                       <p class="text-xs text-on-surface-variant uppercase tracking-wider mb-2 line-clamp-1">{r.breadcrumb}</p>
                       <h2 class="text-lg font-bold text-on-surface group-hover:text-primary transition-colors mb-2">
-                        Article {displayArticleNumber(r.number)} — <span class="font-medium text-on-surface-variant">{r.document_title}</span>
+                        {articleLeafLabel(r.number)} — <span class="font-medium text-on-surface-variant">{r.document_title}</span>
                       </h2>
                       <p class="text-sm text-on-surface-variant font-serif leading-relaxed line-clamp-3">{snippet(r.content)}</p>
                     </Tag>
