@@ -174,7 +174,7 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
               {statutText && (
                 <span class:list={[
                   'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold',
-                  statutNeutre ? 'bg-surface-container text-on-surface-variant' : 'bg-primary/10 text-primary',
+                  statutNonVerifie ? 'bg-surface-container text-on-surface-variant' : 'bg-primary/10 text-primary',
                 ]}>{statutText}</span>
               )}
               {document!.reference_nor && <span class="text-xs sm:text-sm text-outline">Réf. {document!.reference_nor}</span>}
