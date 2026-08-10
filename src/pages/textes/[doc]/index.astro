@@ -63,17 +63,37 @@ if (document) {
   if (publishedDate) chapeauParts.push(`a été publié le ${publishedDate}`);
   else if (signedDate) chapeauParts.push(`a été signé le ${signedDate}`);
 }
-const chapeau = chapeauParts.length > 1 ? `${chapeauParts.join(', ')}.` : '';
-// Le statut « en vigueur » n'est affiché avec confiance QUE lorsque la date
-// d'entrée en vigueur est réellement connue : sans elle, Mibeko ne peut pas
-// prouver que le texte s'applique encore, une affirmation en vigueur serait
-// un mensonge par omission (cf. docs/_archive/audit-prod-2026-08-04.md § 4).
-// Les autres statuts (abrogé, suspendu) restent affichés tels quels : c'est
-// une conclusion positive, pas une absence de donnée.
-const dateInconnue = !document?.date_entree_vigueur;
-const statutNeutre = document?.statut === 'vigueur' && dateInconnue;
-const statutText = statutNeutre
-  ? "Date d'entrée en vigueur non renseignée"
+// Le sujet du chapeau porte le premier segment ; les compléments qui suivent
+// sont séparés par des virgules. Sans ce cas particulier, un texte sans
+// institution donnait « Ce journal officiel, a été signé le … » — une virgule
+// qui sépare le sujet de son verbe.
+const chapeau =
+  chapeauParts.length > 2
+    ? `${chapeauParts[0]} ${chapeauParts.slice(1).join(', ')}.`
+    : chapeauParts.length === 2
+      ? `${chapeauParts[0]} ${chapeauParts[1]}.`
+      : '';
+
+// Le statut « en vigueur » n'est affiché avec confiance QUE si quelqu'un l'a
+// réellement établi. La colonne `statut` a « vigueur » pour valeur par défaut
+// en base : sur un texte que personne n'a contrôlé, elle ne dit rien, elle
+// répète le défaut. Mesuré le 10/08/2026 (étape 0 du protocole) : les 795
+// documents publiés étaient dans ce cas, et le corpus présentait comme
+// applicables, en même temps, trois Constitutions successives.
+//
+// L'ancien contrôle se rabattait sur l'absence de date d'entrée en vigueur.
+// Il protégeait du pire mais parlait d'une DATE là où le lecteur se demande si
+// le texte s'applique — un « Constitution de 1973 · Date d'entrée en vigueur
+// non renseignée » se lit comme du droit courant mal documenté. Il reste en
+// repli tant que l'API d'un environnement n'expose pas encore `statut_verifie`.
+//
+// Les autres statuts (abrogé, suspendu) s'affichent tels quels : ce sont des
+// conclusions positives, pas des absences de donnée.
+const statutNonVerifie =
+  document?.statut === 'vigueur' &&
+  (document?.statut_verifie === false || (document?.statut_verifie === undefined && !document?.date_entree_vigueur));
+const statutText = statutNonVerifie
+  ? 'Statut juridique non vérifié'
   : document?.statut
     ? (statutLabel[document.statut] ?? document.statut)
     : null;

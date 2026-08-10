@@ -30,6 +30,15 @@ export interface DocumentMeta {
   legal_scope: string;
   /** Statut juridique (« vigueur », « abrogé »…) exposé par l'API. */
   statut?: string | null;
+  /**
+   * Vrai si un éditeur a réellement établi ce statut. `statut` vaut « vigueur »
+   * par défaut en base : sans cette confirmation, il répète le défaut au lieu
+   * d'affirmer quoi que ce soit. Optionnel tant que tous les environnements
+   * n'exposent pas le champ.
+   */
+  statut_verifie?: boolean;
+  /** Date à laquelle le statut a été vérifié, si elle l'a été. */
+  statut_verifie_le?: string | null;
   date_publication: string | null;
   date_signature: string | null;
   date_entree_vigueur: string | null;
