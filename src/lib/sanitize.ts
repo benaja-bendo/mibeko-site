@@ -149,11 +149,12 @@ export function displayArticleNumber(input: string | null | undefined): string |
  *
  * Certaines feuilles portent un numéro technique plutôt qu'un vrai numéro
  * d'article : le préambule (visas, considérants), la formule finale et les
- * tableaux. Sans ce libellé, le site titre « Article TABLEAU_1 ».
+ * tableaux, dispositions non numérotées et notes. Sans ce libellé, le site
+ * titre « Article DISPOSITION_1 ».
  *
  * Jumeau : `mibeko-front/src/shared/lib/legalLabels.ts` (`articleLeafLabel`).
  *
- * @param numero  Numéro de la feuille (« 1er », « PREAMBULE », « TABLEAU_2 »).
+ * @param numero  Numéro de la feuille (« 1er », « PREAMBULE », « DISPOSITION_2 »).
  * @param options `short` pour la forme abrégée d'un sommaire (« Art. 1er »).
  */
 export function articleLeafLabel(
@@ -173,6 +174,16 @@ export function articleLeafLabel(
   const table = /^TABLEAU_(\d+)$/.exec(value);
   if (table) {
     return options.short ? `Tab. ${table[1]}` : `Tableau ${table[1]}`;
+  }
+
+  const disposition = /^DISPOSITION_(\d+)$/.exec(value);
+  if (disposition) {
+    return options.short ? `Disp. ${disposition[1]}` : `Disposition ${disposition[1]}`;
+  }
+
+  const note = /^NOTE_(\d+)$/.exec(value);
+  if (note) {
+    return `Note ${note[1]}`;
   }
 
   return options.short ? `Art. ${value}` : `Article ${value}`;
