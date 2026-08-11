@@ -19,6 +19,13 @@ ARG PUBLIC_UMAMI_WEBSITE_ID
 ENV PUBLIC_UMAMI_URL=$PUBLIC_UMAMI_URL
 ENV PUBLIC_UMAMI_WEBSITE_ID=$PUBLIC_UMAMI_WEBSITE_ID
 
+# Casse le cache Docker sur cette étape à chaque déploiement : la home fait des
+# appels API au build (thèmes, derniers textes) qui échouent silencieusement en
+# cas d'indisponibilité passagère (cf. CLAUDE.md), et un simple `gh run rerun`
+# sur un commit inchangé réutilisait ce calque en cache sans jamais retenter
+# l'appel — le déploiement passait au vert sans rien republier.
+ARG CACHEBUST=1
+
 # Build SSR (adapter @astrojs/node, mode standalone)
 # → produit dist/server/entry.mjs (serveur Node) + dist/client (assets)
 RUN npm run build

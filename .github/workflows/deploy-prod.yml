@@ -76,6 +76,7 @@ jobs:
           build-args: |
             PUBLIC_UMAMI_URL=${{ secrets.PUBLIC_UMAMI_URL }}
             PUBLIC_UMAMI_WEBSITE_ID=${{ secrets.PUBLIC_UMAMI_WEBSITE_ID }}
+            CACHEBUST=${{ github.run_id }}
 
   deploy:
     name: Deploy to VPS
