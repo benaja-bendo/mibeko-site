@@ -9,7 +9,7 @@ import ShareActions from '../../../components/ShareActions.astro';
 import OpenInAppBanner from '../../../components/OpenInAppBanner.astro';
 import LegalArticleBody from '../../../components/LegalArticleBody.astro';
 import { fetchPublicDocument, buildTree, documentPath, articlePath } from '../../../lib/api';
-import { articleLeafLabel } from '../../../lib/sanitize';
+import { articleLeafLabel, documentLineLabel } from '../../../lib/sanitize';
 import { articlePlainText } from '../../../lib/tables';
 
 const ARTICLE_PREFIX = 'article-';
@@ -41,6 +41,11 @@ const idx = current ? articles.findIndex((a) => a.number === current.number) : -
 const previous = idx > 0 ? articles[idx - 1] : null;
 const next = idx >= 0 && idx < articles.length - 1 ? articles[idx + 1] : null;
 
+// Intitulé du document parent sur une ligne : sur un acte en abrégé,
+// `titre_officiel` seul ne dit que « Décret n° … du … », ce qui rend le
+// titre de page, le partage et le fil d'Ariane muets.
+const intituleParent = documentLineLabel(document?.titre_officiel, document?.libelle_descriptif);
+
 // Texte SEO : un tableau y entre linéarisé (« A | B | C »), jamais en balises —
 // la description et le JSON-LD en dérivent tous les deux.
 const plain = articlePlainText(current?.content, current?.tables).replace(/\s+/g, ' ').trim();
@@ -48,14 +53,14 @@ const description = plain
   ? plain.length > 160
     ? `${plain.slice(0, 157)}…`
     : plain
-  : `Article ${numero} du ${document?.titre_officiel ?? 'texte'} — République du Congo.`;
+  : `Article ${numero} du ${intituleParent} — République du Congo.`;
 
 // Libellé de la feuille : « Article 5 », mais « Tableau 1 » ou « Préambule »
 // pour les feuilles techniques du pipeline.
 const articleLabel = current ? articleLeafLabel(current.number) : '';
 
 const pageTitle = document && current
-  ? `${articleLabel} — ${document.titre_officiel}`
+  ? `${articleLabel} — ${intituleParent}`
   : 'Texte introuvable';
 
 const typeName = document?.type?.name ?? 'Texte juridique';
@@ -66,7 +71,7 @@ const docUrl = document ? new URL(documentPath(document.slug), siteOrigin).href 
 // Libellé de partage : ce qu'un destinataire doit lire pour situer le texte
 // sans avoir à ouvrir le lien.
 const shareTitle = document && current
-  ? `${articleLabel} — ${document.titre_officiel}`
+  ? `${articleLabel} — ${intituleParent}`
   : '';
 
 const dateFmt = (iso?: string | null) =>
@@ -147,7 +152,7 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
           <span class="text-outline">/</span>
           <a href="/textes" class="hover:text-primary transition-colors">Textes officiels</a>
           <span class="text-outline">/</span>
-          <a href={documentPath(document!.slug)} class="hover:text-primary transition-colors line-clamp-1">{document!.titre_officiel}</a>
+          <a href={documentPath(document!.slug)} class="hover:text-primary transition-colors line-clamp-1">{intituleParent}</a>
           <span class="text-outline">/</span>
           <span class="text-on-surface font-medium">{articleLabel}</span>
         </nav>
@@ -191,6 +196,11 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
               <a href={documentPath(document!.slug)} class="text-base sm:text-lg text-on-surface-variant font-serif hover:text-primary transition-colors">
                 {document!.titre_officiel}
               </a>
+              {/* Objet dérivé du corps de l'acte, sous l'intitulé officiel du
+                  texte parent — jamais à sa place. */}
+              {document!.libelle_descriptif && (
+                <p class="mt-1 text-sm sm:text-base text-outline font-serif leading-snug">{document!.libelle_descriptif}</p>
+              )}
             </header>
 
             <!-- Corps de l'article (texte officiel intégral) -->
@@ -289,7 +299,7 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
   {!notFound && (
     <OpenInAppBanner
       path={selfPath}
-      label={`${articleLabel} — ${document!.titre_officiel}`}
+      label={`${articleLabel} — ${intituleParent}`}
     />
   )}
 </Layout>

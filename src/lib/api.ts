@@ -25,6 +25,17 @@ export interface DocumentMeta {
   slug: string;
   titre_officiel: string;
   title: string;
+  /**
+   * Objet de l'acte DÉRIVÉ de son corps, pour les intitulés que le Journal
+   * officiel réduit au type, au numéro et à la date (« actes en abrégé » :
+   * « Décret n° 2025-240 du 20 juin 2025. »). Ces intitulés sont fidèles à la
+   * source — c'est le JO qui n'imprime aucun objet, il n'y a rien à corriger.
+   *
+   * À AFFICHER À CÔTÉ DU TITRE OFFICIEL, JAMAIS À SA PLACE : utiliser
+   * `documentLineLabel()` (`src/lib/sanitize.ts`) plutôt que de choisir.
+   * Optionnel tant que tous les environnements n'exposent pas le champ.
+   */
+  libelle_descriptif?: string | null;
   reference_nor: string | null;
   type_code: string | null;
   legal_scope: string;

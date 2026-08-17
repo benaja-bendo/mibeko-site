@@ -148,6 +148,13 @@ const jsonLd = [collectionLd, breadcrumbLd].filter(Boolean) as Record<string, un
                     <h2 class="text-lg sm:text-xl font-bold text-on-surface group-hover:text-primary transition-colors leading-snug mb-2">
                       {doc.titre_officiel}
                     </h2>
+                    {/* Objet dérivé du corps de l'acte : sur un acte en abrégé,
+                        le titre ci-dessus ne dit que le type, le numéro et la date. */}
+                    {doc.libelle_descriptif && (
+                      <p class="text-sm text-on-surface-variant leading-snug mb-2 line-clamp-2">
+                        {doc.libelle_descriptif}
+                      </p>
+                    )}
                     {metaLine(doc) && (
                       <p class="text-sm text-on-surface-variant">{metaLine(doc)}</p>
                     )}

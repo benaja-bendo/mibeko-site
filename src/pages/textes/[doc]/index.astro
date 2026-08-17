@@ -8,6 +8,7 @@ import DocumentTree from '../../../components/DocumentTree.astro';
 import ShareActions from '../../../components/ShareActions.astro';
 import OpenInAppBanner from '../../../components/OpenInAppBanner.astro';
 import { fetchPublicDocument, buildTree, documentPath, pdfProxyUrl } from '../../../lib/api';
+import { documentLineLabel } from '../../../lib/sanitize';
 
 const { doc } = Astro.params;
 const payload = doc ? await fetchPublicDocument(doc) : null;
@@ -27,6 +28,16 @@ const pdfUrl = document && hasPdf ? pdfProxyUrl(document.id) : null;
 const pdfDownloadUrl = document && hasPdf ? pdfProxyUrl(document.id, { download: true }) : null;
 
 const typeName = document?.type?.name ?? 'Texte juridique';
+
+/**
+ * Intitulé sur une ligne, pour tout ce qui ne dispose pas de deux lignes : la
+ * balise `<title>`, la méta-description, le fil d'Ariane, le partage. Sur un
+ * acte en abrégé, `titre_officiel` seul ne dit que « Décret n° 2025-240 du
+ * 20 juin 2025. » — illisible pour un lecteur comme pour un moteur. Le H1 de
+ * la page, lui, garde l'intitulé officiel SEUL : c'est lui qui fait foi.
+ */
+const intituleUneLigne = documentLineLabel(document?.titre_officiel, document?.libelle_descriptif);
+
 const selfPath = document ? documentPath(document.slug) : '';
 const selfUrl = selfPath ? new URL(selfPath, siteOrigin).href : '';
 
@@ -132,10 +143,10 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
 ---
 
 <Layout
-  title={notFound ? 'Texte introuvable — Mibeko' : `${document!.titre_officiel} — Mibeko`}
+  title={notFound ? 'Texte introuvable — Mibeko' : `${intituleUneLigne} — Mibeko`}
   description={notFound
     ? "Ce texte n'est pas disponible dans le fonds Mibeko."
-    : `${document!.titre_officiel} — ${typeName} de la République du Congo. ${articles.length} articles, consultables librement sur Mibeko.`}
+    : `${intituleUneLigne} — ${typeName} de la République du Congo. ${articles.length} articles, consultables librement sur Mibeko.`}
   ogType="article"
   canonical={selfUrl || undefined}
   jsonLd={jsonLd}
@@ -159,7 +170,7 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
           <span class="text-outline">/</span>
           <a href="/textes" class="hover:text-primary transition-colors">Textes officiels</a>
           <span class="text-outline">/</span>
-          <span class="text-on-surface font-medium line-clamp-1">{document!.titre_officiel}</span>
+          <span class="text-on-surface font-medium line-clamp-1">{intituleUneLigne}</span>
         </nav>
 
         <!-- Bandeau-titre (masthead) + chapeau éditorial -->
@@ -181,6 +192,13 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
             </div>
 
             <h1 class="font-serif text-[1.75rem] leading-[1.15] sm:text-4xl md:text-[2.6rem] md:leading-[1.1] font-semibold text-on-surface tracking-tight mb-4">{document!.titre_officiel}</h1>
+
+            {/* Le H1 reste l'intitulé officiel — c'est lui qui fait foi. L'objet
+                dérivé du corps de l'acte s'affiche EN DESSOUS, nommé comme tel,
+                pour les actes que le JO a publiés en abrégé. */}
+            {document!.libelle_descriptif && (
+              <p class="text-lg sm:text-xl text-on-surface-variant font-serif leading-snug -mt-2 mb-4">{document!.libelle_descriptif}</p>
+            )}
 
             {chapeau && (
               <p class="text-base sm:text-lg text-on-surface-variant font-serif leading-relaxed mb-5">{chapeau}</p>
@@ -285,7 +303,7 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
               <!-- Desktop : intégration directe (chargée seulement à l'ouverture) -->
               <iframe
                 src={pdfUrl}
-                title={`PDF original — ${document!.titre_officiel}`}
+                title={`PDF original — ${intituleUneLigne}`}
                 loading="lazy"
                 class="hidden lg:block w-full h-[80vh] bg-surface-container-low"
               ></iframe>
@@ -315,11 +333,11 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
           </div>
         )}
 
-        <ShareActions url={selfUrl} title={document!.titre_officiel} heading="Partager ce texte" />
+        <ShareActions url={selfUrl} title={intituleUneLigne} heading="Partager ce texte" />
 
       </div>
     )}
   </main>
   <Footer />
-  {!notFound && <OpenInAppBanner path={selfPath} label={document!.titre_officiel} />}
+  {!notFound && <OpenInAppBanner path={selfPath} label={intituleUneLigne} />}
 </Layout>

@@ -180,6 +180,12 @@ const labelClass = 'block text-xs font-semibold text-on-surface-variant mb-1.5';
                         {d.date_publication && <span class="text-xs text-outline">{dateFmt(d.date_publication)}</span>}
                       </div>
                       <h2 class="text-base sm:text-lg font-bold text-on-surface group-hover:text-primary transition-colors leading-snug">{d.titre_officiel}</h2>
+                      {/* Sur un acte en abrégé, le titre ci-dessus ne dit que
+                          « Décret n° … du … » : l'objet, dérivé du corps du
+                          texte, s'affiche EN DESSOUS — jamais à sa place. */}
+                      {d.libelle_descriptif && (
+                        <p class="mt-1.5 text-sm text-on-surface-variant leading-snug line-clamp-2">{d.libelle_descriptif}</p>
+                      )}
                       {d.reference_nor && <p class="mt-2 text-sm text-outline">Réf. {d.reference_nor}</p>}
                     </a>
                   </li>
