@@ -7,8 +7,10 @@ import Footer from '../../../components/Footer.astro';
 import DocumentTree from '../../../components/DocumentTree.astro';
 import ShareActions from '../../../components/ShareActions.astro';
 import OpenInAppBanner from '../../../components/OpenInAppBanner.astro';
-import { fetchPublicDocument, buildTree, documentPath, pdfProxyUrl } from '../../../lib/api';
+import LegalDocumentEvidence from '../../../components/LegalDocumentEvidence.astro';
+import { fetchPublicDocument, buildTree, countStructureDivisions, documentPath, pdfProxyUrl } from '../../../lib/api';
 import { documentLineLabel } from '../../../lib/sanitize';
+import { documentChapeauSubject, documentTypeLabel, formatFrenchDate, isUnclassifiedType, legalStatusPresentation } from '../../../lib/legalMetadata';
 
 const { doc } = Astro.params;
 const payload = doc ? await fetchPublicDocument(doc) : null;
@@ -22,12 +24,12 @@ const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
 const document = payload?.document;
 const articles = payload?.articles ?? [];
 const tree = buildTree(payload?.structure);
-const sectionCount = (payload?.structure?.nodes ?? []).length;
+const sectionCount = countStructureDivisions(tree);
 const hasPdf = Boolean(payload?.has_pdf);
 const pdfUrl = document && hasPdf ? pdfProxyUrl(document.id) : null;
 const pdfDownloadUrl = document && hasPdf ? pdfProxyUrl(document.id, { download: true }) : null;
 
-const typeName = document?.type?.name ?? 'Texte juridique';
+const typeName = documentTypeLabel(document);
 
 /**
  * Intitulé sur une ligne, pour tout ce qui ne dispose pas de deux lignes : la
@@ -41,35 +43,20 @@ const intituleUneLigne = documentLineLabel(document?.titre_officiel, document?.l
 const selfPath = document ? documentPath(document.slug) : '';
 const selfUrl = selfPath ? new URL(selfPath, siteOrigin).href : '';
 
-const dateFmt = (iso?: string | null) =>
-  iso ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso)) : null;
-
-const journal = document?.official_journal;
-const journalDate = journal?.publication_date
-  ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(journal.publication_date))
-  : null;
-
 const scopeLabel: Record<string, string> = {
   national: 'National',
   ohada: 'OHADA',
   communautaire: 'Communautaire',
 };
 
-const statutLabel: Record<string, string> = {
-  vigueur: 'En vigueur',
-  abroge: 'Abrogé',
-  abrogé: 'Abrogé',
-  suspendu: 'Suspendu',
-};
-
 // Chapeau éditorial : phrase NEUTRE construite uniquement à partir des
 // métadonnées disponibles (type, date, statut) — aucune phrase juridique
 // inventée. On décrit ce que Mibeko sait du texte, pas ce qu'il dit.
-const signedDate = dateFmt(document?.date_signature);
-const publishedDate = dateFmt(document?.date_publication);
+const signedDate = formatFrenchDate(document?.date_signature);
+const publishedDate = formatFrenchDate(document?.date_publication);
 const chapeauParts: string[] = [];
 if (document) {
-  chapeauParts.push(`Ce ${typeName.toLowerCase()}`);
+  chapeauParts.push(documentChapeauSubject(document));
   if (document.institution?.nom) chapeauParts.push(`émane de ${document.institution.nom}`);
   if (publishedDate) chapeauParts.push(`a été publié le ${publishedDate}`);
   else if (signedDate) chapeauParts.push(`a été signé le ${signedDate}`);
@@ -85,29 +72,7 @@ const chapeau =
       ? `${chapeauParts[0]} ${chapeauParts[1]}.`
       : '';
 
-// Le statut « en vigueur » n'est affiché avec confiance QUE si quelqu'un l'a
-// réellement établi. La colonne `statut` a « vigueur » pour valeur par défaut
-// en base : sur un texte que personne n'a contrôlé, elle ne dit rien, elle
-// répète le défaut. Mesuré le 10/08/2026 (étape 0 du protocole) : les 795
-// documents publiés étaient dans ce cas, et le corpus présentait comme
-// applicables, en même temps, trois Constitutions successives.
-//
-// L'ancien contrôle se rabattait sur l'absence de date d'entrée en vigueur.
-// Il protégeait du pire mais parlait d'une DATE là où le lecteur se demande si
-// le texte s'applique — un « Constitution de 1973 · Date d'entrée en vigueur
-// non renseignée » se lit comme du droit courant mal documenté. Il reste en
-// repli tant que l'API d'un environnement n'expose pas encore `statut_verifie`.
-//
-// Les autres statuts (abrogé, suspendu) s'affichent tels quels : ce sont des
-// conclusions positives, pas des absences de donnée.
-const statutNonVerifie =
-  document?.statut === 'vigueur' &&
-  (document?.statut_verifie === false || (document?.statut_verifie === undefined && !document?.date_entree_vigueur));
-const statutText = statutNonVerifie
-  ? 'Statut juridique non vérifié'
-  : document?.statut
-    ? (statutLabel[document.statut] ?? document.statut)
-    : null;
+const status = legalStatusPresentation(document);
 const themes = document?.themes ?? [];
 
 const legislationLd = document
@@ -138,8 +103,8 @@ const breadcrumbLd = document
 
 const jsonLd = [legislationLd, breadcrumbLd].filter(Boolean) as Record<string, unknown>[];
 
-const btnPrimary = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-primary text-on-primary font-semibold text-sm hover:bg-primary-container transition-colors';
-const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl border border-surface-variant bg-surface-container-lowest text-on-surface font-semibold text-sm hover:border-primary/40 transition-colors';
+const btnPrimary = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-lg bg-primary text-on-primary font-semibold text-sm hover:bg-primary-container transition-colors';
+const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounded-lg border border-surface-variant bg-surface-container-lowest text-on-surface font-semibold text-sm hover:border-primary/40 transition-colors';
 ---
 
 <Layout
@@ -167,28 +132,26 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
 
         <nav aria-label="Fil d'Ariane" class="text-sm text-on-surface-variant mb-5 flex flex-wrap items-center gap-1.5">
           <a href="/" class="hover:text-primary transition-colors">Accueil</a>
-          <span class="text-outline">/</span>
+          <span class="text-on-surface-muted">/</span>
           <a href="/textes" class="hover:text-primary transition-colors">Textes officiels</a>
-          <span class="text-outline">/</span>
+          <span class="text-on-surface-muted">/</span>
           <span class="text-on-surface font-medium line-clamp-1">{intituleUneLigne}</span>
         </nav>
 
         <!-- Bandeau-titre (masthead) + chapeau éditorial -->
-        <header class="relative overflow-hidden rounded-3xl border border-surface-variant bg-surface-container-lowest p-6 sm:p-8 md:p-10 mb-6">
+        <header class="relative overflow-hidden rounded-lg border border-surface-variant bg-surface-container-lowest p-6 sm:p-8 md:p-10 mb-6">
           <svg aria-hidden="true" class="hidden sm:block absolute -right-8 -top-10 text-primary/[0.04] pointer-events-none" width="280" height="280" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="m5 21 1-9 6-4 6 4 1 9"></path><path d="M12 8V3"></path><path d="M9 3h6"></path><path d="M8 12h8"></path><path d="M8 16h8"></path></svg>
           <div class="relative max-w-[44rem]">
             <div class="flex flex-wrap items-center gap-2 mb-4">
-              <span class="inline-flex items-center px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-bold tracking-wide uppercase">{typeName}</span>
+              <span class="inline-flex items-center px-3 py-1 rounded-lg bg-secondary/10 text-secondary text-xs font-bold tracking-wide uppercase">{typeName}</span>
               {document!.legal_scope && scopeLabel[document!.legal_scope] && (
-                <span class="inline-flex items-center px-3 py-1 rounded-full bg-surface-container text-on-surface-variant text-xs font-medium">{scopeLabel[document!.legal_scope]}</span>
+                <span class="inline-flex items-center px-3 py-1 rounded-lg bg-surface-container text-on-surface-variant text-xs font-medium">{scopeLabel[document!.legal_scope]}</span>
               )}
-              {statutText && (
-                <span class:list={[
-                  'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold',
-                  statutNonVerifie ? 'bg-surface-container text-on-surface-variant' : 'bg-primary/10 text-primary',
-                ]}>{statutText}</span>
-              )}
-              {document!.reference_nor && <span class="text-xs sm:text-sm text-outline">Réf. {document!.reference_nor}</span>}
+              <span class:list={[
+                'inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold',
+                status.verified ? 'bg-primary/10 text-primary' : 'bg-surface-container text-on-surface-variant',
+              ]}>{status.label}</span>
+              {document!.reference_nor && <span class="text-xs sm:text-sm text-on-surface-muted">Réf. {document!.reference_nor}</span>}
             </div>
 
             <h1 class="font-serif text-[1.75rem] leading-[1.15] sm:text-4xl md:text-[2.6rem] md:leading-[1.1] font-semibold text-on-surface tracking-tight mb-4">{document!.titre_officiel}</h1>
@@ -206,18 +169,18 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
 
             <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-on-surface-variant mb-6">
               <span class="inline-flex items-center gap-1.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-outline"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-on-surface-muted"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
                 <span><span class="font-semibold text-on-surface">{articles.length}</span> articles</span>
               </span>
               {sectionCount > 0 && (
                 <span class="inline-flex items-center gap-1.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-outline"><line x1="8" x2="21" y1="6" y2="6"></line><line x1="8" x2="21" y1="12" y2="12"></line><line x1="8" x2="21" y1="18" y2="18"></line><line x1="3" x2="3.01" y1="6" y2="6"></line><line x1="3" x2="3.01" y1="12" y2="12"></line><line x1="3" x2="3.01" y1="18" y2="18"></line></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-on-surface-muted"><line x1="8" x2="21" y1="6" y2="6"></line><line x1="8" x2="21" y1="12" y2="12"></line><line x1="8" x2="21" y1="18" y2="18"></line><line x1="3" x2="3.01" y1="6" y2="6"></line><line x1="3" x2="3.01" y1="12" y2="12"></line><line x1="3" x2="3.01" y1="18" y2="18"></line></svg>
                   <span><span class="font-semibold text-on-surface">{sectionCount}</span> divisions</span>
                 </span>
               )}
               {(publishedDate || signedDate) && (
                 <span class="inline-flex items-center gap-1.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-outline"><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-on-surface-muted"><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg>
                   {publishedDate ? `Publié le ${publishedDate}` : `Signé le ${signedDate}`}
                 </span>
               )}
@@ -227,52 +190,32 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
               <div class="flex flex-wrap items-center gap-2 mb-6">
                 <span class="text-sm text-on-surface-variant">Situations :</span>
                 {themes.map((theme) => (
-                  <a href={`/themes/${theme.slug}`} class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-medium hover:bg-secondary/10 hover:text-secondary transition-colors">
+                  <a href={`/situations/${theme.slug}`} class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-medium hover:bg-secondary/10 hover:text-secondary transition-colors">
                     {theme.name}
                   </a>
                 ))}
               </div>
             )}
 
-            {journal && (
-              <div class="inline-flex items-start gap-2.5 rounded-xl border border-secondary/20 bg-secondary/[0.06] px-3.5 py-2.5">
-                <svg class="shrink-0 mt-0.5 text-secondary" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8V6Z"></path></svg>
-                <p class="text-sm text-on-surface-variant leading-snug">
-                  <span class="text-on-surface font-semibold">Source officielle</span> · {journal.title}{journalDate ? ` — ${journalDate}` : ''}
-                </p>
-              </div>
-            )}
           </div>
         </header>
 
-        <!-- Pour aller plus loin : orientation citoyenne (guides + démarches) -->
-        <section aria-label="Pour aller plus loin" class="mb-6 rounded-2xl border border-surface-variant bg-surface-container-low p-5 sm:p-6">
-          <h2 class="text-lg font-bold text-on-surface mb-1">Pour aller plus loin</h2>
-          <p class="text-sm text-on-surface-variant mb-4">Comprenez ce texte en français clair, ou suivez la démarche correspondante pas à pas.</p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <a href="/ressources" class="flex items-start gap-3 p-4 rounded-xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:shadow-sm transition-all group">
-              <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
-              </span>
-              <span class="flex flex-col">
-                <span class="font-semibold text-on-surface group-hover:text-primary transition-colors">Lire les guides</span>
-                <span class="text-sm text-on-surface-variant">Les grands principes, sans jargon.</span>
-              </span>
-            </a>
-            <a href="/demarches" class="flex items-start gap-3 p-4 rounded-xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:shadow-sm transition-all group">
-              <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 text-primary shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
-              </span>
-              <span class="flex flex-col">
-                <span class="font-semibold text-on-surface group-hover:text-primary transition-colors">Suivre une démarche</span>
-                <span class="text-sm text-on-surface-variant">Le pas-à-pas et les documents à réunir.</span>
-              </span>
-            </a>
+        <LegalDocumentEvidence document={document!} pdfUrl={pdfUrl} />
+
+        <!-- Pour aller plus loin : orientation citoyenne (guides + démarches fusionnés) -->
+        <section aria-label="Pour aller plus loin" class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-lg border border-surface-variant bg-surface-container-low p-5 sm:p-6">
+          <div>
+            <h2 class="text-base font-bold text-on-surface mb-1">Pour aller plus loin</h2>
+            <p class="text-sm text-on-surface-variant">Comprenez ce texte en français clair, ou suivez la démarche correspondante pas à pas.</p>
           </div>
+          <a href="/guides" class="shrink-0 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline whitespace-nowrap">
+            Guides et démarches
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+          </a>
         </section>
 
         <!-- Sommaire (navigable) -->
-        <section aria-label="Sommaire" class="rounded-2xl border border-surface-variant bg-surface-container-lowest overflow-hidden mb-6">
+        <section aria-label="Sommaire" class="rounded-lg border border-surface-variant bg-surface-container-lowest overflow-hidden mb-6">
           <div class="flex items-center gap-2 h-12 px-4 border-b border-surface-variant bg-surface-container-low">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-secondary"><line x1="8" x2="21" y1="6" y2="6"></line><line x1="8" x2="21" y1="12" y2="12"></line><line x1="8" x2="21" y1="18" y2="18"></line><line x1="3" x2="3.01" y1="6" y2="6"></line><line x1="3" x2="3.01" y1="12" y2="12"></line><line x1="3" x2="3.01" y1="18" y2="18"></line></svg>
             <span class="text-xs font-bold uppercase tracking-[0.08em] text-on-surface-variant">Sommaire</span>
@@ -284,11 +227,17 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
           ) : (
             <p class="p-6 text-on-surface-variant italic">Aucun article publié pour ce texte.</p>
           )}
+          {isUnclassifiedType(document!.type_code) && (
+            <p class="px-4 py-3 sm:px-5 text-sm text-on-surface-variant border-t border-surface-variant bg-surface-container-low">
+              Document non classé : le découpage en articles peut être incomplet.{' '}
+              {pdfUrl && <a href="#pdf-original" class="text-secondary font-semibold hover:underline">Consultez le PDF original</a>}{pdfUrl ? ' pour le texte intégral.' : ''}
+            </p>
+          )}
         </section>
 
         <!-- PDF original : replié par défaut (plus d'iframe sticky d'entrée) -->
         {pdfUrl && (
-          <details id="pdf-original" class="group rounded-2xl border border-surface-variant bg-surface-container-lowest overflow-hidden scroll-mt-24">
+          <details id="pdf-original" class="group rounded-lg border border-surface-variant bg-surface-container-lowest overflow-hidden scroll-mt-24">
             <summary class="flex items-center gap-3 h-14 px-4 sm:px-5 cursor-pointer list-none select-none hover:bg-surface-container-low transition-colors">
               <span class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-secondary/10 text-secondary shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v5h5"></path></svg>
@@ -297,7 +246,7 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
                 <span class="font-semibold text-on-surface">Voir le PDF original</span>
                 <span class="text-sm text-on-surface-variant">Le document source, tel que publié.</span>
               </span>
-              <svg class="text-on-surface-variant transition-transform group-open:rotate-180 shrink-0" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+              <svg class="text-on-surface-variant transition-colors group-open:rotate-180 shrink-0" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
             </summary>
             <div class="border-t border-surface-variant">
               <!-- Desktop : intégration directe (chargée seulement à l'ouverture) -->

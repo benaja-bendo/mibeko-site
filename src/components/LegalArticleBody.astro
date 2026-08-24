@@ -7,8 +7,15 @@
  * ingérés avant la normalisation. `articleSegments` absorbe les deux : ce
  * composant ne rend jamais de HTML fourni par la donnée — il reconstruit la
  * table à partir de cellules de texte, seule forme sûre pour du contenu OCR.
+ *
+ * Le texte hors tableau garde la mise en page du PDF source (une ligne du scan
+ * = une ligne stockée). La charte (§ 8, « Corps d'article ») demande que ces
+ * retours à la ligne soient supprimés à l'affichage : `reflowLegalText` les
+ * regroupe en paragraphes et en listes sans modifier un seul caractère du
+ * texte — voir `lib/legalTextFlow.ts`.
  */
 import { articleSegments, type ApiTable } from '../lib/tables';
+import { reflowLegalText } from '../lib/legalTextFlow';
 
 interface Props {
   content: string | null | undefined;
@@ -27,8 +34,21 @@ const isNumeric = (cell: string) => /^[\d.,\s]*\d[\d.,\s]*\s*(%|FCFA|XAF)?$/i.te
 ) : (
   segments.map((segment) =>
     segment.kind === 'text' ? (
-      <div class="font-serif text-on-surface text-base sm:text-lg leading-relaxed whitespace-pre-wrap break-words">
-        {segment.text}
+      <div class="font-serif text-on-surface text-base sm:text-lg leading-relaxed break-words space-y-4">
+        {reflowLegalText(segment.text).map((block) =>
+          block.kind === 'paragraph' ? (
+            <p>{block.text}</p>
+          ) : (
+            <ul class="list-none pl-0 space-y-2">
+              {block.items.map((item) => (
+                <li class="flex gap-2">
+                  <span class="text-on-surface-variant shrink-0" aria-hidden="true">—</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          ),
+        )}
       </div>
     ) : (
       <figure class="my-7 first:mt-0">
@@ -38,7 +58,7 @@ const isNumeric = (cell: string) => /^[\d.,\s]*\d[\d.,\s]*\s*(%|FCFA|XAF)?$/i.te
           </figcaption>
         )}
         <div
-          class="overflow-x-auto rounded-xl border border-surface-variant bg-surface-container-lowest"
+          class="overflow-x-auto rounded-lg border border-surface-variant bg-surface-container-lowest"
           tabindex="0"
           role="region"
           aria-label={segment.table.caption ?? 'Tableau du texte officiel'}

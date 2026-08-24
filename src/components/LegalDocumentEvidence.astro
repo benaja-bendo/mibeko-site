@@ -1,0 +1,57 @@
+---
+import type { DocumentMeta } from '../lib/api';
+import { formatFrenchDate, legalStatusPresentation } from '../lib/legalMetadata';
+import { UMAMI_EVENTS } from '../lib/analytics';
+
+interface Props {
+  document: DocumentMeta;
+  pdfUrl?: string | null;
+}
+
+const { document, pdfUrl = null } = Astro.props;
+const status = legalStatusPresentation(document);
+const statusDate = status.verified ? formatFrenchDate(document.statut_verifie_le) : null;
+const journal = document.official_journal;
+const journalDate = formatFrenchDate(journal?.publication_date);
+---
+
+<section aria-label="Statut et provenance du texte" class="grid gap-3 sm:grid-cols-2 mb-6">
+  <div class="border border-surface-variant bg-surface-container-lowest p-4">
+    <p class="text-xs font-semibold uppercase tracking-[0.06em] text-on-surface-variant mb-2">Statut juridique</p>
+    <p class:list={[
+      'font-semibold',
+      status.verified ? 'text-primary' : 'text-on-surface',
+    ]}>{status.label}</p>
+    <p class="mt-1 text-sm text-on-surface-variant leading-relaxed">
+      {status.verified
+        ? statusDate
+          ? `Vérifié par Mibeko le ${statusDate}.`
+          : 'Statut vérifié par Mibeko.'
+        : 'Mibeko n’a pas encore établi si ce texte est actuellement applicable.'}
+    </p>
+  </div>
+
+  <div class="border border-surface-variant bg-surface-container-lowest p-4">
+    <p class="text-xs font-semibold uppercase tracking-[0.06em] text-on-surface-variant mb-2">Provenance</p>
+    {journal ? (
+      <>
+        <p class="font-semibold text-on-surface">Journal officiel</p>
+        <p class="mt-1 text-sm text-on-surface-variant leading-relaxed">
+          {journal.title}{journalDate ? ` — ${journalDate}` : ''}
+        </p>
+      </>
+    ) : (
+      <>
+        <p class="font-semibold text-on-surface">Source officielle non reliée</p>
+        <p class="mt-1 text-sm text-on-surface-variant leading-relaxed">
+          La référence au Journal officiel n’est pas renseignée sur cette page.
+        </p>
+      </>
+    )}
+    {pdfUrl && (
+      <a href={pdfUrl} target="_blank" rel="noopener noreferrer" data-umami-event={UMAMI_EVENTS.comprendreSource} class="inline-flex mt-3 text-sm font-semibold text-secondary hover:underline">
+        Consulter le document source
+      </a>
+    )}
+  </div>
+</section>

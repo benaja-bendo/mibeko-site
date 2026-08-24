@@ -53,6 +53,9 @@ export interface DocumentMeta {
   date_publication: string | null;
   date_signature: string | null;
   date_entree_vigueur: string | null;
+  /** Date d’intégration dans le fonds, distincte de la date juridique. */
+  created_at?: string | null;
+  updated_at?: string | null;
   /** Nombre d'articles publiés (présent sur la liste `legal-documents`). */
   articles_count?: number | null;
   institution?: { nom?: string; sigle?: string } | null;
@@ -198,6 +201,12 @@ export interface DocumentListFilters {
   yearTo?: number;
   /** Champ de tri (préfixe `-` pour décroissant). */
   sort?: string;
+  /**
+   * Filtre par titre (`AllowedFilter::partial('titre_officiel')` côté API) —
+   * mode « Textes » du fonds fusionné : trouve les documents dont le titre
+   * contient la requête, sans passer par le moteur de recherche d'articles.
+   */
+  titleQuery?: string;
   page?: number;
   perPage?: number;
 }
@@ -210,10 +219,11 @@ export interface DocumentListResult {
 /**
  * Liste paginée et filtrée des documents publiés du fonds (catalogue `/textes`).
  * Les filtres (type, périmètre, années) et la pagination sont délégués à l'API
- * (`allowedFilters` côté Laravel). Le tri par défaut est alphabétique.
+ * (`allowedFilters` côté Laravel). Le tri par défaut place les dates
+ * juridiques les plus récentes en tête et les dates inconnues à la fin.
  */
 export async function fetchPublishedDocuments(filters: DocumentListFilters = {}): Promise<DocumentListResult> {
-  const { type, scope, yearFrom, yearTo, sort = 'titre_officiel', page = 1, perPage = 24 } = filters;
+  const { type, scope, yearFrom, yearTo, sort = '-date_publication', titleQuery, page = 1, perPage = 24 } = filters;
 
   const url = new URL(`${API_BASE}/legal-documents`);
   url.searchParams.set('filter[curation_status]', 'published');
@@ -221,6 +231,7 @@ export async function fetchPublishedDocuments(filters: DocumentListFilters = {})
   if (scope) url.searchParams.set('filter[legal_scope]', scope);
   if (yearFrom) url.searchParams.set('filter[date_from]', `${yearFrom}-01-01`);
   if (yearTo) url.searchParams.set('filter[date_to]', `${yearTo}-12-31`);
+  if (titleQuery) url.searchParams.set('filter[titre_officiel]', titleQuery);
   url.searchParams.set('sort', sort);
   url.searchParams.set('per_page', String(perPage));
   url.searchParams.set('page', String(page));
@@ -310,7 +321,27 @@ export function buildTree(structure?: PublicStructure): TreeNode[] {
     for (const n of nodes) sortRec(n.children);
     return nodes;
   };
-  return sortRec(roots);
+
+  // Élague les nœuds de structure vides (ni article, ni enfant) : un nœud de
+  // section sans contenu n'est jamais navigable, seulement trompeur — par
+  // exemple un titre corrompu par une extraction qui a mal isolé une section
+  // (un fragment de texte pris pour un titre), sans article rattaché.
+  const pruneEmpty = (nodes: TreeNode[]): TreeNode[] =>
+    nodes
+      .map((n) => ({ ...n, children: pruneEmpty(n.children) }))
+      .filter((n) => n.type === 'ARTICLE' || n.articles.length > 0 || n.children.length > 0);
+
+  return pruneEmpty(sortRec(roots));
+}
+
+/** Compte les nœuds de structure « division » (hors articles), récursivement. */
+export function countStructureDivisions(nodes: TreeNode[]): number {
+  let count = 0;
+  for (const node of nodes) {
+    if (node.type !== 'ARTICLE') count += 1;
+    count += countStructureDivisions(node.children);
+  }
+  return count;
 }
 
 export interface SitemapEntry {
@@ -335,6 +366,8 @@ export async function fetchSitemap(): Promise<SitemapEntry[]> {
 export interface LibrarySearchResult {
   id: string;
   number: string;
+  canonical_number: string;
+  has_duplicate_suffix: boolean;
   content: string | null;
   document_id: string;
   document_slug: string | null;
@@ -346,6 +379,10 @@ export interface LibrarySearchResult {
  * Recherche plein-texte publique dans le fonds (`library/search`). Renvoie la
  * 1ʳᵉ page de résultats, texte assaini. Le `q` doit faire ≥ 2 caractères (le
  * back l'exige) — à filtrer côté appelant.
+ *
+ * Usage étroit : uniquement `api/suggest.ts` (autocomplétion). La page
+ * `/textes` (mode « Articles ») utilise `fetchLibrarySearchPage` ci-dessous,
+ * qui partage les mêmes filtres et la même pagination que le catalogue.
  */
 export async function fetchLibrarySearch(query: string, perPage = 20): Promise<LibrarySearchResult[]> {
   const url = new URL(`${API_BASE}/library/search`);
@@ -361,6 +398,61 @@ export async function fetchLibrarySearch(query: string, perPage = 20): Promise<L
   return json.data.map((result) => ({ ...result, content: sanitizeLegalText(result.content) }));
 }
 
+export interface LibrarySearchFilters {
+  type?: string;
+  scope?: string;
+  yearFrom?: number;
+  yearTo?: number;
+  /** Vocabulaire propre au moteur de recherche (distinct du tri du catalogue). */
+  sort?: 'relevance' | 'date_desc' | 'date_asc';
+  page?: number;
+  perPage?: number;
+}
+
+export interface LibrarySearchPageResult {
+  items: LibrarySearchResult[];
+  meta: PaginationMeta;
+}
+
+/**
+ * Recherche plein-texte paginée et filtrée (mode « Articles » de `/textes`).
+ * Ne passe jamais `semantic=1` : le rappel sémantique reste opt-in côté API
+ * (mibeko-dashboard#50) pour garder une réponse interactive par défaut.
+ */
+export async function fetchLibrarySearchPage(
+  query: string,
+  filters: LibrarySearchFilters = {},
+): Promise<LibrarySearchPageResult> {
+  const { type, scope, yearFrom, yearTo, sort = 'relevance', page = 1, perPage = 12 } = filters;
+
+  const url = new URL(`${API_BASE}/library/search`);
+  url.searchParams.set('q', query);
+  if (type) url.searchParams.set('type', type);
+  if (scope) url.searchParams.set('legal_scope', scope);
+  if (yearFrom) url.searchParams.set('date_from', `${yearFrom}-01-01`);
+  if (yearTo) url.searchParams.set('date_to', `${yearTo}-12-31`);
+  url.searchParams.set('sort', sort);
+  url.searchParams.set('per_page', String(perPage));
+  url.searchParams.set('page', String(page));
+
+  const res = await fetch(url, { headers: { Accept: 'application/json' } });
+  if (!res.ok) {
+    throw new Error(`API ${res.status} sur la recherche`);
+  }
+
+  const json = (await res.json()) as PaginatedEnvelope<LibrarySearchResult[]>;
+  const p = json.pagination;
+  return {
+    items: json.data.map((result) => ({ ...result, content: sanitizeLegalText(result.content) })),
+    meta: {
+      total: p?.total ?? json.data.length,
+      perPage: p?.per_page ?? perPage,
+      currentPage: p?.current_page ?? page,
+      lastPage: p?.last_page ?? 1,
+    },
+  };
+}
+
 export interface ThemeSummary {
   id: string;
   name: string;
@@ -368,6 +460,49 @@ export interface ThemeSummary {
   icon: string | null;
   description: string | null;
   documents_count: number;
+}
+
+export interface EssentialDocument {
+  id: string;
+  slug: string;
+  title: string;
+  type_code: string | null;
+  type_name: string | null;
+  legal_scope: string;
+  date_publication: string | null;
+  articles_count: number;
+}
+
+export interface LibraryFundStats {
+  documents: number;
+  articles: number;
+  latestLegalPublicationDate: string | null;
+  /** Petite sélection de textes fondamentaux, choisie côté API (`library/home`). */
+  essentialDocuments: EssentialDocument[];
+}
+
+/**
+ * Compteurs publics du fonds affichés sur le premier écran. Les valeurs sont
+ * produites par l'API et ne doivent jamais être recopiées en dur dans le site.
+ */
+export async function fetchLibraryFundStats(): Promise<LibraryFundStats> {
+  const res = await fetch(`${API_BASE}/library/home`, { headers: { Accept: 'application/json' } });
+  if (!res.ok) {
+    throw new Error(`API ${res.status} sur les statistiques du fonds`);
+  }
+
+  const json = (await res.json()) as Envelope<{
+    stats: { documents: number; articles: number };
+    recent_documents: Array<{ date_publication?: string | null }>;
+    essential_documents: EssentialDocument[];
+  }>;
+
+  return {
+    documents: json.data.stats.documents,
+    articles: json.data.stats.articles,
+    latestLegalPublicationDate: json.data.recent_documents[0]?.date_publication ?? null,
+    essentialDocuments: json.data.essential_documents ?? [],
+  };
 }
 
 export interface ThemeDocument {
@@ -392,7 +527,10 @@ export async function fetchThemes(): Promise<ThemeSummary[]> {
   if (!res.ok) {
     throw new Error(`API ${res.status} sur les thèmes`);
   }
-  return ((await res.json()) as Envelope<ThemeSummary[]>).data;
+  // Défense côté consommateur : une taxonomie vide peut être recréée ou un
+  // cache API ancien peut survivre quelques minutes. Elle ne doit jamais
+  // devenir une destination publique sans texte publié.
+  return ((await res.json()) as Envelope<ThemeSummary[]>).data.filter((theme) => theme.documents_count > 0);
 }
 
 /** Textes publiés rattachés à un thème (parcours par situation). */
@@ -407,9 +545,13 @@ export async function fetchThemeDocuments(slug: string): Promise<ThemeDetail | n
   return ((await res.json()) as Envelope<ThemeDetail>).data;
 }
 
-/** Construit le chemin d'un thème de vie. */
+/**
+ * Construit le chemin d'un thème de vie. Le concept API reste « thèmes »
+ * (`/library/themes`) ; seule l'URL publique a été renommée en `/situations`
+ * le 18/08/2026 (« par votre situation » plutôt que le mot base de données).
+ */
 export function themePath(slug: string): string {
-  return `/themes/${slug}`;
+  return `/situations/${slug}`;
 }
 
 export interface ContactPayload {

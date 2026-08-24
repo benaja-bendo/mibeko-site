@@ -15,8 +15,9 @@
  * (`$ \ ^ _ { } ~`). Le vrai correctif est en amont (réingestion) — voir la
  * note mémoire `code_penal_reliability` / `parsing_improvements_plan`.
  *
- * Les retours à la ligne sont préservés : le corps de l'article est rendu en
- * `white-space: pre-wrap` (cf. `pages/textes/[doc]/[article].astro`).
+ * Les retours à la ligne hérités du PDF, eux, sont regroupés en paragraphes
+ * à l'affichage par `lib/legalTextFlow.ts` (cf. `LegalArticleBody.astro`) —
+ * un rendu différent, pas une seconde correction de caractères.
  */
 
 /** Chiffres et signes en exposant → caractères Unicode (km^2 → km²). */

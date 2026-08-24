@@ -8,9 +8,11 @@ import DocumentTree from '../../../components/DocumentTree.astro';
 import ShareActions from '../../../components/ShareActions.astro';
 import OpenInAppBanner from '../../../components/OpenInAppBanner.astro';
 import LegalArticleBody from '../../../components/LegalArticleBody.astro';
-import { fetchPublicDocument, buildTree, documentPath, articlePath } from '../../../lib/api';
+import LegalDocumentEvidence from '../../../components/LegalDocumentEvidence.astro';
+import { fetchPublicDocument, buildTree, documentPath, articlePath, pdfProxyUrl } from '../../../lib/api';
 import { articleLeafLabel, documentLineLabel } from '../../../lib/sanitize';
 import { articlePlainText } from '../../../lib/tables';
+import { documentTypeLabel, formatFrenchDate, isUnclassifiedType } from '../../../lib/legalMetadata';
 
 const ARTICLE_PREFIX = 'article-';
 const { doc, article: articleParam } = Astro.params;
@@ -63,7 +65,8 @@ const pageTitle = document && current
   ? `${articleLabel} — ${intituleParent}`
   : 'Texte introuvable';
 
-const typeName = document?.type?.name ?? 'Texte juridique';
+const typeName = documentTypeLabel(document);
+const pdfUrl = document && payload?.has_pdf ? pdfProxyUrl(document.id) : null;
 const selfPath = document && current ? articlePath(document.slug, current.number) : '';
 const selfUrl = selfPath ? new URL(selfPath, siteOrigin).href : '';
 const docUrl = document ? new URL(documentPath(document.slug), siteOrigin).href : '';
@@ -73,9 +76,6 @@ const docUrl = document ? new URL(documentPath(document.slug), siteOrigin).href 
 const shareTitle = document && current
   ? `${articleLabel} — ${intituleParent}`
   : '';
-
-const dateFmt = (iso?: string | null) =>
-  iso ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso)) : null;
 
 const legislationLd = document && current
   ? {
@@ -149,11 +149,11 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
         <!-- Fil d'Ariane -->
         <nav aria-label="Fil d'Ariane" class="text-sm text-on-surface-variant mb-6 flex flex-wrap items-center gap-1.5">
           <a href="/" class="hover:text-primary transition-colors">Accueil</a>
-          <span class="text-outline">/</span>
+          <span class="text-on-surface-muted">/</span>
           <a href="/textes" class="hover:text-primary transition-colors">Textes officiels</a>
-          <span class="text-outline">/</span>
+          <span class="text-on-surface-muted">/</span>
           <a href={documentPath(document!.slug)} class="hover:text-primary transition-colors line-clamp-1">{intituleParent}</a>
-          <span class="text-outline">/</span>
+          <span class="text-on-surface-muted">/</span>
           <span class="text-on-surface font-medium">{articleLabel}</span>
         </nav>
 
@@ -162,13 +162,13 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
           <!-- Sommaire : rail sticky (desktop) + accordéon (mobile). Rendu UNE
                seule fois (l'arbre peut être volumineux) ; bascule CSS pure. -->
           {tree.length > 0 && (
-            <aside class="lg:sticky lg:top-24 lg:self-start lg:max-h-[82vh] lg:overflow-y-auto rounded-2xl border border-surface-variant bg-surface-container-lowest">
+            <aside class="lg:sticky lg:top-24 lg:self-start lg:max-h-[82vh] lg:overflow-y-auto rounded-lg border border-surface-variant bg-surface-container-lowest">
               <input type="checkbox" id="sommaire-toggle" class="peer sr-only" />
               <label for="sommaire-toggle" class="lg:hidden flex items-center gap-2 px-4 py-3 cursor-pointer font-semibold text-on-surface select-none">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"></line><line x1="8" x2="21" y1="12" y2="12"></line><line x1="8" x2="21" y1="18" y2="18"></line><line x1="3" x2="3.01" y1="6" y2="6"></line><line x1="3" x2="3.01" y1="12" y2="12"></line><line x1="3" x2="3.01" y1="18" y2="18"></line></svg>
                 Sommaire du texte
               </label>
-              <p class="hidden lg:block px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-outline">Sommaire</p>
+              <p class="hidden lg:block px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wider text-on-surface-muted">Sommaire</p>
               <div class="hidden peer-checked:block lg:block px-2 pb-3 lg:pt-1 border-t border-surface-variant lg:border-t-0">
                 <DocumentTree nodes={tree} slug={document!.slug} activeNumber={current!.number} />
               </div>
@@ -180,14 +180,14 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
 
             <header class="mb-8 pb-8 border-b border-surface-variant">
               <div class="flex flex-wrap items-center gap-3 mb-4">
-                <span class="inline-flex items-center px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-bold tracking-wide uppercase">
+                <span class="inline-flex items-center px-3 py-1 rounded-lg bg-secondary/10 text-secondary text-xs font-bold tracking-wide uppercase">
                   {typeName}
                 </span>
                 {document!.date_publication && (
-                  <span class="text-xs sm:text-sm text-on-surface-variant">Publié le {dateFmt(document!.date_publication)}</span>
+                  <span class="text-xs sm:text-sm text-on-surface-variant">Publié le {formatFrenchDate(document!.date_publication)}</span>
                 )}
                 {document!.reference_nor && (
-                  <span class="text-xs sm:text-sm text-outline">Réf. {document!.reference_nor}</span>
+                  <span class="text-xs sm:text-sm text-on-surface-muted">Réf. {document!.reference_nor}</span>
                 )}
               </div>
               <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-on-surface tracking-tight leading-tight mb-3">
@@ -199,20 +199,29 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
               {/* Objet dérivé du corps de l'acte, sous l'intitulé officiel du
                   texte parent — jamais à sa place. */}
               {document!.libelle_descriptif && (
-                <p class="mt-1 text-sm sm:text-base text-outline font-serif leading-snug">{document!.libelle_descriptif}</p>
+                <p class="mt-1 text-sm sm:text-base text-on-surface-muted font-serif leading-snug">{document!.libelle_descriptif}</p>
               )}
             </header>
+
+            <LegalDocumentEvidence document={document!} pdfUrl={pdfUrl} />
 
             <!-- Corps de l'article (texte officiel intégral) -->
             <div class="legal-prose">
               <LegalArticleBody content={current!.content} tables={current!.tables} />
             </div>
 
+            {isUnclassifiedType(document!.type_code) && (
+              <p class="mt-4 text-sm text-on-surface-variant border-l-2 border-secondary/50 pl-4">
+                Document non classé : ce texte peut s'arrêter avant la fin du document source.{' '}
+                {pdfUrl && <a href={pdfUrl} target="_blank" rel="noopener noreferrer" class="text-secondary font-semibold hover:underline">Consultez le PDF original</a>}{pdfUrl ? ' pour vérifier.' : ''}
+              </p>
+            )}
+
             {(document!.themes && document!.themes.length > 0) && (
               <div class="mt-10 flex flex-wrap items-center gap-2">
                 <span class="text-sm text-on-surface-variant">Situations :</span>
                 {document!.themes.map((theme) => (
-                  <a href={`/themes/${theme.slug}`} class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-medium hover:bg-secondary/10 hover:text-secondary transition-colors">
+                  <a href={`/situations/${theme.slug}`} class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-medium hover:bg-secondary/10 hover:text-secondary transition-colors">
                     {theme.name}
                   </a>
                 ))}
@@ -230,7 +239,7 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
                     <li>
                       <a
                         href={rel.article_number ? articlePath(rel.document_slug, rel.article_number) : documentPath(rel.document_slug)}
-                        class="flex items-start gap-3 p-4 rounded-xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:shadow-sm transition-all group"
+                        class="flex items-start gap-3 p-4 rounded-lg border border-surface-variant bg-surface-container-lowest hover:border-primary/40 transition-all group"
                       >
                         <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-secondary/10 text-secondary text-xs font-bold uppercase tracking-wide shrink-0 mt-0.5">
                           {RELATION_LABELS[rel.type] ?? rel.type}
@@ -249,42 +258,38 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
             <nav class="mt-12 pt-8 border-t border-surface-variant flex items-center justify-between gap-4" aria-label="Navigation entre articles">
               {previous ? (
                 <a href={articlePath(document!.slug, previous.number)} class="group inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:-translate-x-1 transition-transform"><path d="m15 18-6-6 6-6"></path></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=" transition-colors"><path d="m15 18-6-6 6-6"></path></svg>
                   <span class="text-sm font-semibold">{articleLeafLabel(previous.number)}</span>
                 </a>
               ) : <span></span>}
               {next ? (
                 <a href={articlePath(document!.slug, next.number)} class="group inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors">
                   <span class="text-sm font-semibold">{articleLeafLabel(next.number)}</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1 transition-transform"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=" transition-colors"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
                 </a>
               ) : <span></span>}
             </nav>
 
             <!-- Pour aller plus loin : orientation citoyenne (guides / démarches
                  / app), avec une mention pro discrète en pied. -->
-            <aside class="mt-16 rounded-2xl border border-surface-variant bg-surface-container-low p-6 sm:p-8 md:p-10">
+            <aside class="mt-16 rounded-lg border border-surface-variant bg-surface-container-low p-6 sm:p-8 md:p-10">
               <h2 class="text-xl font-bold text-on-surface mb-2">Pour aller plus loin</h2>
               <p class="text-on-surface-variant font-serif mb-8 max-w-xl">
                 Ce texte s'applique à des situations concrètes. Comprenez-le en français clair et passez à l'action.
               </p>
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <a href="/ressources" class="flex flex-col gap-2 p-5 rounded-xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:shadow-md transition-all group">
-                  <span class="text-primary font-bold">Lire un guide</span>
-                  <span class="text-sm text-on-surface-variant">Les grands principes, expliqués sans jargon.</span>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <a href="/guides" class="flex flex-col gap-2 p-5 rounded-lg border border-surface-variant bg-surface-container-lowest hover:border-primary/40 transition-all group">
+                  <span class="text-primary font-bold">Guides et démarches</span>
+                  <span class="text-sm text-on-surface-variant">Les grands principes en français simple, et le pas-à-pas pour agir.</span>
                 </a>
-                <a href="/demarches" class="flex flex-col gap-2 p-5 rounded-xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:shadow-md transition-all group">
-                  <span class="text-primary font-bold">Suivre une démarche</span>
-                  <span class="text-sm text-on-surface-variant">Le pas-à-pas, avec les documents à réunir.</span>
-                </a>
-                <a href="/produits#mobile" class="flex flex-col gap-2 p-5 rounded-xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:shadow-md transition-all group">
+                <a href="/application" class="flex flex-col gap-2 p-5 rounded-lg border border-surface-variant bg-surface-container-lowest hover:border-primary/40 transition-all group">
                   <span class="text-primary font-bold">Emporter l'app</span>
-                  <span class="text-sm text-on-surface-variant">Tout le droit congolais dans votre poche.</span>
+                  <span class="text-sm text-on-surface-variant">Le fonds juridique publié dans votre poche.</span>
                 </a>
               </div>
               <p class="mt-6 text-sm text-on-surface-variant">
                 Vous êtes un professionnel du droit ?{' '}
-                <a href="/tarifs" class="text-secondary font-semibold hover:underline">Découvrez l'espace Pro</a>{' '}
+                <a href="/professionnels" class="text-secondary font-semibold hover:underline">Découvrez l'espace Pro</a>{' '}
                 (assistant IA, dossiers, échéances).
               </p>
             </aside>
