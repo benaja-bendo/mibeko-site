@@ -2,6 +2,13 @@
 title: "Créer une SARL au Congo : les étapes essentielles"
 description: "Forme juridique, statuts, immatriculation au RCCM : un repère pratique en français simple pour créer une société à responsabilité limitée dans l'espace OHADA."
 category: "Création d'entreprise"
+author: "Équipe éditoriale Mibeko"
+reviewStatus: "a_relire"
+sources:
+  - title: "Droit des sociétés commerciales et du GIE — OHADA"
+    url: "https://www.ohada.org/droit-des-societes-commerciales-et-du-gie/"
+  - title: "Agence congolaise pour la création des entreprises — ACPCE"
+    url: "https://acpce.cg/"
 publishedDate: 2026-04-28
 cover: ../../assets/images/article-creer-sarl.webp
 fondsQuery: "société à responsabilité limitée SARL"

@@ -3,6 +3,17 @@ title: "Créer une SARL au Congo"
 description: "De l'idée à l'immatriculation : les étapes pour constituer une société à responsabilité limitée dans l'espace OHADA, et les documents à réunir."
 category: "Entreprise"
 audience: "entreprise"
+author: "Équipe éditoriale Mibeko"
+reviewStatus: "a_relire"
+sources:
+  - title: "Droit des sociétés commerciales et du GIE — OHADA"
+    url: "https://www.ohada.org/droit-des-societes-commerciales-et-du-gie/"
+  - title: "Agence congolaise pour la création des entreprises — ACPCE"
+    url: "https://acpce.cg/"
+officialDestination:
+  title: "Effectuer les formalités auprès de l’ACPCE"
+  url: "https://monentreprise.acpce.cg/"
+pilotPitch: "Un dossier de création complet — statuts, formalités et documents réunis — préparé avec vous plutôt que seul."
 publishedDate: 2026-06-25
 cover: ../../assets/images/article-creer-sarl.webp
 featured: true

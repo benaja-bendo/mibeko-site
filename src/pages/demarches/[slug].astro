@@ -2,7 +2,9 @@
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
+import EditorialEvidence from '../../components/EditorialEvidence.astro';
 import { getCollection, render } from 'astro:content';
+import { UMAMI_EVENTS } from '../../lib/analytics';
 
 export async function getStaticPaths() {
   const demarches = await getCollection('demarches', ({ data }) => !data.draft);
@@ -16,7 +18,7 @@ const { data } = demarche;
 const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
 const canonical = new URL(`/demarches/${demarche.id}`, siteOrigin).href;
 const audienceLabel: Record<string, string> = { citoyen: 'Citoyen', entreprise: 'Entreprise', professionnel: 'Professionnel' };
-const lawHref = (query: string) => `/recherche?q=${encodeURIComponent(query)}`;
+const lawHref = (query: string) => `/textes?q=${encodeURIComponent(query)}`;
 
 const howToLd = {
   '@context': 'https://schema.org',
@@ -38,7 +40,7 @@ const breadcrumbLd = {
   '@type': 'BreadcrumbList',
   itemListElement: [
     { '@type': 'ListItem', position: 1, name: 'Accueil', item: new URL('/', siteOrigin).href },
-    { '@type': 'ListItem', position: 2, name: 'Démarches', item: new URL('/demarches', siteOrigin).href },
+    { '@type': 'ListItem', position: 2, name: 'Guides', item: new URL('/guides', siteOrigin).href },
     { '@type': 'ListItem', position: 3, name: data.title, item: canonical },
   ],
 };
@@ -51,23 +53,46 @@ const breadcrumbLd = {
 
 			<nav aria-label="Fil d'Ariane" class="text-sm text-on-surface-variant mb-8 flex flex-wrap items-center gap-1.5">
 				<a href="/" class="hover:text-primary transition-colors">Accueil</a>
-				<span class="text-outline">/</span>
-				<a href="/demarches" class="hover:text-primary transition-colors">Démarches</a>
-				<span class="text-outline">/</span>
+				<span class="text-on-surface-muted">/</span>
+				<a href="/guides" class="hover:text-primary transition-colors">Guides</a>
+				<span class="text-on-surface-muted">/</span>
 				<span class="text-on-surface font-medium line-clamp-1">{data.title}</span>
 			</nav>
 
 			<header class="mb-8">
 				<div class="flex items-center gap-2 mb-4 flex-wrap">
 					<span class="inline-flex items-center px-2.5 py-1 rounded-md bg-secondary/10 text-secondary text-xs font-bold uppercase tracking-wide">{data.category}</span>
-					<span class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-semibold">{audienceLabel[data.audience] ?? data.audience}</span>
-					<span class="text-xs text-outline font-medium">{data.steps.length} étapes</span>
+					{(() => {
+						const audience = audienceLabel[data.audience] ?? data.audience;
+						return data.category.toLowerCase() !== audience.toLowerCase() ? (
+							<span class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-semibold">{audience}</span>
+						) : null;
+					})()}
+					<span class="text-xs text-on-surface-muted font-medium">{data.steps.length} étapes</span>
 				</div>
 				<h1 class="text-3xl md:text-4xl font-bold text-on-surface tracking-tight leading-tight mb-4">{data.title}</h1>
 				<p class="text-lg text-on-surface-variant font-serif leading-relaxed">{data.description}</p>
 			</header>
 
 			<div class="demarche-intro legal-prose mb-6"><Content /></div>
+
+			<EditorialEvidence
+				author={data.author}
+				reviewStatus={data.reviewStatus}
+				reviewer={data.reviewer}
+				reviewedDate={data.reviewedDate}
+				sources={data.sources}
+			/>
+
+			{data.officialDestination && (
+				<aside class="mb-8 border border-secondary/30 bg-secondary/[0.05] p-5 sm:p-6">
+					<p class="text-xs font-semibold uppercase tracking-[0.06em] text-secondary mb-2">Destination officielle</p>
+					<a href={data.officialDestination.url} target="_blank" rel="noopener noreferrer" class="font-semibold text-on-surface hover:text-secondary hover:underline">
+						{data.officialDestination.title}
+					</a>
+					<p class="mt-2 text-sm text-on-surface-variant">Mibeko n’est ni affilié à cet organisme public ni mandaté par lui.</p>
+				</aside>
+			)}
 
 			<section class="rm" data-roadmap data-slug={demarche.id} aria-label="Étapes de la démarche">
 				<div class="rm-sticky" data-js>
@@ -130,10 +155,10 @@ const breadcrumbLd = {
 							<div class="rm-card rm-card-cta">
 								<p class="rm-kicker">Objectif</p>
 								<h2 class="rm-title">Vous avez les clés de la démarche</h2>
-								<p class="rm-desc">Emportez ce parcours avec vous : suivez vos étapes, gardez vos documents à portée de main et retrouvez tout le droit congolais dans l'application.</p>
+								<p class="rm-desc">Les cases cochées sont conservées dans ce navigateur. Vérifiez les textes cités et les formalités à jour avant d’engager la démarche.</p>
 								<div class="rm-cta-actions">
-									<a href="/produits#mobile" class="rm-btn rm-btn-primary">Télécharger l'app</a>
-									<a href="/ressources" class="rm-btn">Lire les guides</a>
+									<a href="/textes" class="rm-btn rm-btn-primary">Vérifier les textes</a>
+									<a href="/guides" class="rm-btn">Lire les guides</a>
 								</div>
 							</div>
 						</li>
@@ -141,10 +166,24 @@ const breadcrumbLd = {
 				</div>
 			</section>
 
+			{data.pilotPitch && (
+				<aside class="mt-10 rounded-lg border-2 border-secondary/40 bg-surface-container-lowest p-6 sm:p-8">
+					<p class="text-xs font-semibold uppercase tracking-wide text-secondary mb-3">Agir</p>
+					<h2 class="text-xl font-bold text-on-surface mb-2">Besoin d'aller plus vite ?</h2>
+					<p class="text-on-surface-variant leading-relaxed mb-2">{data.pilotPitch}</p>
+					<p class="text-sm text-on-surface-variant leading-relaxed mb-6">
+						Un périmètre, un délai et un coût vous sont confirmés par écrit avant tout engagement. Aucun paiement n'est demandé tant que vous n'avez pas accepté ces conditions.
+					</p>
+					<a href="/contact" data-umami-event={UMAMI_EVENTS.agirPilote} class="inline-flex items-center justify-center h-11 px-6 bg-secondary text-on-secondary font-semibold rounded-lg hover:opacity-90 transition-opacity">
+						Proposer mon besoin
+					</a>
+				</aside>
+			)}
+
 			<div class="mt-12 pt-8 border-t border-surface-variant">
-				<a href="/demarches" class="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary font-semibold transition-colors">
+				<a href="/guides" class="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary font-semibold transition-colors">
 					<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
-					Toutes les démarches
+					Tous les guides et démarches
 				</a>
 			</div>
 		</div>
@@ -160,8 +199,8 @@ const breadcrumbLd = {
 	.rm-sticky-row { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem; }
 	.rm-sticky-label { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-secondary); }
 	.rm-sticky-sub { font-size: 0.85rem; color: var(--color-on-surface-variant); text-align: right; }
-	.rm-sticky-bar { height: 5px; background: var(--color-surface-container); border-radius: 99px; overflow: hidden; }
-	.rm-sticky-fill { display: block; height: 100%; width: 0; background: var(--color-primary); border-radius: 99px; transition: width 0.45s ease; }
+		.rm-sticky-bar { height: 5px; background: var(--color-surface-container); border-radius: 0; overflow: hidden; }
+		.rm-sticky-fill { display: block; height: 100%; width: 0; background: var(--color-primary); border-radius: 0; transition: width 0.45s ease; }
 
 	.rm-list { position: relative; }
 	.rm-steps { list-style: none; margin: 0; padding: 0; }
@@ -169,17 +208,17 @@ const breadcrumbLd = {
 	.rm-step:last-child { padding-bottom: 0; }
 	.rm-rail { position: relative; display: flex; justify-content: center; }
 
-	.rm-track, .rm-fill { position: absolute; left: 24px; transform: translateX(-50%); width: 3px; border-radius: 99px; pointer-events: none; }
+		.rm-track, .rm-fill { position: absolute; left: 24px; transform: translateX(-50%); width: 3px; border-radius: 0; pointer-events: none; }
 	.rm-track { background: var(--color-surface-variant); z-index: 0; }
 	.rm-fill { background: var(--color-primary); z-index: 1; height: 0; transition: height 0.45s cubic-bezier(0.4, 0, 0.2, 1); }
 
-	.rm-node { position: relative; z-index: 2; flex: none; width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.95rem; font-weight: 700; background: var(--color-surface-container-lowest); color: var(--color-on-surface-variant); border: 2px solid var(--color-surface-variant); transition: all 0.3s ease; }
+		.rm-node { position: relative; z-index: 2; flex: none; width: 40px; height: 40px; border-radius: 0.5rem; display: inline-flex; align-items: center; justify-content: center; font-size: 0.95rem; font-weight: 700; background: var(--color-surface-container-lowest); color: var(--color-on-surface-variant); border: 2px solid var(--color-surface-variant); transition: all 0.3s ease; }
 	.rm-step.is-done .rm-node { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
-	.rm-step.is-active .rm-node { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-primary) 18%, transparent); }
+		.rm-step.is-active .rm-node { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
 	.rm-node-mark { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
 
-	.rm-card { background: var(--color-surface-container-lowest); border: 1px solid var(--color-surface-variant); border-radius: 1rem; padding: 1.25rem 1.4rem; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
-	.rm-step.is-active .rm-card { border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-surface-variant)); box-shadow: 0 8px 24px -12px color-mix(in srgb, var(--color-primary) 40%, transparent); }
+		.rm-card { background: var(--color-surface-container-lowest); border: 1px solid var(--color-surface-variant); border-radius: 0.5rem; padding: 1.25rem 1.4rem; transition: border-color 0.3s ease; }
+		.rm-step.is-active .rm-card { border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-surface-variant)); }
 
 	.rm-kicker { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--color-secondary); margin: 0 0 0.35rem; }
 	.rm-title { font-size: 1.15rem; font-weight: 700; color: var(--color-on-surface); margin: 0 0 0.4rem; line-height: 1.3; }

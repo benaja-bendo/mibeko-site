@@ -3,6 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import CTASection from '../../components/CTASection.astro';
 import Footer from '../../components/Footer.astro';
+import EditorialEvidence from '../../components/EditorialEvidence.astro';
 import { Image } from 'astro:assets';
 import { getCollection, render } from 'astro:content';
 import { documentPath } from '../../lib/api';
@@ -19,10 +20,12 @@ const { data } = guide;
 const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
 const canonical = new URL(`/ressources/${guide.id}`, siteOrigin).href;
 const dateFmt = (d: Date) => new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
-// Lien vers le fonds : direct si le guide cible un texte publié précis
-// (`fondsSlug`), sinon recherche pré-remplie (`fondsQuery`).
+// Référence principale : texte du fonds lorsqu'il existe, sinon première source
+// structurée du guide. Le pont éditorial ne dépend jamais de la pertinence du
+// moteur de recherche pour retrouver son propre fondement.
 const directTextHref = data.fondsSlug ? documentPath(data.fondsSlug) : null;
-const fondsHref = `/recherche?q=${encodeURIComponent(data.fondsQuery ?? data.category)}`;
+const referenceHref = directTextHref ?? data.sources[0].url;
+const referenceIsExternal = !directTextHref;
 
 const articleLd = {
   '@context': 'https://schema.org',
@@ -33,7 +36,7 @@ const articleLd = {
   ...(data.updatedDate ? { dateModified: data.updatedDate.toISOString() } : {}),
   inLanguage: 'fr',
   articleSection: data.category,
-  author: { '@type': 'Organization', name: 'Mibeko' },
+  author: { '@type': 'Organization', name: data.author },
   publisher: { '@type': 'Organization', name: 'Mibeko', logo: { '@type': 'ImageObject', url: new URL('/logo.svg', siteOrigin).href } },
   mainEntityOfPage: canonical,
   ...(data.cover ? { image: new URL(data.cover.src, siteOrigin).href } : {}),
@@ -55,12 +58,12 @@ const articleLd = {
         {data.cover && (
           <Image src={data.cover} alt="" width={1280} loading="eager" class="w-full h-full object-cover object-center opacity-30" />
         )}
-        <div class="absolute inset-0 bg-gradient-to-b from-background/90 via-background/95 to-background"></div>
+        <div class="absolute inset-0 bg-background/85"></div>
       </div>
 
       <div class="max-w-[800px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center animate-fade-in-up">
         <div class="flex items-center justify-center gap-3 mb-6">
-          <span class="inline-flex items-center px-3 py-1 rounded-full bg-secondary/10 border border-secondary/20 text-secondary text-xs font-bold tracking-wide uppercase">{data.category}</span>
+          <span class="inline-flex items-center px-3 py-1 rounded-lg bg-secondary/10 border border-secondary/20 text-secondary text-xs font-bold tracking-wide uppercase">{data.category}</span>
           <span class="text-sm text-on-surface-variant font-medium">{dateFmt(data.publishedDate)}</span>
         </div>
         <h1 class="text-3xl md:text-5xl lg:text-6xl font-bold text-on-surface tracking-tight mb-8 leading-[1.15]">{data.title}</h1>
@@ -71,7 +74,7 @@ const articleLd = {
     <article class="pb-20 md:pb-28">
       <div class="max-w-[760px] mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in-up animation-delay-200">
         {data.cover && (
-          <div class="w-full rounded-3xl overflow-hidden mb-16 border border-surface-variant shadow-lg">
+          <div class="w-full rounded-lg overflow-hidden mb-16 border border-surface-variant">
             <Image src={data.cover} alt={data.title} width={1280} loading="eager" class="w-full h-auto object-cover aspect-video" />
           </div>
         )}
@@ -80,22 +83,33 @@ const articleLd = {
           <Content />
         </div>
 
+        <EditorialEvidence
+          author={data.author}
+          reviewStatus={data.reviewStatus}
+          reviewer={data.reviewer}
+          reviewedDate={data.reviewedDate}
+          sources={data.sources}
+        />
+
         <!-- Pont éditorial → fonds officiel -->
-        <div class="mt-14 rounded-2xl border border-surface-variant bg-surface-container-low p-8">
+        <div class="mt-14 rounded-lg border border-surface-variant bg-surface-container-low p-8">
           <h2 class="text-lg font-bold text-on-surface mb-2">Consultez les textes officiels</h2>
-          <p class="text-sm text-on-surface-variant mb-6">Ce guide explique les grands principes. Pour le détail, accédez aux textes en vigueur dans le fonds Mibeko.</p>
+          <p class="text-sm text-on-surface-variant mb-6">Ce guide explique les grands principes. Pour le détail, consultez le texte de référence et vérifiez son statut juridique.</p>
           <div class="flex flex-wrap gap-3">
-            {directTextHref ? (
-              <a href={directTextHref} class="inline-flex items-center h-10 px-5 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors text-sm">Lire le texte de référence</a>
-            ) : (
-              <a href={fondsHref} class="inline-flex items-center h-10 px-5 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors text-sm">Rechercher dans le fonds</a>
-            )}
+            <a
+              href={referenceHref}
+              target={referenceIsExternal ? '_blank' : undefined}
+              rel={referenceIsExternal ? 'noopener noreferrer' : undefined}
+              class="inline-flex items-center h-10 px-5 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors text-sm"
+            >
+              {referenceIsExternal ? 'Lire la source officielle' : 'Lire le texte de référence'}
+            </a>
             <a href="/textes" class="inline-flex items-center h-10 px-5 bg-surface-container text-on-surface font-semibold rounded hover:bg-surface-container-high transition-colors text-sm">Parcourir les textes officiels</a>
           </div>
         </div>
 
         <div class="mt-12 pt-8 border-t border-surface-variant">
-          <a href="/ressources" class="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary font-semibold transition-colors">
+          <a href="/guides" class="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary font-semibold transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
             Tous les guides
           </a>
@@ -103,7 +117,7 @@ const articleLd = {
       </div>
     </article>
 
-		<CTASection title="Ne manquez aucune évolution du droit" text="Avec Mibeko, recevez les actualités juridiques qui vous concernent directement dans votre espace." />
+		<CTASection title="Revenez toujours au texte" text="Les guides donnent des repères généraux. Le texte publié et, si nécessaire, un professionnel du droit restent vos références pour agir." />
 	</main>
 	<Footer />
 </Layout>

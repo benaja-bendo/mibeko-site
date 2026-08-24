@@ -2,6 +2,11 @@
 title: "Indemnités de licenciement : ce que prévoit le droit du travail"
 description: "Préavis, indemnité de licenciement, solde de tout compte : les grands principes encadrant la fin du contrat de travail, expliqués pour les employeurs comme pour les salariés."
 category: "Droit du travail"
+author: "Équipe éditoriale Mibeko"
+reviewStatus: "a_relire"
+sources:
+  - title: "Code du travail 1975 (modifié en 1996) — Secrétariat général du Gouvernement"
+    url: "https://sgg.cg/codes/congo-code-1975-travail.pdf"
 publishedDate: 2026-05-05
 cover: ../../assets/images/article-licenciement.webp
 fondsQuery: "code du travail licenciement indemnité"

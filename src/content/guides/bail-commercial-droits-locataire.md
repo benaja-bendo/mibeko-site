@@ -2,6 +2,11 @@
 title: "Bail commercial : droits et obligations du locataire"
 description: "Durée, renouvellement, loyer, résiliation : les points essentiels du bail commercial dans l'espace OHADA, à connaître avant de signer."
 category: "Droit commercial"
+author: "Équipe éditoriale Mibeko"
+reviewStatus: "a_relire"
+sources:
+  - title: "Acte uniforme portant droit commercial général — fonds Mibeko"
+    url: "https://mibeko.fr/textes/acte-uniforme-portant-droit-commercial-general"
 publishedDate: 2026-03-20
 cover: ../../assets/images/article-bail-commercial.webp
 fondsQuery: "bail commercial OHADA"

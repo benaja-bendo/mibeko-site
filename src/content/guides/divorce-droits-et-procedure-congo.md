@@ -2,6 +2,11 @@
 title: "Divorce : comprendre vos droits et la procédure"
 description: "Formes de divorce, garde des enfants, partage des biens : les repères que pose le Code de la famille, expliqués sans jargon pour les citoyens."
 category: "Droit de la famille"
+author: "Équipe éditoriale Mibeko"
+reviewStatus: "a_relire"
+sources:
+  - title: "Code de la famille de 1984 — fonds Mibeko"
+    url: "https://mibeko.fr/textes/code-de-la-famille-de-1984"
 publishedDate: 2026-04-15
 cover: ../../assets/images/article-divorce-famille.webp
 fondsQuery: "code de la famille divorce"

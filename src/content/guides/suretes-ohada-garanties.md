@@ -2,6 +2,11 @@
 title: "Sûretés OHADA : comprendre les garanties du crédit"
 description: "Cautionnement, gage, nantissement, hypothèque : panorama des garanties organisées par l'Acte uniforme sur les sûretés et de leur rôle dans le financement des entreprises."
 category: "OHADA"
+author: "Équipe éditoriale Mibeko"
+reviewStatus: "a_relire"
+sources:
+  - title: "Organisation des sûretés — OHADA"
+    url: "https://www.ohada.org/organisation-des-suretes/"
 publishedDate: 2026-04-02
 cover: ../../assets/images/article-suretes-ohada.webp
 fondsQuery: "acte uniforme sûretés"

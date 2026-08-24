@@ -3,8 +3,14 @@ title: "Recouvrer une créance impayée"
 description: "Une facture reste impayée ? Les étapes pour réagir, de la relance amiable aux procédures simplifiées de recouvrement prévues par l'OHADA."
 category: "Justice & entreprise"
 audience: "entreprise"
+author: "Équipe éditoriale Mibeko"
+reviewStatus: "a_relire"
+sources:
+  - title: "Procédures simplifiées de recouvrement et voies d’exécution — OHADA"
+    url: "https://www.ohada.org/organisation-des-procedures-simplifiees-de-recouvrement-et-des-voies-dexecution/"
 publishedDate: 2026-06-24
 fondsQuery: "recouvrement créance injonction de payer"
+pilotPitch: "Une mise en demeure rédigée pour votre situation et prête à envoyer, plutôt qu'un modèle générique."
 steps:
   - title: "Tenter la relance amiable"
     description: "Avant toute procédure, relancez votre débiteur par écrit et conservez une trace. Beaucoup d'impayés se règlent à ce stade."

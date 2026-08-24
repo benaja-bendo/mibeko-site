@@ -1,0 +1,53 @@
+---
+import { UMAMI_EVENTS } from '../lib/analytics';
+
+interface Source {
+  title: string;
+  url: string;
+}
+
+interface Props {
+  author: string;
+  reviewStatus: 'a_relire' | 'relu';
+  reviewer?: string;
+  reviewedDate?: Date;
+  sources: Source[];
+}
+
+const { author, reviewStatus, reviewer, reviewedDate, sources } = Astro.props;
+const formattedReviewDate = reviewedDate
+  ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(reviewedDate)
+  : null;
+---
+
+<aside aria-label="Traçabilité éditoriale" class="my-8 border border-surface-variant bg-surface-container-low p-5 sm:p-6">
+  <h2 class="text-base font-bold text-on-surface mb-3">Traçabilité éditoriale</h2>
+  <dl class="grid gap-2 text-sm">
+    <div class="flex flex-wrap gap-x-2">
+      <dt class="font-semibold text-on-surface">Rédaction :</dt>
+      <dd class="text-on-surface-variant">{author}</dd>
+    </div>
+    <div class="flex flex-wrap gap-x-2">
+      <dt class="font-semibold text-on-surface">Relecture juridique :</dt>
+      <dd class:list={[
+        reviewStatus === 'relu' ? 'text-primary' : 'text-secondary',
+      ]}>
+        {reviewStatus === 'relu'
+          ? `${reviewer}${formattedReviewDate ? `, le ${formattedReviewDate}` : ''}`
+          : 'à effectuer — contenu indicatif non revu juridiquement'}
+      </dd>
+    </div>
+  </dl>
+  <div class="mt-4">
+    <p class="text-sm font-semibold text-on-surface mb-2">Sources consultées</p>
+    <ul class="flex flex-col gap-1.5">
+      {sources.map((source) => (
+        <li>
+          <a href={source.url} target="_blank" rel="noopener noreferrer" data-umami-event={UMAMI_EVENTS.comprendreSource} class="text-sm text-secondary hover:underline">
+            {source.title}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</aside>

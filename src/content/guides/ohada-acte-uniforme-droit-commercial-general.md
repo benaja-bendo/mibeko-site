@@ -2,6 +2,11 @@
 title: "L'Acte uniforme OHADA sur le droit commercial général, expliqué"
 description: "Le registre du commerce et du crédit mobilier (RCCM), le statut de commerçant, le bail commercial : ce que l'Acte uniforme harmonise pour les entreprises de l'espace OHADA."
 category: "Droit commercial"
+author: "Équipe éditoriale Mibeko"
+reviewStatus: "a_relire"
+sources:
+  - title: "Acte uniforme portant droit commercial général — fonds Mibeko"
+    url: "https://mibeko.fr/textes/acte-uniforme-portant-droit-commercial-general"
 publishedDate: 2026-05-12
 cover: ../../assets/images/article-ohada-rccm.webp
 featured: true
