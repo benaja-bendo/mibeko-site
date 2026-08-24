@@ -1,0 +1,196 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import CTASection from '../components/CTASection.astro';
+import Footer from '../components/Footer.astro';
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+
+// Fusion des deux anciens index /ressources et /demarches (18/08/2026) : huit
+// contenus ne justifiaient pas deux entrées de menu distinctes. Les pages de
+// détail ne bougent pas (/ressources/[slug], /demarches/[slug]) — seuls les
+// index fusionnent, ici, derrière une facette « type ».
+const guidesRaw = await getCollection('guides', ({ data }) => !data.draft);
+const demarchesRaw = await getCollection('demarches', ({ data }) => !data.draft);
+
+type Item = {
+	kind: 'guide' | 'demarche';
+	id: string;
+	href: string;
+	title: string;
+	description: string;
+	category: string;
+	cover?: (typeof guidesRaw)[number]['data']['cover'];
+	publishedDate: Date;
+	featured: boolean;
+	stepsCount?: number;
+};
+
+const items: Item[] = [
+	...guidesRaw.map((g) => ({
+		kind: 'guide' as const,
+		id: g.id,
+		href: `/ressources/${g.id}`,
+		title: g.data.title,
+		description: g.data.description,
+		category: g.data.category,
+		cover: g.data.cover,
+		publishedDate: g.data.publishedDate,
+		featured: g.data.featured,
+	})),
+	...demarchesRaw.map((d) => ({
+		kind: 'demarche' as const,
+		id: d.id,
+		href: `/demarches/${d.id}`,
+		title: d.data.title,
+		description: d.data.description,
+		category: d.data.category,
+		cover: d.data.cover,
+		publishedDate: d.data.publishedDate,
+		featured: d.data.featured,
+		stepsCount: d.data.steps.length,
+	})),
+].sort((a, b) => b.publishedDate.getTime() - a.publishedDate.getTime());
+
+const featured = items.find((i) => i.featured) ?? items[0];
+const rest = featured ? items.filter((i) => !(i.kind === featured.kind && i.id === featured.id)) : items;
+const kindFilters = ['Tout', 'Guides', 'Démarches'];
+
+const dateFmt = (d: Date) => new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+const kindPlural = (k: Item['kind']) => (k === 'guide' ? 'Guides' : 'Démarches');
+---
+
+<Layout
+	title="Guides et démarches — Mibeko"
+	description="Comprendre le droit congolais et OHADA en français simple, puis agir étape par étape : guides et démarches, reliés aux textes officiels du fonds Mibeko."
+>
+	<Header />
+	<main id="main" class="flex-grow">
+
+		<section class="pt-12 pb-8 md:pt-16 md:pb-10 bg-background relative overflow-hidden">
+			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center animate-fade-in-up">
+				<p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-4">Comprendre et agir</p>
+				<h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-on-surface tracking-tight mb-6">Guides et démarches</h1>
+				<p class="text-lg md:text-xl text-on-surface-variant font-serif max-w-2xl mx-auto leading-relaxed">
+					Le droit du Congo et de l'espace OHADA, expliqué simplement — puis le pas-à-pas pour agir, relié aux textes officiels.
+				</p>
+			</div>
+		</section>
+
+		{items.length === 0 ? (
+			<section class="py-24 text-center">
+				<p class="text-on-surface-variant">Les premiers contenus arrivent bientôt.</p>
+			</section>
+		) : (
+			<>
+				<section class="pb-12 bg-background sticky top-[79px] z-40 border-b border-surface-variant/40">
+					<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap justify-center gap-2 md:gap-3" data-filters>
+						{kindFilters.map((label, i) => (
+							<button
+								type="button"
+								data-filter={label}
+								class:list={[
+									"filter-btn inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300",
+									i === 0
+										? "bg-primary text-on-primary"
+										: "bg-surface-container-lowest border border-surface-variant text-on-surface hover:border-primary/30 hover:text-primary"
+								]}
+							>{label}</button>
+						))}
+					</div>
+				</section>
+
+				<section class="py-16 md:py-24 bg-surface-container-low">
+					<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+
+						{featured && (
+							<article data-card data-kind={kindPlural(featured.kind)} class="mb-16 md:mb-24 bg-surface-container-lowest rounded-lg border border-surface-variant overflow-hidden group hover:border-primary/30 transition-all duration-500 animate-fade-in-up relative">
+								<div class="grid grid-cols-1 lg:grid-cols-2">
+									<div class="p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+										<div class="flex items-center gap-3 mb-6 flex-wrap">
+											<span class="inline-flex items-center px-3 py-1 rounded-lg bg-secondary/10 text-secondary text-xs font-bold tracking-wide uppercase">À la une • {featured.category}</span>
+											<span class="text-sm text-on-surface-variant font-medium">{dateFmt(featured.publishedDate)}</span>
+										</div>
+										<h2 class="text-3xl md:text-4xl font-bold text-on-surface mb-6 leading-tight group-hover:text-primary transition-colors">
+											<a href={featured.href} class="before:absolute before:inset-0">{featured.title}</a>
+										</h2>
+										<p class="text-lg text-on-surface-variant font-serif leading-relaxed mb-8">{featured.description}</p>
+										<div class="inline-flex items-center gap-2 text-primary font-semibold mt-auto">
+											{featured.kind === 'guide' ? 'Lire le guide' : `Voir la démarche · ${featured.stepsCount} étapes`}
+											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+										</div>
+									</div>
+									<div class="relative bg-primary/5 border-l border-surface-variant/50 overflow-hidden min-h-[300px] lg:min-h-full">
+										{featured.cover && (
+											<Image src={featured.cover} alt={featured.title} width={1120} loading="eager" class="absolute inset-0 w-full h-full object-cover opacity-90 transition-colors duration-700 ease-out" />
+										)}
+									</div>
+								</div>
+							</article>
+						)}
+
+						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+							{rest.map((item) => (
+								<article data-card data-kind={kindPlural(item.kind)} class="bg-surface-container-lowest border border-surface-variant rounded-lg flex flex-col hover:border-secondary/40 transition-all duration-300 group relative overflow-hidden">
+									{item.cover && (
+										<div class="w-full h-48 overflow-hidden bg-surface-container-low border-b border-surface-variant relative">
+											<Image src={item.cover} alt={item.title} width={720} loading="eager" class="w-full h-full object-cover transition-colors duration-500 ease-out" />
+										</div>
+									)}
+									<div class="p-6 md:p-8 flex flex-col flex-grow">
+										<div class="flex items-center justify-between gap-3 mb-5 flex-wrap">
+											<span class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-semibold uppercase tracking-wider group-hover:bg-secondary/10 group-hover:text-secondary transition-colors">{item.category}</span>
+											<span class="text-xs text-on-surface-muted font-medium">{item.kind === 'demarche' ? `${item.stepsCount} étapes` : dateFmt(item.publishedDate)}</span>
+										</div>
+										<h3 class="text-xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors leading-snug">
+											<a href={item.href} class="before:absolute before:inset-0">{item.title}</a>
+										</h3>
+										<p class="text-sm text-on-surface-variant font-serif leading-relaxed mb-6 flex-grow line-clamp-3">{item.description}</p>
+										<div class="mt-auto inline-flex items-center gap-1.5 text-sm font-semibold text-secondary">
+											{item.kind === 'guide' ? 'Lire le guide' : 'Voir la démarche'}
+											<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=" transition-colors duration-300"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+										</div>
+									</div>
+								</article>
+							))}
+						</div>
+
+						<div class="mt-20 text-center animate-fade-in-up">
+              <div class="inline-flex flex-col items-center justify-center p-8 border border-dashed border-outline-variant/60 rounded-lg bg-background max-w-2xl mx-auto">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-on-surface-muted mb-4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <h4 class="text-lg font-bold text-on-surface mb-2">Vous cherchez un texte précis ?</h4>
+                <p class="text-sm text-on-surface-variant mb-6">Au-delà des guides et démarches, tout le fonds juridique est consultable et recherchable.</p>
+                <a href="/textes" class="inline-flex items-center h-10 px-5 bg-surface-container text-on-surface font-semibold rounded hover:bg-surface-container-high transition-colors text-sm">Parcourir le fonds</a>
+              </div>
+						</div>
+					</div>
+				</section>
+			</>
+		)}
+
+		<CTASection title="Comprendre, puis agir avec les bons textes" text="Guides en français clair et démarches pas à pas, reliés au fonds officiel — et à l'application pour les retrouver hors connexion." />
+	</main>
+	<Footer />
+</Layout>
+
+<script>
+	const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('.filter-btn'));
+	const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-card]'));
+	const active = ['bg-primary', 'text-on-primary'];
+	const idle = ['bg-surface-container-lowest', 'border', 'border-surface-variant', 'text-on-surface'];
+
+	buttons.forEach((btn) => {
+		btn.addEventListener('click', () => {
+			const filter = btn.dataset.filter ?? 'Tout';
+			buttons.forEach((b) => {
+				const on = b === btn;
+				active.forEach((c) => b.classList.toggle(c, on));
+				idle.forEach((c) => b.classList.toggle(c, !on));
+			});
+			cards.forEach((card) => {
+				const show = filter === 'Tout' || card.dataset.kind === filter;
+				card.classList.toggle('hidden', !show);
+			});
+		});
+	});
+</script>

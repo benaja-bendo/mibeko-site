@@ -26,6 +26,17 @@ export default defineConfig({
     // retirée : le gratuit s'énonce une fois, sur l'accueil et le fonds.
     '/produits': '/application',
     '/tarifs': '/professionnels',
+    // Renommages de menu (18/08/2026) : « thèmes » (mot de base de données)
+    // devient « situations » (mot de l'usager) ; les nouveautés du fonds
+    // rejoignent /textes dont elles sont un état, pas une rubrique à part.
+    '/themes': '/situations',
+    '/themes/[slug]': '/situations/[slug]',
+    '/actualites': '/textes/nouveautes',
+    // Fusion des index guides + démarches en une seule page à deux facettes :
+    // 8 contenus ne justifiaient pas deux entrées de menu. Les pages de
+    // détail ([slug]) ne bougent pas, seuls les deux index fusionnent.
+    '/ressources': '/guides',
+    '/demarches': '/guides',
   },
   // Traefik termine le TLS : la connexion proxy → conteneur Astro est en HTTP
   // clair, donc le `checkOrigin` natif reconstruit `http://mibeko.fr` et rejette

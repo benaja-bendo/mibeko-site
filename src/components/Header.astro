@@ -1,57 +1,67 @@
 ---
-// Navigation citoyenne : le site est d'abord un portail d'accès au droit. Le
-// SaaS pro est relégué à une entrée discrète (« Professionnels » → /tarifs).
+// Le fonds est le produit : la recherche vit dans l'en-tête comme un champ,
+// pas une icône, et le menu se limite à trois destinations réelles (fonds,
+// guides, application). Méthode et Nouveautés restent accessibles depuis le
+// pied de page et les pages de contenu — ce sont des destinations de second
+// contact, pas des portes d'entrée. Le SaaS pro reste une entrée à part
+// (« Professionnels » → /professionnels).
 const navLinks = [
-  { href: '/themes', label: 'Situations' },
-  { href: '/demarches', label: 'Démarches' },
-  { href: '/ressources', label: 'Guides' },
-  { href: '/textes', label: 'Textes officiels' },
-  { href: '/actualites', label: 'Actualités' },
+  { href: '/textes', label: 'Le fonds' },
+  { href: '/guides', label: 'Guides' },
+  { href: '/application', label: "L'application" },
 ];
 
 const pathname = Astro.url.pathname;
 const isActive = (href: string) =>
   href === '/' ? pathname === '/' : pathname.startsWith(href);
+const query = Astro.url.pathname === '/textes' ? (Astro.url.searchParams.get('q') ?? '') : '';
 ---
 
-<header class="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-surface-variant/60">
-  <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+<header class="sticky top-0 z-50 w-full bg-background/95 border-b border-surface-variant/60">
+  <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center gap-4 lg:gap-6">
     <!-- Logo -->
-    <a href="/" class="flex items-center gap-2 group" aria-label="Mibeko — Accueil">
+    <a href="/" class="flex items-center gap-2 group shrink-0" aria-label="Mibeko — Accueil">
       <img src="/logo.svg" alt="" class="w-8 h-8 group-hover:opacity-90 transition-opacity" />
       <span class="font-sans font-bold text-xl text-primary tracking-tight">Mibeko</span>
     </a>
 
+    <!-- Recherche (Desktop) : champ persistant, composant le plus important du site -->
+    <form action="/textes" method="get" role="search" class="hidden lg:block flex-1 max-w-[260px]">
+      <label for="header-search" class="sr-only">Rechercher un texte, un article ou un thème</label>
+      <div class="flex items-center h-10 bg-surface-container-lowest border border-outline-variant/60 rounded-lg focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all pl-3">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-on-surface-variant/60 shrink-0"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line></svg>
+        <input id="header-search" name="q" type="search" value={query} placeholder="Rechercher…" data-search-suggest class="min-w-0 flex-1 bg-transparent border-none outline-none px-2.5 h-full text-sm text-on-surface placeholder:text-on-surface-variant/50" />
+      </div>
+    </form>
+
     <!-- Navigation (Desktop) -->
-    <nav class="hidden md:flex items-center gap-8" aria-label="Navigation principale">
+    <nav class="hidden lg:flex items-center gap-7 ml-auto" aria-label="Navigation principale">
       {navLinks.map((link) => (
         <a
           href={link.href}
           aria-current={isActive(link.href) ? 'page' : undefined}
           class:list={[
-            "text-sm font-medium transition-colors relative py-2",
+            "text-sm font-medium transition-colors relative py-2 whitespace-nowrap",
             isActive(link.href) ? "text-primary" : "text-on-surface-variant hover:text-primary"
           ]}
         >
           {link.label}
           {isActive(link.href) && (
-            <span class="absolute bottom-0 left-0 w-full h-[2px] bg-secondary rounded-t-full"></span>
+            <span class="absolute bottom-0 left-0 w-full h-[2px] bg-secondary rounded-t"></span>
           )}
         </a>
       ))}
     </nav>
 
-    <!-- Actions (Desktop) : recherche + entrée pro discrète (lien texte) -->
-    <div class="hidden md:flex items-center gap-6">
-      <a href="/recherche" aria-label="Rechercher" class="text-on-surface-variant hover:text-primary transition-colors">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line></svg>
-      </a>
+    <!-- Séparateur + entrée pro (Desktop) -->
+    <div class="hidden lg:flex items-center gap-6 shrink-0">
+      <span class="h-6 w-px bg-surface-variant" aria-hidden="true"></span>
       <a
-        href="/tarifs"
-        aria-current={pathname.startsWith('/tarifs') ? 'page' : undefined}
+        href="/professionnels"
+        aria-current={pathname.startsWith('/professionnels') ? 'page' : undefined}
         class:list={[
-          'text-sm font-medium transition-colors',
-          pathname.startsWith('/tarifs') ? 'text-primary' : 'text-on-surface-variant hover:text-primary',
+          'text-sm font-medium transition-colors whitespace-nowrap',
+          pathname.startsWith('/professionnels') ? 'text-primary' : 'text-on-surface-variant hover:text-primary',
         ]}
       >
         Professionnels
@@ -62,7 +72,7 @@ const isActive = (href: string) =>
     <button
       id="mobile-menu-toggle"
       type="button"
-      class="md:hidden p-2 -mr-2 text-on-surface-variant hover:text-primary"
+      class="lg:hidden ml-auto p-2 -mr-2 text-on-surface-variant hover:text-primary"
       aria-label="Ouvrir le menu"
       aria-expanded="false"
       aria-controls="mobile-menu"
@@ -80,27 +90,33 @@ const isActive = (href: string) =>
   </div>
 
   <!-- Mobile menu panel -->
-  <div id="mobile-menu" class="hidden md:hidden border-t border-surface-variant/60 bg-background">
-    <nav class="max-w-[1120px] mx-auto px-4 sm:px-6 py-4 flex flex-col" aria-label="Navigation mobile">
-      {navLinks.map((link) => (
-        <a
-          href={link.href}
-          aria-current={isActive(link.href) ? 'page' : undefined}
-          class:list={[
-            "py-3 text-base font-medium border-b border-surface-variant/40 transition-colors",
-            isActive(link.href) ? "text-primary" : "text-on-surface-variant hover:text-primary"
-          ]}
-        >
-          {link.label}
+  <div id="mobile-menu" class="hidden lg:hidden border-t border-surface-variant/60 bg-background">
+    <div class="max-w-[1120px] mx-auto px-4 sm:px-6 py-4 flex flex-col gap-1">
+      <form action="/textes" method="get" role="search" class="mb-3">
+        <label for="header-search-mobile" class="sr-only">Rechercher un texte, un article ou un thème</label>
+        <div class="flex items-center h-11 bg-surface-container-lowest border border-outline-variant/60 rounded-lg focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all pl-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-on-surface-variant/60 shrink-0"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line></svg>
+          <input id="header-search-mobile" name="q" type="search" value={query} placeholder="Rechercher…" data-search-suggest class="min-w-0 flex-1 bg-transparent border-none outline-none px-2.5 h-full text-base text-on-surface placeholder:text-on-surface-variant/50" />
+        </div>
+      </form>
+      <nav class="flex flex-col" aria-label="Navigation mobile">
+        {navLinks.map((link) => (
+          <a
+            href={link.href}
+            aria-current={isActive(link.href) ? 'page' : undefined}
+            class:list={[
+              "py-3 text-base font-medium border-b border-surface-variant/40 transition-colors",
+              isActive(link.href) ? "text-primary" : "text-on-surface-variant hover:text-primary"
+            ]}
+          >
+            {link.label}
+          </a>
+        ))}
+        <a href="/professionnels" class="py-3 text-base font-medium transition-colors text-on-surface-variant hover:text-primary">
+          Professionnels
         </a>
-      ))}
-      <a href="/recherche" class="py-3 text-base font-medium border-b border-surface-variant/40 transition-colors text-on-surface-variant hover:text-primary">
-        Rechercher
-      </a>
-      <a href="/tarifs" class="py-3 text-base font-medium border-b border-surface-variant/40 transition-colors text-on-surface-variant hover:text-primary">
-        Professionnels
-      </a>
-    </nav>
+      </nav>
+    </div>
   </div>
 </header>
 
