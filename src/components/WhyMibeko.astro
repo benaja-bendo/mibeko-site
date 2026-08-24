@@ -1,68 +1,17 @@
 ---
-import { Image } from 'astro:assets';
-import imgEquipe from '../assets/images/equipe-professionnels.webp';
-
-const reasons = [
-  {
-    title: 'Sources Officielles',
-    description: 'Accédez à une base de données rigoureusement vérifiée, issue des journaux officiels et des publications gouvernementales.',
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l8-4v18"></path><path d="M19 21V11l-6-3"></path><path d="M9 7v14"></path></svg>`
-  },
-  {
-    title: 'Français Simple',
-    description: 'Des explications claires et simplifiées pour démocratiser la compréhension des textes de loi souvent complexes.',
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"></path><path d="m4 14 6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="m22 22-5-10-5 10"></path><path d="M14 18h6"></path></svg>`
-  },
-  {
-    title: 'Sécurité des Données',
-    description: 'Conformité totale avec la législation congolaise sur la protection des données personnelles (Loi 2019).',
-    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"></path></svg>`
-  }
-];
 ---
 
-<section class="py-20 md:py-32 bg-primary text-on-primary relative overflow-hidden">
-  <!-- Subtle Decor -->
-  <div class="absolute top-0 right-0 w-[800px] h-[800px] bg-secondary/10 rounded-full blur-[100px] translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
-
-  <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-      
-      <!-- Title Area -->
-      <div class="lg:col-span-5 animate-fade-in-up">
-        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-on-primary/10 border border-on-primary/20 mb-6">
-          <span class="text-xs font-semibold text-inverse-primary uppercase tracking-wider">Notre engagement</span>
-        </div>
-        <h2 class="text-3xl md:text-4xl lg:text-[40px] font-bold mb-6 tracking-tight leading-tight">
-          La référence de <br />confiance.
-        </h2>
-        <p class="text-inverse-primary text-lg font-serif leading-relaxed mb-8 max-w-md">
-          Développé avec le soutien de juristes congolais, Mibeko allie l'exigence de la pratique du droit à une technologie de pointe.
-        </p>
-
-        <div class="relative rounded-2xl overflow-hidden border border-on-primary/15 shadow-xl max-w-md">
-          <Image src={imgEquipe} alt="Des juristes congolais collaborent autour d'un dossier" width={900} loading="eager" class="w-full h-auto object-cover aspect-[16/10]" />
-          <div class="absolute inset-0 bg-primary/10 mix-blend-multiply pointer-events-none"></div>
-        </div>
-      </div>
-
-      <!-- Reasons Grid -->
-      <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {reasons.map((reason, index) => (
-          <div 
-            class={`bg-primary-container/40 backdrop-blur-md rounded-2xl p-8 border border-on-primary/10 hover:bg-primary-container/60 hover:border-secondary/50 transition-all duration-300 animate-fade-in-up animation-delay-${(index + 1) * 100} ${index === 2 ? 'sm:col-span-2 sm:max-w-md sm:mx-auto lg:col-span-1 lg:max-w-none' : ''}`}
-          >
-            <div class="w-12 h-12 rounded-xl bg-on-primary/10 text-inverse-primary flex items-center justify-center mb-6">
-              <Fragment set:html={reason.icon} />
-            </div>
-            <h3 class="text-xl font-bold mb-3">{reason.title}</h3>
-            <p class="text-sm text-inverse-primary leading-relaxed">
-              {reason.description}
-            </p>
-          </div>
-        ))}
-      </div>
-
+<section class="py-16 md:py-20 bg-primary text-on-primary">
+  <div class="max-w-[640px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-on-primary/10 border border-on-primary/20 mb-6">
+      <span class="text-xs font-semibold text-inverse-primary uppercase tracking-wider">Notre engagement</span>
     </div>
+    <h2 class="text-2xl md:text-3xl font-bold mb-5 tracking-tight">Une source, pas un résumé</h2>
+    <p class="text-inverse-primary text-base md:text-lg font-serif leading-relaxed mb-8">
+      Chaque texte provient d'une source officielle — le Secrétariat général du Gouvernement (sgg.cg) ou l'OHADA (ohada.org) — et affiche, quand il est établi, son statut juridique. Mibeko est un service privé et indépendant : seule la publication au Journal officiel fait foi.
+    </p>
+    <a href="/methode" class="inline-flex items-center h-11 px-5 border border-on-primary/30 text-on-primary font-semibold hover:border-on-primary transition-colors">
+      Lire notre méthode
+    </a>
   </div>
 </section>

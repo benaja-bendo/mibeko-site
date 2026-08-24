@@ -1,0 +1,44 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  guides: CollectionEntry<'guides'>[];
+}
+const { guides } = Astro.props;
+---
+
+<section class="py-16 md:py-20 bg-background">
+  <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mb-10">
+      <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-2">Comprendre</p>
+      <h2 class="text-2xl md:text-3xl font-bold text-on-surface tracking-tight">Comprendre une situation</h2>
+    </div>
+
+    <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {guides.map((guide) => (
+        <li>
+          <a href={`/ressources/${guide.id}`} class="group flex flex-col h-full rounded-lg border border-surface-variant bg-surface-container-lowest hover:border-primary/40 transition-colors overflow-hidden">
+            {guide.data.cover && (
+              <div class="w-full h-32 overflow-hidden bg-surface-container border-b border-surface-variant">
+                <Image src={guide.data.cover} alt="" width={360} loading="lazy" class="w-full h-full object-cover" />
+              </div>
+            )}
+            <div class="p-5 flex flex-col flex-grow">
+              <span class="text-xs font-semibold uppercase tracking-wider text-on-surface-muted mb-2">{guide.data.category}</span>
+              <h3 class="text-base font-bold text-on-surface group-hover:text-primary transition-colors leading-snug mb-2">{guide.data.title}</h3>
+              <p class="text-sm text-on-surface-variant font-serif leading-relaxed line-clamp-2 flex-grow">{guide.data.description}</p>
+            </div>
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <div class="mt-8">
+      <a href="/guides" class="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+        Voir tous les guides
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+      </a>
+    </div>
+  </div>
+</section>

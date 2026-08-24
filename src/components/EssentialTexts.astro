@@ -1,0 +1,49 @@
+---
+import { documentPath, type EssentialDocument } from '../lib/api';
+import { publicTypeLabel } from '../lib/legalMetadata';
+
+interface Props {
+  documents: EssentialDocument[];
+}
+const { documents } = Astro.props;
+---
+
+<section class="py-16 md:py-20 bg-background border-t border-surface-variant/50">
+  <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mb-10">
+      <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-2">Le fonds juridique</p>
+      <h2 class="text-2xl md:text-3xl font-bold text-on-surface tracking-tight">Entrer dans le fonds</h2>
+    </div>
+
+    <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+      {documents.map((doc) => (
+        <li>
+          <a href={documentPath(doc.slug)} class="group flex flex-col h-full p-5 rounded-lg border border-surface-variant bg-surface-container-lowest hover:border-primary/40 transition-colors">
+            <span class="inline-flex items-center self-start px-2.5 py-1 rounded bg-surface-container text-on-surface-variant text-xs font-semibold uppercase tracking-wider mb-3 group-hover:bg-secondary/10 group-hover:text-secondary transition-colors">
+              {publicTypeLabel(doc.type_code, doc.type_name)}
+            </span>
+            <h3 class="ai-sentence text-base font-bold text-on-surface group-hover:text-primary transition-colors leading-snug mb-2">{doc.title}</h3>
+            {doc.articles_count > 0 && (
+              <p class="mt-auto text-xs text-on-surface-muted">{doc.articles_count} article{doc.articles_count > 1 ? 's' : ''}</p>
+            )}
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <div class="mt-8">
+      <a href="/textes" class="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+        Parcourir tout le fonds
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Le titre officiel n'est jamais réécrit : ceci ne change que le rendu visuel
+     (première lettre), jamais le texte accessible ni la donnée source. */
+  .ai-sentence::first-letter {
+    text-transform: uppercase;
+  }
+</style>
