@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import SearchSuggest from '../components/SearchSuggest.astro';
 
 interface Props {
 	title: string;
@@ -55,11 +56,12 @@ const orgJsonLd = {
 	url: siteRoot,
 	logo: new URL('/logo.svg', siteOrigin).href,
 	description,
-	slogan: 'Vos droits, simplifiés.',
+	slogan: 'Le droit congolais, clair et à portée de main',
 	areaServed: 'CG',
 };
 
-// Boîte de recherche Google (sitelinks searchbox) → page /recherche.
+// Boîte de recherche Google (sitelinks searchbox) → page /textes (fusion
+// recherche + fonds du 18/08/2026 ; /recherche n'est plus qu'un alias 301).
 const websiteJsonLd = {
 	'@context': 'https://schema.org',
 	'@type': 'WebSite',
@@ -70,7 +72,7 @@ const websiteJsonLd = {
 		'@type': 'SearchAction',
 		target: {
 			'@type': 'EntryPoint',
-			urlTemplate: `${siteRoot}recherche?q={search_term_string}`,
+			urlTemplate: `${siteRoot}textes?q={search_term_string}`,
 		},
 		'query-input': 'required name=search_term_string',
 	},
@@ -140,5 +142,6 @@ const websiteJsonLd = {
 			Aller au contenu principal
 		</a>
 		<slot />
+		<SearchSuggest />
 	</body>
 </html>

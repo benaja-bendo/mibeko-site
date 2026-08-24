@@ -1,0 +1,149 @@
+---
+/**
+ * Suggestions de recherche en direct, sur tout champ portant
+ * `data-search-suggest` (accueil, `/recherche`). Un seul exemplaire de ce
+ * composant vit dans `Layout.astro` : le script s'attache lui-même à tous les
+ * champs marqués présents sur la page.
+ *
+ * Progressive enhancement stricte : le champ appartient à un
+ * `<form method="get">` qui fonctionne seul. Ce script n'ajoute qu'un aperçu
+ * avant validation — jamais une dépendance. Une panne de `/api/suggest`
+ * laisse simplement la liste vide.
+ */
+---
+
+<script>
+  interface Suggestion {
+    label: string;
+    title: string;
+    breadcrumb: string;
+    href: string;
+  }
+
+  const DEBOUNCE_MS = 200;
+  const MIN_LENGTH = 2;
+
+  document.querySelectorAll<HTMLInputElement>('[data-search-suggest]').forEach((input) => {
+    let panel: HTMLDivElement | null = null;
+    let activeIndex = -1;
+    let items: Suggestion[] = [];
+    let debounceHandle: number | undefined;
+    let requestToken = 0;
+
+    const closePanel = () => {
+      panel?.remove();
+      panel = null;
+      activeIndex = -1;
+      input.setAttribute('aria-expanded', 'false');
+      input.removeAttribute('aria-activedescendant');
+    };
+
+    const position = () => {
+      if (!panel) return;
+      const rect = input.getBoundingClientRect();
+      panel.style.top = `${rect.bottom + window.scrollY + 4}px`;
+      panel.style.left = `${rect.left + window.scrollX}px`;
+      panel.style.width = `${rect.width}px`;
+    };
+
+    const setActive = (index: number) => {
+      if (!panel) return;
+      const options = panel.querySelectorAll<HTMLElement>('[role="option"]');
+      options.forEach((el, i) => {
+        const isActive = i === index;
+        el.classList.toggle('bg-surface-container', isActive);
+        if (isActive) el.id = 'search-suggest-active';
+        else el.removeAttribute('id');
+      });
+      activeIndex = index;
+      if (index >= 0) input.setAttribute('aria-activedescendant', 'search-suggest-active');
+      else input.removeAttribute('aria-activedescendant');
+    };
+
+    const openWith = (results: Suggestion[]) => {
+      items = results;
+      closePanel();
+      if (results.length === 0) return;
+
+      panel = document.createElement('div');
+      panel.setAttribute('role', 'listbox');
+      panel.className =
+        'fixed z-50 max-h-80 overflow-y-auto rounded-lg border border-surface-variant bg-surface-container-lowest';
+      position();
+
+      for (const [i, r] of results.entries()) {
+        const option = document.createElement('a');
+        option.href = r.href;
+        option.setAttribute('role', 'option');
+        option.className =
+          'flex flex-col gap-0.5 px-3 py-2 text-sm border-b border-surface-variant/60 last:border-b-0 hover:bg-surface-container';
+        const title = document.createElement('span');
+        title.className = 'font-semibold text-on-surface line-clamp-2';
+        title.textContent = `${r.label} — ${r.title}`;
+        const sub = document.createElement('span');
+        sub.className = 'text-xs text-on-surface-muted line-clamp-1';
+        sub.textContent = r.breadcrumb;
+        option.append(title, sub);
+        option.addEventListener('mouseenter', () => setActive(i));
+        panel.append(option);
+      }
+
+      document.body.append(panel);
+      input.setAttribute('aria-expanded', 'true');
+    };
+
+    const fetchSuggestions = async (query: string) => {
+      const token = ++requestToken;
+      try {
+        const res = await fetch(`/api/suggest?q=${encodeURIComponent(query)}`);
+        if (!res.ok || token !== requestToken) return;
+        const json = (await res.json()) as { results: Suggestion[] };
+        if (token !== requestToken) return;
+        openWith(json.results ?? []);
+      } catch {
+        // Best-effort : une panne laisse le formulaire natif fonctionner seul.
+      }
+    };
+
+    input.setAttribute('role', 'combobox');
+    input.setAttribute('aria-expanded', 'false');
+    input.setAttribute('aria-autocomplete', 'list');
+    input.setAttribute('autocomplete', 'off');
+
+    input.addEventListener('input', () => {
+      window.clearTimeout(debounceHandle);
+      const query = input.value.trim();
+      if (query.length < MIN_LENGTH) {
+        closePanel();
+        return;
+      }
+      debounceHandle = window.setTimeout(() => fetchSuggestions(query), DEBOUNCE_MS);
+    });
+
+    input.addEventListener('keydown', (event) => {
+      if (!panel || items.length === 0) return;
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        setActive((activeIndex + 1) % items.length);
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        setActive((activeIndex - 1 + items.length) % items.length);
+      } else if (event.key === 'Enter' && activeIndex >= 0) {
+        event.preventDefault();
+        window.location.href = items[activeIndex].href;
+      } else if (event.key === 'Escape') {
+        closePanel();
+      }
+    });
+
+    input.addEventListener('blur', () => {
+      // Délai : laisse un clic sur une suggestion se déclencher avant fermeture.
+      window.setTimeout(closePanel, 150);
+    });
+
+    // Repositionner plutôt que fermer : sur mobile, l'apparition du clavier
+    // fait défiler la page au moment même où le panneau vient de s'ouvrir.
+    window.addEventListener('scroll', position, { passive: true });
+    window.addEventListener('resize', position);
+  });
+</script>
