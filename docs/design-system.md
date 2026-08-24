@@ -389,16 +389,16 @@ Mibeko est un service **privé et indépendant, sans adossement institutionnel**
 
 ---
 
-## 13. Ce que cette charte ne tranche pas
+## 13. Arbitrages d’exécution tranchés le 17 août 2026
 
-À décider, et à consigner ici une fois tranché :
+Le plan du portail a fait trancher les six points que la charte laissait ouverts. Les lignes datées correspondantes de `docs/decisions.md` font autorité :
 
-- **La règle d'affichage de la vitrine.** « Derniers textes publiés » montre aujourd'hui ce qui est chronologiquement récent en base, ce qui remonte des rectificatifs de 1959. Faut-il une sélection éditoriale, un filtre par importance, ou l'abandon de la section ?
-- **Le tri par défaut du catalogue.** Le tri alphabétique remonte mécaniquement les intitulés dégradés. Chronologique inversé ? Par importance juridique ? Par matière ?
-- **Le sort des thèmes de vie** tant que la couverture reste à 61 textes sur 1 078 : masquer les compteurs, réduire le nombre de thèmes affichés, ou déprioriser l'entrée « par situation ».
-- **La grille tarifaire pro**, encore en `PLACEHOLDER PRIX — userAction` dans `src/pages/tarifs.astro`.
-- **La refonte de l'emblème** (§ 12) : la règle est posée, le dessin reste à faire — et la question juridique de l'usage des couleurs nationales à faire trancher.
-- **La signature retenue** parmi les cinq en circulation (§ 12).
+- **Vitrine** : « Nouveautés du fonds », triées sur la date d’intégration et montrant celle-ci séparément de la date juridique.
+- **Catalogue** : chronologie juridique décroissante, dates inconnues en dernier, puis titre officiel et UUID pour la stabilité.
+- **Thèmes de vie** : pages et navigation conservées, entrée retirée de la première hiérarchie de l’accueil tant que la couverture n’est pas gouvernée ; aucun thème vide n’est rendu.
+- **Prochain pas commercial** : comprendre par l’accès libre, agir par un pilote accompagné aux conditions confirmées avant engagement, travailler par une démonstration Pro ; aucun tarif fictif ni checkout simulé.
+- **Emblème** : livre ouvert monolinéaire, monochrome, lisible à 16–24 px, sans écu, flambeau, balance, devise ni couleurs nationales disposées en drapeau.
+- **Signature** : une seule — « Le droit congolais, clair et à portée de main ».
 
 ---
 

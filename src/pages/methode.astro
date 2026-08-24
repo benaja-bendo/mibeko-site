@@ -10,7 +10,7 @@ import Footer from '../components/Footer.astro';
 // dans l'application (conformité Play Store).
 const sources = [
   {
-    name: 'Secrétariat Général du Gouvernement',
+    name: 'Secrétariat général du Gouvernement',
     detail: 'Journaux officiels et textes de la République du Congo.',
     url: 'https://www.sgg.cg',
     label: 'sgg.cg',
@@ -26,19 +26,19 @@ const sources = [
 const steps = [
   {
     title: 'Collecte des sources officielles',
-    description: 'Nous partons des textes publiés par les sources officielles (Journal Officiel, sites gouvernementaux et OHADA). Le document source, tel que publié, reste toujours accessible en PDF.',
+    description: 'Nous partons des textes publiés par les sources officielles (Journal officiel, sites gouvernementaux et OHADA). Le document source, tel que publié, reste toujours accessible en PDF.',
   },
   {
     title: 'Numérisation et structuration',
     description: 'Les documents sont numérisés puis découpés article par article, en respectant leur arborescence (livres, titres, chapitres, sections). Chaque article devient adressable individuellement.',
   },
   {
-    title: 'Relecture éditoriale',
-    description: 'Le texte issu de la numérisation est relu et corrigé pour rétablir la mise en forme et lever les artefacts de reconnaissance de caractères, sans en modifier le fond.',
+    title: 'Contrôles documentés',
+    description: 'La numérisation est contrôlée progressivement. Quand une vérification éditoriale ou juridique n’est pas établie, la page le signale au lieu de la supposer.',
   },
   {
-    title: 'Versionnage et mise à jour',
-    description: 'Chaque texte porte ses métadonnées (type, dates, références) et son statut. Le fonds est enrichi et actualisé au fil des nouvelles publications.',
+    title: 'Métadonnées et statut',
+    description: 'Nous affichons les métadonnées disponibles et distinguons le statut déclaré du statut réellement vérifié. Le fonds s’enrichit au fil des documents intégrés.',
   },
 ];
 
@@ -47,7 +47,7 @@ const jsonLd = [
     '@context': 'https://schema.org',
     '@type': 'AboutPage',
     name: 'Notre méthode — Mibeko',
-    description: "D'où viennent les textes de Mibeko et comment ils sont traités : sources officielles, numérisation, découpage article par article, relecture éditoriale et versionnage.",
+    description: "D'où viennent les textes de Mibeko et comment ils sont traités : sources officielles, numérisation, découpage article par article et état de vérification.",
     inLanguage: 'fr',
   },
 ];
@@ -55,7 +55,7 @@ const jsonLd = [
 
 <Layout
   title="Notre méthode — d'où viennent les textes | Mibeko"
-  description="Comment Mibeko constitue son fonds juridique : sources officielles (sgg.cg, ohada.org), numérisation, découpage article par article, relecture éditoriale et versionnage. Le PDF source reste toujours consultable."
+  description="Comment Mibeko constitue son fonds juridique : sources officielles, numérisation, découpage article par article et indication de l’état de vérification."
   jsonLd={jsonLd}
 >
   <Header />
@@ -75,7 +75,7 @@ const jsonLd = [
         </p>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {sources.map((s) => (
-            <a href={s.url} target="_blank" rel="noopener noreferrer" class="flex flex-col gap-1.5 p-5 rounded-2xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:shadow-sm transition-all group">
+            <a href={s.url} target="_blank" rel="noopener noreferrer" class="flex flex-col gap-1.5 p-5 rounded-lg border border-surface-variant bg-surface-container-lowest hover:border-primary/40 transition-all group">
               <span class="font-semibold text-on-surface group-hover:text-primary transition-colors">{s.name}</span>
               <span class="text-sm text-on-surface-variant">{s.detail}</span>
               <span class="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-secondary">
@@ -95,7 +95,7 @@ const jsonLd = [
         <ol class="flex flex-col gap-5">
           {steps.map((step, i) => (
             <li class="flex gap-4 sm:gap-5">
-              <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary text-on-primary font-bold shrink-0">{i + 1}</span>
+              <span class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-on-primary font-bold shrink-0">{i + 1}</span>
               <div class="pt-1">
                 <h3 class="text-lg font-bold text-on-surface mb-1.5">{step.title}</h3>
                 <p class="text-on-surface-variant leading-relaxed">{step.description}</p>
@@ -109,13 +109,13 @@ const jsonLd = [
     <!-- Transparence / avertissement -->
     <section class="pb-16 md:pb-24">
       <div class="max-w-[820px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="rounded-2xl border border-secondary/25 bg-secondary/[0.05] p-6 sm:p-8">
+        <div class="rounded-lg border border-secondary/25 bg-secondary/[0.05] p-6 sm:p-8">
           <h2 class="text-lg font-bold text-on-surface mb-3">Une aide à la compréhension, pas un conseil juridique</h2>
           <p class="text-on-surface-variant leading-relaxed mb-3">
             Mibeko facilite l'accès et la compréhension du droit. Le contenu proposé est fourni à titre d'information et ne remplace pas l'avis d'un professionnel du droit. En cas de doute ou de litige, consultez un avocat ou l'autorité compétente.
           </p>
           <p class="text-on-surface-variant leading-relaxed">
-            Le document source officiel, tel que publié, reste consultable en PDF sur chaque texte : vous pouvez toujours vérifier à la source.
+            Lorsqu’un document source est disponible, la page du texte permet de le consulter. La publication au Journal officiel reste la référence qui fait foi.
           </p>
           {/* À COMPLÉTER : gouvernance éditoriale et validation par un juriste
               (nom/qualité) une fois formalisée. Ne pas revendiquer de garantie

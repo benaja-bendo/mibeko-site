@@ -60,9 +60,9 @@ const infos = [
 						</div>
 					))}
 
-					<div class="mt-2 p-5 rounded-xl bg-surface-container-low border border-surface-variant">
+					<div class="mt-2 p-5 rounded-lg bg-surface-container-low border border-surface-variant">
 						<p class="text-sm text-on-surface-variant leading-relaxed">
-							<strong class="text-on-surface">Besoin d'un texte précis ?</strong> Avant de nous écrire, la réponse est peut-être déjà dans le fonds : <a href="/recherche" class="text-secondary font-medium hover:underline">la recherche</a> couvre tous les textes publiés.
+							<strong class="text-on-surface">Besoin d'un texte précis ?</strong> Avant de nous écrire, la réponse est peut-être déjà dans le fonds : <a href="/textes" class="text-secondary font-medium hover:underline">la recherche</a> couvre tous les textes publiés.
 						</p>
 					</div>
 				</div>
@@ -70,7 +70,7 @@ const infos = [
 				<!-- Form -->
 				<div class="lg:col-span-3">
 					{status === 'ok' && (
-						<div class="mb-6 flex items-start gap-3 p-5 rounded-xl bg-primary/10 border border-primary/20">
+						<div class="mb-6 flex items-start gap-3 p-5 rounded-lg bg-primary/10 border border-primary/20">
 							<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary shrink-0 mt-0.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="m9 11 3 3L22 4"></path></svg>
 							<div>
 								<p class="font-semibold text-on-surface">Message envoyé</p>
@@ -79,7 +79,7 @@ const infos = [
 						</div>
 					)}
 					{status === 'invalid' && (
-						<div class="mb-6 flex items-start gap-3 p-5 rounded-xl bg-secondary/10 border border-secondary/20">
+						<div class="mb-6 flex items-start gap-3 p-5 rounded-lg bg-secondary/10 border border-secondary/20">
 							<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-secondary shrink-0 mt-0.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" x2="12" y1="9" y2="13"></line><line x1="12" x2="12.01" y1="17" y2="17"></line></svg>
 							<div>
 								<p class="font-semibold text-on-surface">Vérifiez votre message</p>
@@ -88,7 +88,7 @@ const infos = [
 						</div>
 					)}
 					{status === 'error' && (
-						<div class="mb-6 flex items-start gap-3 p-5 rounded-xl bg-secondary/10 border border-secondary/20">
+						<div class="mb-6 flex items-start gap-3 p-5 rounded-lg bg-secondary/10 border border-secondary/20">
 							<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-secondary shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg>
 							<div>
 								<p class="font-semibold text-on-surface">L'envoi a échoué</p>
@@ -97,7 +97,7 @@ const infos = [
 						</div>
 					)}
 
-					<form action="/api/contact" method="post" class="bg-white border border-surface-variant rounded-xl p-6 md:p-8 flex flex-col gap-5">
+					<form action="/api/contact" method="post" class="bg-white border border-surface-variant rounded-lg p-6 md:p-8 flex flex-col gap-5">
 						<div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
 							<div class="flex flex-col gap-2">
 								<label for="name" class="text-sm font-medium text-on-surface">Nom complet</label>

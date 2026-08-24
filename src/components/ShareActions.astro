@@ -34,12 +34,12 @@ const shareText = `${title}\n${url}`;
 const whatsappHref = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 
 const btn =
-  'inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-surface-variant bg-surface-container-lowest text-on-surface font-semibold text-sm hover:border-primary/40 hover:text-primary transition-colors';
+  'inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg border border-surface-variant bg-surface-container-lowest text-on-surface font-semibold text-sm hover:border-primary/40 hover:text-primary transition-colors';
 ---
 
 <section
   aria-label={heading}
-  class="mt-10 rounded-2xl border border-surface-variant bg-surface-container-low p-5 sm:p-6"
+  class="mt-10 rounded-lg border border-surface-variant bg-surface-container-low p-5 sm:p-6"
   data-share
   data-share-url={url}
   data-share-title={title}
