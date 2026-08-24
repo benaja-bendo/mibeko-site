@@ -10,7 +10,9 @@ import node from '@astrojs/node';
 // pour le fonds juridique servi depuis l'API (`/codes/...`).
 export default defineConfig({
   site: 'https://mibeko.fr',
-  adapter: node({ mode: 'standalone' }),
+  // Le mode middleware laisse `server.mjs` appliquer compression et politique
+  // de cache à toute la réponse, actifs statiques compris.
+  adapter: node({ mode: 'middleware' }),
   // Renommage du fonds juridique `/codes` → `/textes` (le répertoire mêle
   // codes, lois, arrêtés, décrets). Redirections 301 pour préserver le SEO et
   // les liens existants. Le `[...rest]` couvre les pages document et article.

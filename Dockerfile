@@ -19,15 +19,12 @@ ARG PUBLIC_UMAMI_WEBSITE_ID
 ENV PUBLIC_UMAMI_URL=$PUBLIC_UMAMI_URL
 ENV PUBLIC_UMAMI_WEBSITE_ID=$PUBLIC_UMAMI_WEBSITE_ID
 
-# Casse le cache Docker sur cette étape à chaque déploiement : la home fait des
-# appels API au build (thèmes, derniers textes) qui échouent silencieusement en
-# cas d'indisponibilité passagère (cf. CLAUDE.md), et un simple `gh run rerun`
-# sur un commit inchangé réutilisait ce calque en cache sans jamais retenter
-# l'appel — le déploiement passait au vert sans rien republier.
+# Permet au déploiement de forcer la régénération des pages éditoriales
+# pré-rendues et des actifs, même lorsqu'il rejoue un commit inchangé.
 ARG CACHEBUST=1
 
-# Build SSR (adapter @astrojs/node, mode standalone)
-# → produit dist/server/entry.mjs (serveur Node) + dist/client (assets)
+# Build SSR (adapter @astrojs/node, mode middleware)
+# → produit dist/server/entry.mjs (handler Astro) + dist/client (assets)
 RUN npm run build
 
 # --- Étape 2 : Dépendances de production uniquement ---
@@ -42,15 +39,16 @@ FROM node:22-alpine AS runtime
 
 WORKDIR /app
 ENV NODE_ENV=production
-# Le serveur standalone d'Astro lit HOST/PORT ; 0.0.0.0 pour être joignable
-# depuis Traefik. MIBEKO_API_URL est injecté au runtime (cf. docker-compose).
+# L'enveloppe Express/Astro lit HOST/PORT ; 0.0.0.0 pour être joignable depuis
+# Traefik. MIBEKO_API_URL est injecté au runtime (cf. docker-compose).
 ENV HOST=0.0.0.0
 ENV PORT=4321
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY package.json ./
+COPY server.mjs ./
 
 EXPOSE 4321
 
-CMD ["node", "./dist/server/entry.mjs"]
+CMD ["node", "./server.mjs"]
