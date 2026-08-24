@@ -20,6 +20,12 @@ export default defineConfig({
     '/codes': '/textes',
     '/codes/[doc]': '/textes/[doc]',
     '/codes/[doc]/[article]': '/textes/[doc]/[article]',
+    // Scission de la page produit unique en deux pages, une par audience
+    // (18/08/2026) : l'app grand public et l'espace Pro n'ont plus la même
+    // prochaine étape. La grille tarifaire (« 0 FCFA / toujours ») est
+    // retirée : le gratuit s'énonce une fois, sur l'accueil et le fonds.
+    '/produits': '/application',
+    '/tarifs': '/professionnels',
   },
   // Traefik termine le TLS : la connexion proxy → conteneur Astro est en HTTP
   // clair, donc le `checkOrigin` natif reconstruit `http://mibeko.fr` et rejette
