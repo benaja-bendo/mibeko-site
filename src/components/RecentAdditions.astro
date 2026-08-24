@@ -1,0 +1,51 @@
+---
+import { documentPath, type DocumentMeta } from '../lib/api';
+import { documentTypeLabel } from '../lib/legalMetadata';
+
+interface Props {
+  documents: DocumentMeta[];
+}
+const { documents } = Astro.props;
+
+const dateFmt = (iso?: string | null) =>
+  iso ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso)) : null;
+---
+
+<section class="py-16 md:py-20 bg-surface-container-low border-y border-surface-variant/50">
+  <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mb-10">
+      <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-2">Le fonds vit</p>
+      <h2 class="text-2xl md:text-3xl font-bold text-on-surface tracking-tight mb-3">Nouveautés du fonds</h2>
+      <p class="text-sm text-on-surface-variant">Les derniers textes intégrés. La date d'intégration n'est pas la date d'adoption ou de publication du texte.</p>
+    </div>
+
+    <ul class="flex flex-col gap-3">
+      {documents.map((doc) => (
+        <li>
+          <a href={documentPath(doc.slug)} class="group flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-4 sm:p-5 rounded-lg border border-surface-variant bg-surface-container-lowest hover:border-primary/40 transition-colors">
+            <span class="inline-flex items-center self-start sm:self-auto shrink-0 px-2.5 py-1 rounded bg-surface-container text-on-surface-variant text-xs font-semibold uppercase tracking-wider group-hover:bg-secondary/10 group-hover:text-secondary transition-colors">
+              {documentTypeLabel(doc)}
+            </span>
+            <span class="ai-sentence flex-1 text-sm sm:text-base font-bold text-on-surface group-hover:text-primary transition-colors leading-snug line-clamp-1">{doc.titre_officiel}</span>
+            {doc.created_at && (
+              <span class="shrink-0 text-xs text-on-surface-muted">Intégré le {dateFmt(doc.created_at)}</span>
+            )}
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <div class="mt-8">
+      <a href="/textes/nouveautes" class="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+        Voir toutes les nouveautés
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ai-sentence::first-letter {
+    text-transform: uppercase;
+  }
+</style>

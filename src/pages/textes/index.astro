@@ -8,40 +8,89 @@ import CTASection from '../../components/CTASection.astro';
 import {
   fetchPublishedDocuments,
   fetchDocumentTypes,
+  fetchLibrarySearchPage,
   documentPath,
+  articlePath,
   type DocumentMeta,
   type DocumentTypeOption,
+  type LibrarySearchResult,
   type PaginationMeta,
 } from '../../lib/api';
+import { documentTypeLabel, publicTypeLabel } from '../../lib/legalMetadata';
+import { articleLeafLabel } from '../../lib/sanitize';
 
+// Fusion recherche + fonds (18/08/2026) : la recherche et le catalogue sont
+// deux vues incomplètes du même objet (champ sans filtres d'un côté, filtres
+// sans champ de l'autre). Une page, trois états, une seule barre de filtres.
+//
+// Dépendance dure : le rappel sémantique de `library/search` était le
+// bottleneck (~5 s contre 0,1 s pour l'accueil, mibeko-dashboard#50). Il est
+// désormais désactivé par défaut côté API (`semantic` devient opt-in) —
+// `fetchLibrarySearchPage` ne le passe jamais. Cette page suppose ce correctif
+// déployé ; sans lui, le mode « Articles » ci-dessous reste lent.
 const params = Astro.url.searchParams;
+const q = (params.get('q') ?? '').trim();
+const hasQuery = q.length >= 2;
+const view = params.get('view') === 'textes' ? 'textes' : 'articles';
+
 const type = params.get('type') ?? '';
 const scope = params.get('scope') ?? '';
 const fromRaw = params.get('from') ?? '';
 const toRaw = params.get('to') ?? '';
-const sort = params.get('sort') ?? 'titre_officiel';
-const page = Math.max(1, Number(params.get('page') ?? '1') || 1);
 const yearFrom = fromRaw ? Number(fromRaw) : undefined;
 const yearTo = toRaw ? Number(toRaw) : undefined;
+const page = Math.max(1, Number(params.get('page') ?? '1') || 1);
+
+const catalogSorts = [
+  { value: '-date_publication', label: 'Plus récents' },
+  { value: 'date_publication', label: 'Plus anciens' },
+  { value: 'titre_officiel', label: 'Titre (A→Z)' },
+];
+const searchSorts = [
+  { value: 'relevance', label: 'Pertinence' },
+  { value: 'date_desc', label: 'Plus récents' },
+  { value: 'date_asc', label: 'Plus anciens' },
+];
+const sortOptions = hasQuery && view === 'articles' ? searchSorts : catalogSorts;
+const defaultSort = hasQuery && view === 'articles' ? 'relevance' : '-date_publication';
+const sort = params.get('sort') ?? defaultSort;
 
 let documents: DocumentMeta[] = [];
+let articleResults: LibrarySearchResult[] = [];
 let meta: PaginationMeta = { total: 0, perPage: 24, currentPage: 1, lastPage: 1 };
 let types: DocumentTypeOption[] = [];
 let loadError = false;
 
 try {
-  const [result, typeList] = await Promise.all([
-    fetchPublishedDocuments({ type, scope, yearFrom, yearTo, sort, page }),
-    fetchDocumentTypes(),
-  ]);
-  documents = result.items;
-  meta = result.meta;
+  const typeList = await fetchDocumentTypes();
   types = typeList;
+
+  if (hasQuery && view === 'articles') {
+    const result = await fetchLibrarySearchPage(q, {
+      type,
+      scope,
+      yearFrom,
+      yearTo,
+      sort: sort as 'relevance' | 'date_desc' | 'date_asc',
+      page,
+      perPage: 12,
+    });
+    articleResults = result.items;
+    meta = result.meta;
+  } else if (hasQuery && view === 'textes') {
+    const result = await fetchPublishedDocuments({ type, scope, yearFrom, yearTo, sort, titleQuery: q, page, perPage: 24 });
+    documents = result.items;
+    meta = result.meta;
+  } else {
+    const result = await fetchPublishedDocuments({ type, scope, yearFrom, yearTo, sort, page, perPage: 24 });
+    documents = result.items;
+    meta = result.meta;
+  }
 } catch {
   loadError = true;
 }
 
-const hasFilters = Boolean(type || scope || fromRaw || toRaw || (sort && sort !== 'titre_officiel'));
+const hasFilters = Boolean(type || scope || fromRaw || toRaw || (sort && sort !== defaultSort));
 
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: currentYear - 1958 }, (_, i) => currentYear - i);
@@ -51,16 +100,16 @@ const scopes = [
   { value: 'ohada', label: 'OHADA' },
   { value: 'communautaire', label: 'Communautaire' },
 ];
-const sorts = [
-  { value: 'titre_officiel', label: 'Titre (A→Z)' },
-  { value: '-date_publication', label: 'Plus récents' },
-  { value: 'date_publication', label: 'Plus anciens' },
-];
 
 const dateFmt = (iso?: string | null) =>
   iso ? new Intl.DateTimeFormat('fr-FR', { year: 'numeric' }).format(new Date(iso)) : null;
 
-/** Construit une URL `/textes` en repartant des filtres courants, surchargés. */
+const snippet = (text: string | null): string => {
+  const clean = (text ?? '').replace(/\s+/g, ' ').trim();
+  return clean.length > 220 ? `${clean.slice(0, 217)}…` : clean;
+};
+
+/** Reconstruit une URL `/textes` en repartant des paramètres courants, surchargés. */
 const urlWith = (overrides: Record<string, string | number | undefined>) => {
   const sp = new URLSearchParams(params);
   for (const [k, v] of Object.entries(overrides)) {
@@ -74,19 +123,24 @@ const urlWith = (overrides: Record<string, string | number | undefined>) => {
 const selectClass =
   'h-11 w-full rounded-lg border border-surface-variant bg-surface-container-lowest px-3 text-sm text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/40';
 const labelClass = 'block text-xs font-semibold text-on-surface-variant mb-1.5';
+
+const pageTitle = hasQuery ? `« ${q} » — Le fonds juridique` : 'Textes officiels du Congo — le fonds juridique Mibeko';
 ---
 
 <Layout
-  title="Textes officiels du Congo — le fonds juridique Mibeko"
-  description="Consultez librement les codes, lois, arrêtés et décrets de la République du Congo et de l'espace OHADA. Filtrez par type et par date, naviguez article par article."
+  title={`${pageTitle} | Mibeko`}
+  description="Consultez et recherchez librement les codes, lois, arrêtés et décrets de la République du Congo et de l'espace OHADA, article par article."
+  noindex={hasQuery}
 >
   <Header />
   <main id="main" class="flex-grow bg-background">
 
-    <section class="pt-20 pb-8 md:pt-28 md:pb-10">
+    <section class="pt-12 pb-6 md:pt-16 md:pb-8">
       <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
         <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-3">Le fonds juridique</p>
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-on-surface tracking-tight mb-4">Textes officiels du Congo</h1>
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-on-surface tracking-tight mb-4">
+          {hasQuery ? <>Résultats pour « {q} »</> : 'Textes officiels du Congo'}
+        </h1>
         <p class="text-base md:text-lg text-on-surface-variant font-serif max-w-2xl leading-relaxed">
           Codes, lois, arrêtés et décrets de la République du Congo et de l'espace OHADA, consultables article par article, librement.
         </p>
@@ -96,15 +150,23 @@ const labelClass = 'block text-xs font-semibold text-on-surface-variant mb-1.5';
     <section class="pb-20">
       <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
 
-        <!-- Barre de filtres (formulaire GET, fonctionne sans JS) -->
-        <form method="get" class="mb-8 p-4 sm:p-5 rounded-2xl border border-surface-variant bg-surface-container-low">
+        <!-- Recherche + filtres : un seul formulaire GET, fonctionne sans JS -->
+        <form method="get" class="mb-6 p-4 sm:p-5 rounded-lg border border-surface-variant bg-surface-container-low">
+          <div class="mb-4">
+            <label for="f-q" class={labelClass}>Rechercher</label>
+            <div class="flex items-center h-12 bg-surface-container-lowest border border-outline-variant/60 rounded-lg focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all pl-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-on-surface-variant/60 shrink-0"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line></svg>
+              <input id="f-q" name="q" type="search" value={q} placeholder="Ex : « bail commercial », « article 230 »…" data-search-suggest class="min-w-0 flex-1 bg-transparent border-none outline-none px-3 h-full text-on-surface placeholder:text-on-surface-variant/50" />
+            </div>
+          </div>
+
           <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             <div>
               <label for="f-type" class={labelClass}>Type</label>
               <select id="f-type" name="type" class={selectClass}>
                 <option value="">Tous</option>
                 {types.map((t) => (
-                  <option value={t.code} selected={t.code === type}>{t.name}</option>
+                  <option value={t.code} selected={t.code === type}>{publicTypeLabel(t.code, t.name)}</option>
                 ))}
               </select>
             </div>
@@ -136,20 +198,23 @@ const labelClass = 'block text-xs font-semibold text-on-surface-variant mb-1.5';
               </select>
             </div>
           </div>
+
+          {hasQuery && <input type="hidden" name="view" value={view} />}
+
           <div class="mt-4 flex flex-col sm:flex-row sm:items-end gap-3">
             <div class="w-full sm:w-56">
               <label for="f-sort" class={labelClass}>Trier par</label>
               <select id="f-sort" name="sort" class={selectClass}>
-                {sorts.map((s) => (
+                {sortOptions.map((s) => (
                   <option value={s.value} selected={s.value === sort}>{s.label}</option>
                 ))}
               </select>
             </div>
             <div class="flex gap-3 sm:ml-auto">
               <button type="submit" class="h-11 px-6 bg-primary text-on-primary font-semibold rounded-lg hover:bg-primary-container transition-colors text-sm whitespace-nowrap">
-                Appliquer les filtres
+                {hasQuery ? 'Rechercher' : 'Appliquer les filtres'}
               </button>
-              {hasFilters && (
+              {(hasFilters || hasQuery) && (
                 <a href="/textes" class="h-11 inline-flex items-center px-4 text-on-surface-variant font-medium rounded-lg border border-surface-variant hover:bg-surface-container transition-colors text-sm">
                   Réinitialiser
                 </a>
@@ -158,26 +223,81 @@ const labelClass = 'block text-xs font-semibold text-on-surface-variant mb-1.5';
           </div>
         </form>
 
+        <!-- Bascule Textes / Articles : seulement quand une requête est active -->
+        {hasQuery && (
+          <div class="flex items-center gap-2 mb-6">
+            <a href={urlWith({ view: 'articles', page: undefined })} aria-current={view === 'articles' ? 'page' : undefined} class:list={['inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors', view === 'articles' ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest border border-surface-variant text-on-surface hover:border-primary/30']}>
+              Articles
+            </a>
+            <a href={urlWith({ view: 'textes', page: undefined })} aria-current={view === 'textes' ? 'page' : undefined} class:list={['inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors', view === 'textes' ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest border border-surface-variant text-on-surface hover:border-primary/30']}>
+              Textes
+            </a>
+          </div>
+        )}
+
         {loadError ? (
           <p class="text-on-surface-variant">Le fonds est momentanément indisponible. Réessayez dans un instant.</p>
+        ) : hasQuery && view === 'articles' ? (
+          articleResults.length === 0 ? (
+            <div class="text-center py-12">
+              <p class="text-lg text-on-surface mb-2">Aucun résultat pour « {q} ».</p>
+              <p class="text-sm text-on-surface-variant">Essayez d'autres termes, changez de vue vers <a href={urlWith({ view: 'textes', page: undefined })} class="text-primary font-semibold hover:underline">Textes</a>, ou <a href="/guides" class="text-primary font-semibold hover:underline">lisez nos guides</a>.</p>
+            </div>
+          ) : (
+            <>
+              <p class="text-sm text-on-surface-variant mb-5">{meta.total} résultat{meta.total > 1 ? 's' : ''} pour « {q} »</p>
+              <ul class="flex flex-col gap-4">
+                {articleResults.map((r) => {
+                  const href = r.document_slug ? articlePath(r.document_slug, r.number) : null;
+                  const Tag = href ? 'a' : 'div';
+                  return (
+                    <li>
+                      <Tag
+                        {...(href ? { href } : {})}
+                        class:list={[
+                          'block p-6 rounded-lg border border-surface-variant bg-surface-container-lowest transition-all',
+                          href ? 'hover:border-primary/40 group' : 'opacity-80',
+                        ]}
+                      >
+                        <p class="text-xs text-on-surface-variant uppercase tracking-wider mb-2 line-clamp-1">{r.breadcrumb}</p>
+                        <h2 class="text-lg font-bold text-on-surface group-hover:text-primary transition-colors mb-2">
+                          {articleLeafLabel(r.number)} — <span class="font-medium text-on-surface-variant">{r.document_title}</span>
+                        </h2>
+                        {r.has_duplicate_suffix && (
+                          <p class="mb-2 text-xs font-semibold text-secondary">
+                            Doublon technique signalé — numéro canonique : {articleLeafLabel(r.canonical_number)}
+                          </p>
+                        )}
+                        <p class="text-sm text-on-surface-variant font-serif leading-relaxed line-clamp-3">{snippet(r.content)}</p>
+                      </Tag>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )
         ) : (
           <>
             <p class="text-sm text-on-surface-variant mb-5">
               {meta.total === 0
-                ? 'Aucun texte ne correspond à ces critères.'
-                : `${meta.total} texte${meta.total > 1 ? 's' : ''}${hasFilters ? ' filtré' + (meta.total > 1 ? 's' : '') : ''}`}
+                ? hasQuery ? `Aucun texte ne correspond à « ${q} ».` : 'Aucun texte ne correspond à ces critères.'
+                : `${meta.total} texte${meta.total > 1 ? 's' : ''}${hasFilters || hasQuery ? ' filtré' + (meta.total > 1 ? 's' : '') : ''}`}
             </p>
+
+            {hasQuery && documents.length === 0 && (
+              <p class="text-sm text-on-surface-variant mb-8">Essayez la vue <a href={urlWith({ view: 'articles', page: undefined })} class="text-primary font-semibold hover:underline">Articles</a>, qui cherche aussi dans le texte des lois.</p>
+            )}
 
             {documents.length > 0 && (
               <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {documents.map((d) => (
                   <li>
-                    <a href={documentPath(d.slug)} class="flex flex-col h-full p-5 sm:p-6 rounded-2xl border border-surface-variant bg-surface-container-lowest hover:border-primary/40 hover:-translate-y-1 hover:shadow-lg transition-all group">
+                    <a href={documentPath(d.slug)} class="flex flex-col h-full p-5 sm:p-6 rounded-lg border border-surface-variant bg-surface-container-lowest hover:border-primary/40 transition-all group">
                       <div class="flex items-center gap-3 mb-4">
                         <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-semibold uppercase tracking-wider group-hover:bg-secondary/10 group-hover:text-secondary transition-colors">
-                          {d.type?.name ?? 'Texte'}
+                          {documentTypeLabel(d)}
                         </span>
-                        {d.date_publication && <span class="text-xs text-outline">{dateFmt(d.date_publication)}</span>}
+                        {d.date_publication && <span class="text-xs text-on-surface-muted">{dateFmt(d.date_publication)}</span>}
                       </div>
                       <h2 class="text-base sm:text-lg font-bold text-on-surface group-hover:text-primary transition-colors leading-snug">{d.titre_officiel}</h2>
                       {/* Sur un acte en abrégé, le titre ci-dessus ne dit que
@@ -186,38 +306,38 @@ const labelClass = 'block text-xs font-semibold text-on-surface-variant mb-1.5';
                       {d.libelle_descriptif && (
                         <p class="mt-1.5 text-sm text-on-surface-variant leading-snug line-clamp-2">{d.libelle_descriptif}</p>
                       )}
-                      {d.reference_nor && <p class="mt-2 text-sm text-outline">Réf. {d.reference_nor}</p>}
+                      {d.reference_nor && <p class="mt-2 text-sm text-on-surface-muted">Réf. {d.reference_nor}</p>}
                     </a>
                   </li>
                 ))}
               </ul>
             )}
-
-            {meta.lastPage > 1 && (
-              <nav class="mt-10 flex items-center justify-between gap-4" aria-label="Pagination">
-                {meta.currentPage > 1 ? (
-                  <a href={urlWith({ page: meta.currentPage - 1 })} rel="prev" class="inline-flex items-center gap-2 h-11 px-4 sm:px-5 rounded-lg border border-surface-variant text-on-surface font-semibold text-sm hover:border-primary/40 hover:text-primary transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
-                    <span class="hidden sm:inline">Précédent</span>
-                  </a>
-                ) : <span></span>}
-                <span class="text-sm text-on-surface-variant">Page {meta.currentPage} sur {meta.lastPage}</span>
-                {meta.currentPage < meta.lastPage ? (
-                  <a href={urlWith({ page: meta.currentPage + 1 })} rel="next" class="inline-flex items-center gap-2 h-11 px-4 sm:px-5 rounded-lg border border-surface-variant text-on-surface font-semibold text-sm hover:border-primary/40 hover:text-primary transition-all">
-                    <span class="hidden sm:inline">Suivant</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-                  </a>
-                ) : <span></span>}
-              </nav>
-            )}
           </>
+        )}
+
+        {!loadError && meta.lastPage > 1 && (
+          <nav class="mt-10 flex items-center justify-between gap-4" aria-label="Pagination">
+            {meta.currentPage > 1 ? (
+              <a href={urlWith({ page: meta.currentPage - 1 })} rel="prev" class="inline-flex items-center gap-2 h-11 px-4 sm:px-5 rounded-lg border border-surface-variant text-on-surface font-semibold text-sm hover:border-primary/40 hover:text-primary transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+                <span class="hidden sm:inline">Précédent</span>
+              </a>
+            ) : <span></span>}
+            <span class="text-sm text-on-surface-variant">Page {meta.currentPage} sur {meta.lastPage}</span>
+            {meta.currentPage < meta.lastPage ? (
+              <a href={urlWith({ page: meta.currentPage + 1 })} rel="next" class="inline-flex items-center gap-2 h-11 px-4 sm:px-5 rounded-lg border border-surface-variant text-on-surface font-semibold text-sm hover:border-primary/40 hover:text-primary transition-all">
+                <span class="hidden sm:inline">Suivant</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+              </a>
+            ) : <span></span>}
+          </nav>
         )}
       </div>
     </section>
 
     <CTASection
       title="Besoin d'aller plus loin qu'une lecture ?"
-      text="Expliquez les textes avec Mibeko IA, classez-les en dossiers et recevez les alertes du Journal Officiel dans votre espace."
+      text="Expliquez les textes avec l'Assistant Mibeko, classez-les en dossiers et recevez les alertes du Journal officiel dans votre espace."
     />
   </main>
   <Footer />

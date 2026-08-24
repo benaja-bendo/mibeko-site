@@ -1,21 +1,20 @@
 ---
 export const prerender = false;
 
-import Layout from '../layouts/Layout.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import NewsletterForm from '../components/NewsletterForm.astro';
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import NewsletterForm from '../../components/NewsletterForm.astro';
 import {
   fetchPublishedDocuments,
   documentPath,
   type DocumentMeta,
   type PaginationMeta,
-} from '../lib/api';
+} from '../../lib/api';
+import { documentTypeLabel } from '../../lib/legalMetadata';
 
-// « Fil » éditorial : les derniers textes ajoutés au fonds. On réutilise le
-// catalogue trié du plus récent au plus ancien. `date_publication` étant souvent
-// absent côté données, l'API classe alors par date d'ajout — ce qui correspond
-// bien à un flux d'actualités (« ce qui vient d'arriver dans le fonds »).
+// Journal d’intégration du fonds, distinct d’une veille juridique : on trie sur
+// `created_at` et on affiche séparément la date juridique du document.
 const params = Astro.url.searchParams;
 const page = Math.max(1, Number(params.get('page') ?? '1') || 1);
 const PER_PAGE = 20;
@@ -25,7 +24,7 @@ let meta: PaginationMeta = { total: 0, perPage: PER_PAGE, currentPage: 1, lastPa
 let loadError = false;
 
 try {
-  const result = await fetchPublishedDocuments({ sort: '-date_publication', page, perPage: PER_PAGE });
+  const result = await fetchPublishedDocuments({ sort: '-created_at', page, perPage: PER_PAGE });
   documents = result.items;
   meta = result.meta;
 } catch {
@@ -47,11 +46,12 @@ const scopeLabel: Record<string, string> = {
 // aucun résumé ni contenu juridique inventé.
 function metaLine(doc: DocumentMeta): string {
   const parts: string[] = [];
-  if (doc.type?.name) parts.push(doc.type.name);
+  if (doc.created_at) parts.push(`intégré le ${dateLong(doc.created_at)}`);
   const signed = dateLong(doc.date_signature);
   const published = dateLong(doc.date_publication);
-  if (published) parts.push(`publié le ${published}`);
-  else if (signed) parts.push(`signé le ${signed}`);
+  if (published) parts.push(`date juridique : publié le ${published}`);
+  else if (signed) parts.push(`date juridique : signé le ${signed}`);
+  else parts.push('date juridique non renseignée');
   if (doc.reference_nor) parts.push(`réf. ${doc.reference_nor}`);
   if (typeof doc.articles_count === 'number' && doc.articles_count > 0) {
     parts.push(`${doc.articles_count} article${doc.articles_count > 1 ? 's' : ''}`);
@@ -59,18 +59,18 @@ function metaLine(doc: DocumentMeta): string {
   return parts.join(' · ');
 }
 
-/** Construit une URL `/actualites` en surchargeant la page. */
-const pageUrl = (p: number) => (p <= 1 ? '/actualites' : `/actualites?page=${p}`);
+/** Construit une URL `/textes/nouveautes` en surchargeant la page. */
+const pageUrl = (p: number) => (p <= 1 ? '/textes/nouveautes' : `/textes/nouveautes?page=${p}`);
 
-const canonical = new URL(page > 1 ? `/actualites?page=${page}` : '/actualites', siteOrigin).href;
+const canonical = new URL(page > 1 ? `/textes/nouveautes?page=${page}` : '/textes/nouveautes', siteOrigin).href;
 
 // JSON-LD CollectionPage : liste des textes de la page courante.
 const collectionLd = documents.length > 0
   ? {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: 'Actualités juridiques — Mibeko',
-      description: "Les derniers textes officiels ajoutés au fonds juridique de la République du Congo et de l'espace OHADA.",
+      name: 'Nouveautés du fonds — Mibeko',
+      description: "Les derniers documents ajoutés au fonds juridique de la République du Congo et de l'espace OHADA.",
       inLanguage: 'fr',
       url: canonical,
       mainEntity: {
@@ -90,7 +90,8 @@ const breadcrumbLd = {
   '@type': 'BreadcrumbList',
   itemListElement: [
     { '@type': 'ListItem', position: 1, name: 'Accueil', item: new URL('/', siteOrigin).href },
-    { '@type': 'ListItem', position: 2, name: 'Actualités', item: new URL('/actualites', siteOrigin).href },
+    { '@type': 'ListItem', position: 2, name: 'Textes officiels', item: new URL('/textes', siteOrigin).href },
+    { '@type': 'ListItem', position: 3, name: 'Nouveautés', item: new URL('/textes/nouveautes', siteOrigin).href },
   ],
 };
 
@@ -98,20 +99,20 @@ const jsonLd = [collectionLd, breadcrumbLd].filter(Boolean) as Record<string, un
 ---
 
 <Layout
-  title="Actualités juridiques du Congo — les derniers textes | Mibeko"
-  description="Le fil des derniers textes officiels ajoutés au fonds : codes, lois, décrets et arrêtés de la République du Congo et de l'espace OHADA, mis à jour en continu."
+  title="Nouveautés du fonds juridique — Mibeko"
+  description="Les derniers documents intégrés au fonds Mibeko, avec leur date d’intégration distincte de leur date juridique."
   canonical={canonical}
   jsonLd={jsonLd}
 >
   <Header />
   <main id="main" class="flex-grow bg-background">
 
-    <section class="pt-20 pb-8 md:pt-28 md:pb-10">
+    <section class="pt-12 pb-6 md:pt-16 md:pb-8">
       <div class="max-w-[860px] mx-auto px-4 sm:px-6 lg:px-8">
-        <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-3">Le fonds s'enrichit</p>
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-on-surface tracking-tight mb-4">Actualités juridiques</h1>
+        <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-3">Journal d’intégration</p>
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-on-surface tracking-tight mb-4">Nouveautés du fonds</h1>
         <p class="text-base md:text-lg text-on-surface-variant font-serif max-w-2xl leading-relaxed">
-          Les derniers textes officiels intégrés au fonds Mibeko, du plus récent au plus ancien. Cliquez pour lire un texte article par article.
+          Les derniers documents intégrés au fonds Mibeko, du plus récent au plus ancien. La date d’intégration n’est pas la date d’adoption ou de publication du texte.
         </p>
       </div>
     </section>
@@ -133,11 +134,11 @@ const jsonLd = [collectionLd, breadcrumbLd].filter(Boolean) as Record<string, un
                 <li>
                   <a
                     href={documentPath(doc.slug)}
-                    class="block bg-surface-container-lowest border border-surface-variant rounded-2xl p-5 sm:p-6 hover:border-primary/40 hover:shadow-md transition-all group"
+                    class="block bg-surface-container-lowest border border-surface-variant rounded-lg p-5 sm:p-6 hover:border-primary/40 transition-all group"
                   >
                     <div class="flex items-center gap-2 mb-3 flex-wrap">
                       <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-secondary/10 text-secondary text-xs font-bold uppercase tracking-wide">
-                        {doc.type?.name ?? 'Texte'}
+                        {documentTypeLabel(doc)}
                       </span>
                       {doc.legal_scope && scopeLabel[doc.legal_scope] && (
                         <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-surface-container text-on-surface-variant text-xs font-medium">
@@ -188,7 +189,7 @@ const jsonLd = [collectionLd, breadcrumbLd].filter(Boolean) as Record<string, un
     <!-- Capture : rester informé des prochains textes -->
     <section class="pb-20">
       <div class="max-w-[860px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="rounded-2xl border border-surface-variant bg-surface-container-low p-6 sm:p-8">
+        <div class="rounded-lg border border-surface-variant bg-surface-container-low p-6 sm:p-8">
           <h2 class="text-xl font-bold text-on-surface mb-2">Suivre les nouveautés</h2>
           <p class="text-on-surface-variant mb-6 max-w-xl">
             Recevez les nouveaux textes et guides par e-mail. Une fois par mois, sans spam.
