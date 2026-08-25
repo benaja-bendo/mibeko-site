@@ -5,7 +5,7 @@ import { siteOrigin, urlsetResponse, type UrlEntry } from '../lib/sitemap';
 export const prerender = false;
 
 // Pages stables du site.
-const STATIC_PATHS = ['/', '/textes', '/textes/nouveautes', '/guides', '/situations', '/application', '/professionnels', '/methode', '/contact', '/cgu', '/confidentialite', '/mentions-legales'];
+const STATIC_PATHS = ['/', '/textes', '/textes/nouveautes', '/guides', '/situations', '/application', '/professionnels', '/assistant', '/methode', '/contact', '/cgu', '/confidentialite', '/mentions-legales'];
 
 /** Pages stables + thèmes de vie (parcours par situation). */
 export const GET: APIRoute = async ({ site }) => {

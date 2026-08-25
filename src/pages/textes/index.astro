@@ -242,6 +242,7 @@ const pageTitle = hasQuery ? `« ${q} » — Le fonds juridique` : 'Textes offic
             <div class="text-center py-12">
               <p class="text-lg text-on-surface mb-2">Aucun résultat pour « {q} ».</p>
               <p class="text-sm text-on-surface-variant">Essayez d'autres termes, changez de vue vers <a href={urlWith({ view: 'textes', page: undefined })} class="text-primary font-semibold hover:underline">Textes</a>, ou <a href="/guides" class="text-primary font-semibold hover:underline">lisez nos guides</a>.</p>
+              <p class="mt-4 text-sm text-on-surface-variant">La recherche compare des mots. Si vous avez une question, <a href="/assistant" class="text-secondary font-semibold hover:underline">l'Assistant Mibeko</a> y répond à partir des textes publiés et cite ses articles.</p>
             </div>
           ) : (
             <>
@@ -335,9 +336,24 @@ const pageTitle = hasQuery ? `« ${q} » — Le fonds juridique` : 'Textes offic
       </div>
     </section>
 
+    <section class="py-12 md:py-16 bg-surface-container-low border-t border-surface-variant/50">
+      <div class="max-w-[820px] mx-auto px-4 sm:px-6 lg:px-8">
+        <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-2">Assistant Mibeko</p>
+        <h2 class="text-2xl md:text-3xl font-bold text-on-surface tracking-tight mb-3">Vous avez posé une question, pas cherché un mot</h2>
+        <p class="text-on-surface-variant font-serif leading-relaxed max-w-[68ch] mb-5">
+          Une recherche rapproche des termes&nbsp;; elle ne dit pas ce que le droit prévoit. L'Assistant Mibeko
+          compose sa réponse à partir des textes publiés ci-dessus et cite l'article exact d'où elle vient.
+        </p>
+        <a href="/assistant" class="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+          Voir trois réponses et leurs sources
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </section>
+
     <CTASection
       title="Besoin d'aller plus loin qu'une lecture ?"
-      text="Expliquez les textes avec l'Assistant Mibeko, classez-les en dossiers et recevez les alertes du Journal officiel dans votre espace."
+      text="Classez les textes en dossiers, suivez vos échéances et recevez les alertes du Journal officiel dans votre espace."
     />
   </main>
   <Footer />

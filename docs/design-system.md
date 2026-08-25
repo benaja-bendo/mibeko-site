@@ -263,6 +263,7 @@ Les composants réels du site, et la règle qui s'applique à chacun. C'est cett
 | Champ de recherche | `HomeHero.astro`, `recherche.astro` | Composant le plus important du site. Filet appuyé, libellé visible, **placeholder qui ne déborde jamais** (celui de l'accueil est tronqué en mobile). Formulaire GET natif : fonctionne sans JavaScript. |
 | Carte de texte | catalogue, résultats | Type d'acte, année, titre normalisé, et le chemin (`CODE > CODE DE LA FAMILLE > …`) quand il existe. Le badge de type doit être **exact** : un arrêté ne porte pas « LOI ». |
 | Bandeau de statut | à créer | Voir § 4. |
+| Démonstration de l'Assistant | `AssistantDemo.astro` | Question, réponse et **sources cliquables** vers le fonds. Jamais une fausse interface de chat : la démonstration se lit comme une page de droit. Chaque citation est un lien réel vers `/textes/…` — `npm run check:assistant-links` doit passer, sinon la démonstration détruit ce qu'elle prétend prouver. Contenu figé et daté, jamais d'appel LLM (décision du 31/07/2026). |
 | Bloc de provenance | page document | Source officielle, numéro et date de JO, lien vers le PDF d'origine. C'est la preuve : il est visible sans déplier. |
 | Sommaire | page document | **Hiérarchique** (livre / titre / chapitre / section), replié par défaut, avec filtre interne. La nappe plate de pastilles rend aujourd'hui 2 826 puces sur le Code civil — inutilisable, et cause directe des 1,58 Mo de la page. |
 | Corps d'article | `LegalArticleBody.astro` | Source Serif, 68 ch, interlignage 1,75. Le texte est présenté en paragraphes : les retours à la ligne hérités du PDF source sont supprimés à l'affichage (le correctif de fond reste en amont, côté ingestion). |
@@ -409,6 +410,7 @@ cd mibeko-site
 npm run check                                        # types et templates
 grep -roE 'rounded-(xl|2xl|3xl|full)|shadow-(sm|md|lg|xl|2xl)|blur-(2xl|3xl)' src | wc -l   # attendu : 0
 grep -c -- '--color-' src/styles/global.css          # doit correspondre au frontmatter
+npm run check:assistant-links                        # chaque article cité par une démonstration répond 200
 ```
 
 Aucun chiffre de cette charte n'est à recopier à la main : les commandes ci-dessus font foi. Toute décision structurante prise sur la base de ce document appelle une ligne datée dans `docs/decisions.md` du dépôt `docs/`.

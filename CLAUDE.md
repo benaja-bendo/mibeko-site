@@ -7,6 +7,7 @@ Rôle économique : le site **vend**. C'est le **seul canal d'acquisition organi
 
 ## Règle absolue
 **Pas de compte utilisateur sur `mibeko.fr`.** Ni login, ni inscription, ni état utilisateur persistant, ni IA conversationnelle. Tout ce qui exige une authentification vit sur `app.mibeko.fr` (le site n'y renvoie que par liens sortants : `/tarifs`, `/produits`, `/contact`). Les seuls `POST` du site sont `src/pages/api/contact.ts` et `api/newsletter.ts`, qui relaient vers l'API Laravel en serveur-à-serveur.
+Ce que le site **peut** montrer de l'IA : des **démonstrations figées** (décision du 31/07/2026), servies en HTML depuis `src/data/assistant-demos.ts` et rendues par `AssistantDemo.astro` — aucun appel LLM, aucun coût exposé aux anonymes. Leurs citations sont de vrais liens vers `/textes/…` : `npm run check:assistant-links` les vérifie et doit rester vert, y compris après une évolution du corpus.
 
 ## Commandes
 ```bash
@@ -29,7 +30,7 @@ Une seule variable requise : `MIBEKO_API_URL` (`cp .env.example .env`). Résolut
 3. **`security.checkOrigin` est désactivé** dans `astro.config.mjs` (Traefik termine le TLS → faux 403). Le contrôle est refait à la main sur `Origin`/`Referer` dans `api/contact.ts` (`ALLOWED_HOSTS`). **Toute nouvelle route POST doit refaire ce contrôle**, sinon elle est ouverte.
 4. **Umami est inactif tant que les variables ne sont pas des build-args Docker.** `Layout.astro` n'injecte le script que si `PUBLIC_UMAMI_URL` **et** `PUBLIC_UMAMI_WEBSITE_ID` sont définies ; comme elles sont lues via `import.meta.env`, elles sont inlinées **au build** → il faut les `ARG` du `Dockerfile` + les secrets passés en `build-args` dans `.github/workflows/deploy-prod.yml`. Les ajouter au `.env` runtime ne fait rien. L'URL est l'**origine de base**, sans `/script.js` (le layout l'ajoute). Ne pas proposer un autre outil d'analytics : décision actée dans `docs/decisions.md`.
 5. **Conformité stores déjà subie** (rejet Play « Misleading Claims ») : **ne jamais promettre sur le site une capacité que l'app n'a pas**, et citer les sources officielles (sgg.cg, ohada.org) — déjà fait dans `/methode` et `/cgu`, à préserver. `src/pages/tarifs.astro` porte encore un `PLACEHOLDER PRIX — userAction` : ne pas inventer un tarif.
-6. **Un seul nom pour l'IA : « Assistant Mibeko »** (cf. `mibeko-app-kmp/CLAUDE.md`). `src/pages/textes/index.astro` dit encore « Mibeko IA » — à corriger, pas à imiter.
+6. **Un seul nom pour l'IA : « Assistant Mibeko »** (cf. `mibeko-app-kmp/CLAUDE.md`). Appliqué dans tout `src/` ; seul `cgu.astro` conserve « assistant IA », formulation d'engagement de conformité stores à ne pas retoucher.
 7. Le renommage `/codes` → `/textes` est porté par des **redirections 301 dans `astro.config.mjs`** : ne jamais réintroduire de lien `/codes`, et ne pas générer de lien vers un document sans `slug` (`fetchPublishedDocuments` filtre déjà les slugs vides — garde-fou à conserver).
 8. Les polices (Inter + Source Serif 4) sont chargées depuis Google Fonts, seul tiers externe du site : en tenir compte avant d'en ajouter un autre (posture affichée en `/confidentialite` : mesure d'audience sans cookies).
 

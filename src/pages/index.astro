@@ -8,6 +8,7 @@ import EssentialTexts from '../components/EssentialTexts.astro';
 import RecentAdditions from '../components/RecentAdditions.astro';
 import GuidesBand from '../components/GuidesBand.astro';
 import WhyMibeko from '../components/WhyMibeko.astro';
+import AssistantBand from '../components/AssistantBand.astro';
 import AppExit from '../components/AppExit.astro';
 import Footer from '../components/Footer.astro';
 import { fetchLibraryFundStats, fetchPublishedDocuments, type LibraryFundStats, type DocumentMeta } from '../lib/api';
@@ -41,6 +42,7 @@ const guides = (await getCollection('guides', ({ data }) => !data.draft))
 		{recentDocuments.length > 0 && <RecentAdditions documents={recentDocuments} />}
 		{guides.length > 0 && <GuidesBand guides={guides} />}
 		<WhyMibeko />
+		<AssistantBand />
 		<AppExit />
 	</main>
 	<Footer />

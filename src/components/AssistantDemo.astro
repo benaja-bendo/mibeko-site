@@ -1,0 +1,101 @@
+---
+/**
+ * Rend une démonstration figée de l'Assistant Mibeko.
+ *
+ * Volontairement PAS une fausse interface de chat : les bulles empruntent le
+ * costume d'un produit grand public, là où la charte v2 tranche « institution,
+ * pas produit ». La démonstration se lit comme une page de droit — question,
+ * réponse, sources — et sa force vient de ce que les sources sont de vrais
+ * liens vers le fonds publié sur ce même site.
+ *
+ * Zéro JavaScript : tout est du texte et des liens.
+ */
+import type { AssistantDemo } from '../data/assistant-demos';
+
+interface Props {
+	demo: AssistantDemo;
+	/** L'accueil n'affiche qu'un extrait : pas de titre de section répété. */
+	compact?: boolean;
+}
+
+const { demo, compact = false } = Astro.props;
+
+const dateFmt = (iso: string) =>
+	new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso));
+
+/**
+ * Découpe la réponse sur ses marqueurs [n] pour les rendre cliquables. Un
+ * marqueur sans source correspondante reste du texte brut plutôt que de
+ * produire un lien mort — c'est la même prudence que le filtre de citations
+ * côté serveur, qui retire les marqueurs orphelins avant affichage.
+ */
+const byMarker = new Map(demo.sources.map((s) => [s.marker, s]));
+const segments = (demo.answer ?? '')
+	.split(/(\[\d+\])/g)
+	.filter((part) => part !== '')
+	.map((part) => {
+		const hit = /^\[(\d+)\]$/.exec(part);
+		const source = hit ? byMarker.get(Number(hit[1])) : undefined;
+		return source ? { kind: 'cite' as const, source } : { kind: 'text' as const, value: part };
+	});
+---
+
+<article class="rounded-lg border border-surface-variant bg-surface-container-lowest p-5 sm:p-7">
+	<p class="text-xs font-semibold uppercase tracking-wider text-secondary mb-2">
+		{demo.audience === 'professionnel' ? 'Démonstration · professionnel' : 'Démonstration'}
+	</p>
+	<p class="text-sm text-on-surface-muted mb-3">{demo.context}</p>
+
+	<h3 class="text-lg sm:text-xl font-semibold text-on-surface tracking-tight mb-5 text-balance">
+		«&nbsp;{demo.question}&nbsp;»
+	</h3>
+
+	{demo.answer && (
+		<div class="mb-6">
+			<p class="font-serif text-on-surface leading-relaxed max-w-[68ch]">
+				{segments.map((seg) =>
+					seg.kind === 'text' ? (
+						seg.value
+					) : (
+						<a
+							href={seg.source.href}
+							class="inline-flex items-center justify-center min-w-[24px] min-h-[24px] px-1 align-baseline text-secondary font-sans font-semibold text-sm hover:underline"
+							aria-label={`Voir ${seg.source.label}`}
+						>[{seg.source.marker}]</a>
+					)
+				)}
+			</p>
+			{demo.capturedOn && (
+				<p class="mt-3 text-xs text-on-surface-muted">
+					Réponse de l'Assistant Mibeko, figée le {dateFmt(demo.capturedOn)}.
+				</p>
+			)}
+		</div>
+	)}
+
+	<div class="border-t border-surface-variant pt-5">
+		<p class="text-xs font-semibold uppercase tracking-wider text-on-surface-muted mb-4">
+			{demo.answer
+				? 'Les articles cités'
+				: 'Les articles du fonds sur lesquels l’Assistant Mibeko appuie sa réponse'}
+		</p>
+		<ul class="flex flex-col gap-4">
+			{demo.sources.map((source) => (
+				<li>
+					<a
+						href={source.href}
+						class="group inline-flex items-start gap-2 min-h-[24px] text-sm font-semibold text-primary hover:underline"
+					>
+						<span class="text-secondary shrink-0">[{source.marker}]</span>
+						<span>{source.label}</span>
+					</a>
+					{!compact && (
+						<p class="mt-1.5 pl-7 font-serif text-sm text-on-surface-variant leading-relaxed max-w-[68ch]">
+							{source.excerpt}
+						</p>
+					)}
+				</li>
+			))}
+		</ul>
+	</div>
+</article>

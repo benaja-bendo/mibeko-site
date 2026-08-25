@@ -11,8 +11,10 @@ const features = [
     description: 'Recherche hybride (lexicale + sémantique) sur tout le fonds, structurée par l\'arborescence des textes.',
   },
   {
-    title: 'Assistant IA sourcé',
+    title: 'Assistant Mibeko',
     description: 'Des réponses avec citations cliquables vers les articles : vous gardez la main sur la source.',
+    href: '/assistant',
+    linkLabel: 'Voir trois démonstrations',
   },
   {
     title: 'Dossiers & échéances',
@@ -38,7 +40,7 @@ const faqs = [
 
 <Layout
 	title="Espace professionnel — le poste de travail du juriste | Mibeko"
-	description="La plateforme web des avocats, notaires, huissiers et juristes d'entreprise : recherche avancée, assistant IA sourcé, dossiers et suivi des échéances. République du Congo et OHADA."
+	description="La plateforme web des avocats, notaires, huissiers et juristes d'entreprise : recherche avancée, Assistant Mibeko, dossiers et suivi des échéances. République du Congo et OHADA."
 >
 	<Header />
 	<main id="main" class="flex-grow bg-background">
@@ -55,6 +57,9 @@ const faqs = [
 						<div class="pt-4 border-t-2 border-secondary/50">
 							<h3 class="text-base font-bold text-on-surface mb-1.5">{f.title}</h3>
 							<p class="text-sm text-on-surface-variant font-serif leading-relaxed">{f.description}</p>
+							{'href' in f && (
+								<a href={f.href} class="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-secondary hover:underline">{f.linkLabel}</a>
+							)}
 						</div>
 					))}
 				</div>

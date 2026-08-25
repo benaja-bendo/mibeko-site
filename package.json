@@ -10,7 +10,8 @@
     "build": "astro build",
     "check": "astro check",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "check:assistant-links": "node --experimental-strip-types scripts/check-assistant-links.mjs"
   },
   "dependencies": {
     "@astrojs/node": "^11.1.2",

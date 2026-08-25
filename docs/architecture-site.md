@@ -28,6 +28,7 @@ Le `Layout.astro` global gère `<head>` : titre, description, canonical, Open Gr
 ├── /themes                    Thèmes de vie — entrée par situation (SSR)
 │   └── /themes/[slug]         Textes rattachés à un thème (SSR)
 ├── /recherche                 Recherche plein-texte du fonds (SSR, noindex)
+├── /assistant                 Assistant Mibeko — démonstrations figées et sources (pré-rendu)
 ├── /produits                  Présentation des produits Mibeko (app mobile, plateforme pro)
 ├── /contact                   Formulaire de contact
 ├── /cgu, /confidentialite,    Pages légales
