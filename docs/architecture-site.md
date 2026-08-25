@@ -42,6 +42,11 @@ Le `Layout.astro` global gère `<head>` : titre, description, canonical, Open Gr
     └── /sitemap-textes.xml    et le fonds juridique (documents + articles)
 ```
 
+Le site ne porte **aucun compte** : la création de compte, la connexion et le profil vivent sur
+`app.mibeko.fr`. Le site n'expose que des liens sortants vers `app.mibeko.fr/auth/register`, placés aux
+moments de conversion autorisés — `/professionnels`, `/application`, `/assistant` et le pied de page
+(décision du 26/08/2026).
+
 La navigation principale (`Header.astro`) expose quatre entrées — **Textes officiels** (`/textes`), **Démarches** (`/demarches`), **Guides** (`/ressources`), **Contact** (`/contact`) — plus une icône de recherche (`/recherche`), un lien `/produits` et un bouton vers l'espace pro (`app.mibeko.fr`).
 
 ## Pilier 1 — Le fonds juridique (`/textes`)

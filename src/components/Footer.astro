@@ -24,6 +24,7 @@ const columns = [
       { href: '/methode', label: 'Notre méthode' },
       { href: '/application', label: "L'application" },
       { href: '/professionnels', label: 'Professionnels' },
+      { href: 'https://app.mibeko.fr/auth/register', label: 'Créer un compte', external: true },
       { href: '/contact', label: 'Contact' },
     ],
   },
@@ -92,7 +93,12 @@ const columns = [
           <ul class="flex flex-col gap-3">
             {col.links.map((link) => (
               <li>
-                <a href={link.href} class="text-inverse-primary hover:text-white text-sm transition-colors">
+                <a
+                  href={link.href}
+                  target={'external' in link ? '_blank' : undefined}
+                  rel={'external' in link ? 'noopener noreferrer' : undefined}
+                  class="inline-flex items-center min-h-[24px] text-inverse-primary hover:text-white text-sm transition-colors"
+                >
                   {link.label}
                 </a>
               </li>
