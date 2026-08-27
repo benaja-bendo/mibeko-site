@@ -6,14 +6,23 @@
  * répondent — et non une affirmation sur Mibeko : c'est la condition posée en
  * tête de `index.astro` pour qu'un bloc ait sa place sur l'accueil. Il est
  * placé sous le champ de recherche du hero, jamais au-dessus (charte v2, loi 2).
+ *
+ * DEUX COLONNES, DEUX RÔLES (27/08/2026). À gauche, l'écran de l'application
+ * qui se joue : c'est la **démonstration**, elle bouge, elle montre l'Assistant
+ * en marche. À droite, les articles qu'il cite, en **liens réels** vers le fonds
+ * publié de ce site : c'est la **preuve**, elle ne bouge pas, on clique dessus.
+ * La séparation est volontaire — une animation ne prouve rien, un lien qui
+ * répond 200 prouve quelque chose (loi 1). Et l'offre vient en dernier, une fois
+ * les deux administrées (loi 2).
  */
-import AssistantDemo from './AssistantDemo.astro';
+import AssistantConversation from './AssistantConversation.astro';
 import { featuredDemo } from '../data/assistant-demos';
+import { UMAMI_EVENTS } from '../lib/analytics';
 ---
 
 <section class="py-16 md:py-20 border-t border-surface-variant/50">
 	<div class="max-w-[820px] mx-auto px-4 sm:px-6 lg:px-8">
-		<div class="max-w-2xl mb-8">
+		<div class="max-w-2xl mb-10">
 			<p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-2">Assistant Mibeko</p>
 			<h2 class="text-2xl md:text-3xl font-bold text-on-surface tracking-tight mb-3">Une question, et l'article qui y répond</h2>
 			<p class="text-on-surface-variant font-serif leading-relaxed">
@@ -22,13 +31,51 @@ import { featuredDemo } from '../data/assistant-demos';
 			</p>
 		</div>
 
-		<AssistantDemo demo={featuredDemo} compact />
+		<div class="grid gap-10 lg:grid-cols-[300px_1fr] lg:gap-12 lg:items-start">
+			<AssistantConversation demo={featuredDemo} />
 
-		<p class="mt-6">
-			<a href="/assistant" class="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
-				Voir les trois démonstrations
-				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-			</a>
-		</p>
+			<div>
+				<p class="text-xs font-semibold uppercase tracking-wider text-on-surface-muted mb-4">
+					Les articles cités, publiés sur ce site
+				</p>
+				<ul class="flex flex-col gap-4 mb-8">
+					{featuredDemo.sources.map((source) => (
+						<li>
+							<a
+								href={source.href}
+								class="inline-flex items-start gap-2 min-h-[24px] text-sm font-semibold text-primary hover:underline"
+							>
+								<span class="text-secondary shrink-0">[{source.marker}]</span>
+								<span>{source.label}</span>
+							</a>
+						</li>
+					))}
+				</ul>
+
+				<div class="border-t border-surface-variant pt-6">
+					<p class="text-sm text-on-surface-variant mb-4">
+						Lire les textes reste libre et sans compte. Pour poser vos propres questions, l'Assistant
+						vous attend dans l'application mobile et dans l'espace professionnel.
+					</p>
+					<div class="flex flex-col sm:flex-row gap-3">
+						<a
+							href="https://app.mibeko.fr/auth/register"
+							target="_blank"
+							rel="noopener noreferrer"
+							data-umami-event={UMAMI_EVENTS.compteCreer}
+							class="inline-flex items-center justify-center h-11 px-6 bg-primary text-on-primary text-sm font-semibold rounded-lg hover:bg-primary-container transition-colors"
+						>
+							Créer un compte
+						</a>
+						<a
+							href="/assistant"
+							class="inline-flex items-center justify-center h-11 px-6 border border-outline-variant/70 text-on-surface text-sm font-semibold rounded-lg hover:bg-surface-container transition-colors"
+						>
+							Voir les trois démonstrations
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 </section>

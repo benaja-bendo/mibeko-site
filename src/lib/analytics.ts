@@ -11,4 +11,5 @@ export const UMAMI_EVENTS = {
   agirPilote: 'agir_pilote',
   travaillerOffre: 'travailler_offre',
   travaillerDemo: 'travailler_demo',
+  compteCreer: 'compte_creer',
 } as const;

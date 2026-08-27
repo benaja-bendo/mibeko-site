@@ -1,0 +1,818 @@
+---
+/**
+ * AssistantConversation.astro — l'écran Assistant de l'application Mibeko,
+ * rejoué en boucle.
+ *
+ * DÉCISION DU 27/08/2026 (fondateur). Le site montre l'Assistant *en marche*.
+ * Ce qui est reproduit ici n'est pas une interface de chat générique : c'est
+ * l'écran `ChatScreen.kt` de `mibeko-app-kmp`, élément par élément —
+ * l'en-tête « Assistant Mibeko », la pastille verte à étincelle et le libellé
+ * « Mibeko IA », la bulle utilisateur à angle rentrant, les trois points
+ * d'attente, la phrase « Voici les sources juridiques pertinentes pour votre
+ * situation : », les cartes d'article, le sélecteur Concis/Analyse, le champ
+ * « Posez une question sur le droit... » et l'avertissement en capitales.
+ *
+ * POURQUOI L'APPLICATION MOBILE ET PAS LE DASHBOARD. Le thème du dashboard
+ * (« Lex Gold », sombre et doré) est la marque abandonnée — l'unification sur
+ * le vert « forêt » est actée, et le sort du dashboard n'est pas tranché
+ * (`business-model.md` §11.1). Le thème du mobile, lui, porte en commentaire
+ * « parité web » : `MibekoGreen #1E6B47`, `MibekoForest #03271A`,
+ * `MibekoTerracotta #8F4C31`, `MibekoCream #FCF9F8` sont exactement les jetons
+ * de ce site. Reproduire l'écran mobile est donc à la fois fidèle à
+ * l'application et cohérent avec la charte.
+ *
+ * CE QUI EST VRAI, ET CE QUI NE L'EST PAS. La question, les articles cités et
+ * leurs extraits viennent de `assistant-demos.ts`, c'est-à-dire du corpus
+ * publié — `npm run check:assistant-links` les vérifie. **Aucun texte de
+ * réponse n'est inventé** : tant qu'aucune réponse réelle n'est capturée
+ * (`mibeko-site#18`), le tour de l'assistant enchaîne les trois points d'attente
+ * puis la phrase de sources — qui est le comportement réel de l'application —
+ * et jamais une réponse reconstituée.
+ *
+ * SANS JAVASCRIPT. Le serveur rend la conversation **terminée** : une personne
+ * sans JS, avec `prefers-reduced-motion`, ou un robot d'indexation voit un écran
+ * d'application complet et lisible. Le script commence par vider ce qu'il va
+ * rejouer — il n'ajoute jamais de contenu qui n'existait pas.
+ *
+ * GÉOMÉTRIE DE L'APPLICATION, PAS DU SITE. Les rayons (16 dp de bulle, 4 dp de
+ * champ, pastilles rondes) sont ceux de `ChatScreen.kt`. Ils vivent dans le
+ * `<style>` de ce composant, jamais en classes utilitaires : le vocabulaire du
+ * site n'est pas contaminé par celui de l'application (charte § 2 et § 8).
+ */
+import type { AssistantDemo } from '../data/assistant-demos';
+
+interface Props {
+	demo: AssistantDemo;
+}
+
+const { demo } = Astro.props;
+
+/**
+ * La carte d'article de l'application affiche le document en pastille et le
+ * numéro d'article en titre. Nos libellés portent les deux, séparés par un
+ * tiret cadratin : on les redécoupe plutôt que de dupliquer la donnée.
+ */
+const cards = demo.sources.map((source) => {
+	const [article, ...rest] = source.label.split('—');
+	return {
+		...source,
+		article: article.trim(),
+		document: rest.join('—').trim() || 'Corpus Mibeko',
+	};
+});
+
+const answerWords = (demo.answer ?? '').split(/(?<=\s)/).filter((word) => word !== '');
+---
+
+<div
+	class="device"
+	data-conversation
+	role="img"
+	aria-label={`Démonstration animée : l'Assistant Mibeko répond à la question « ${demo.question} » en citant ${demo.sources.length} article${demo.sources.length > 1 ? 's' : ''} du corpus publié.`}
+>
+	<div class="device__screen">
+		<!-- Barre d'état -->
+		<div class="statusbar" aria-hidden="true">
+			<span data-clock>9:41</span>
+			<span class="statusbar__icons">
+				<svg width="15" height="10" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.3" y="5" width="3" height="6" rx="1"/><rect x="8.6" y="2.6" width="3" height="8.4" rx="1"/><rect x="12.9" y="0" width="3" height="11" rx="1" opacity=".35"/></svg>
+				<svg width="14" height="10" viewBox="0 0 15 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 3.4a10 10 0 0 1 13 0"/><path d="M3.4 6.2a6.4 6.4 0 0 1 8.2 0"/><path d="M5.9 8.9a2.8 2.8 0 0 1 3.2 0"/></svg>
+				<svg width="21" height="10" viewBox="0 0 23 11" fill="none"><rect x=".6" y=".6" width="19" height="9.8" rx="2.5" stroke="currentColor" stroke-opacity=".45"/><rect x="2.2" y="2.2" width="13" height="6.6" rx="1.5" fill="currentColor"/><path d="M21.2 4v3a2 2 0 0 0 0-3z" fill="currentColor" fill-opacity=".45"/></svg>
+			</span>
+		</div>
+
+		<!-- En-tête de l'écran (TopAppBar « Assistant Mibeko ») -->
+		<div class="topbar" aria-hidden="true">Assistant Mibeko</div>
+
+		<!-- Fil de discussion. Rendu complet par le serveur, rejoué par le script. -->
+		<div class="thread" data-thread aria-hidden="true">
+			<div class="thread__inner">
+			<div class="turn turn--user">
+				<div class="turn__head">
+					<span class="turn__name">Vous</span>
+					<span class="avatar avatar--user">
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/></svg>
+					</span>
+				</div>
+				<div class="bubble bubble--user">{demo.question}</div>
+			</div>
+
+			<div class="turn turn--ai">
+				<div class="turn__head">
+					<span class="avatar avatar--ai">
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6l1.9 5.6 5.6 1.9-5.6 1.9-1.9 5.6-1.9-5.6L4.5 10.1l5.6-1.9L12 2.6zM18.6 15.4l.8 2.3 2.3.8-2.3.8-.8 2.3-.8-2.3-2.3-.8 2.3-.8.8-2.3z"/></svg>
+					</span>
+					<span class="turn__name">Mibeko IA</span>
+				</div>
+				{demo.answer ? (
+					<div class="bubble bubble--ai" data-answer>
+						{answerWords.map((word, index) => (
+							<span class="aw" style={`--i:${index}`}>{word}</span>
+						))}
+					</div>
+				) : (
+					<div class="bubble bubble--ai" data-answer>
+						<span class="dots" data-dots aria-hidden="true"><i></i><i></i><i></i></span>
+					</div>
+				)}
+
+				<div class="sources" data-sources>
+					<p class="sources__lead">Voici les sources juridiques pertinentes pour votre situation&nbsp;:</p>
+					<div class="sources__row" data-sources-row>
+						{cards.map((card, index) => (
+							<article class="card" style={`--i:${index}`}>
+								<div class="card__head">
+									<span class="card__badge">{card.document}</span>
+									<svg class="card__mark" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+								</div>
+								<p class="card__title">{card.article}</p>
+								<p class="card__excerpt">{card.excerpt}</p>
+							</article>
+						))}
+					</div>
+				</div>
+			</div>
+			</div>
+		</div>
+
+		<!-- Sélecteur de mode (Concis / Analyse) -->
+		<div class="modes" aria-hidden="true">
+			<span class="modes__group">
+				<span class="modes__item is-selected">Concis</span>
+				<span class="modes__item">Analyse</span>
+			</span>
+			<span class="modes__ref">
+				<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.9 7.9"/></svg>
+				Référence
+			</span>
+		</div>
+
+		<!-- Barre de saisie -->
+		<div class="composer" aria-hidden="true">
+			<span class="composer__field"><span data-typed></span><i class="caret" data-caret></i><span class="composer__placeholder" data-placeholder>Posez une question sur le droit...</span></span>
+			<span class="composer__send" data-send>
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
+			</span>
+		</div>
+
+		<p class="disclaimer" aria-hidden="true">Mibeko IA peut faire des erreurs. Vérifiez les sources citées.</p>
+	</div>
+</div>
+
+<script is:inline>
+	/*
+	 * Garde d'amorçage : elle s'exécute au parsing, avant le premier rendu, et
+	 * n'arme la reprise QUE si elle peut effectivement se jouer. Sans JavaScript
+	 * ce bloc n'existe pas, et l'écran rendu par le serveur — une conversation
+	 * terminée et lisible — reste tel quel.
+	 *
+	 * Filet de sécurité à 2,5 s : si le module d'orchestration n'a jamais été
+	 * chargé (échec réseau sur le bundle), on désarme, et l'écran complet reste
+	 * affiché. Le pire cas est « rien ne bouge », jamais « rien ne s'affiche ».
+	 */
+	(function () {
+		var el = document.currentScript && document.currentScript.previousElementSibling;
+		if (!el || !el.hasAttribute('data-conversation')) return;
+		if (!('IntersectionObserver' in window)) return;
+		if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		el.setAttribute('data-armed', '');
+		setTimeout(function () {
+			if (!window.__mibekoConversationReady) el.removeAttribute('data-armed');
+		}, 2500);
+	})();
+</script>
+
+<script>
+	/**
+	 * Orchestration de la conversation.
+	 *
+	 * HORLOGE PAR IMAGE. Mesuré le 27/08/2026 : dans une fenêtre visible mais non
+	 * focalisée — un second écran, cas très courant — Chrome ramène `setTimeout` à
+	 * une granularité d'une seconde et toute la chorégraphie s'effondre sur deux
+	 * paliers. Compter le temps image par image supprime ce défaut et donne en
+	 * prime la mise en pause : hors écran ou onglet masqué, la boucle s'arrête
+	 * d'elle-même, ce qui compte sur les Android d'entrée de gamme visés (§ 11).
+	 * Le delta est plafonné à 250 ms — assez haut pour ne pas ralentir un appareil
+	 * qui peine à dix images par seconde, assez bas pour qu'un retour d'onglet ne
+	 * rattrape pas d'un coup plusieurs secondes de retard.
+	 *
+	 * Le principe vient du composant de référence apporté par le fondateur.
+	 */
+	(window as Window & { __mibekoConversationReady?: boolean }).__mibekoConversationReady = true;
+
+	const ABORT = Symbol('abort');
+
+	class Clock {
+		private waits = new Set<{ remaining: number; resolve: () => void; reject: (r: unknown) => void }>();
+		private raf: number | null = null;
+		private last = 0;
+		paused = false;
+
+		start() {
+			if (this.raf !== null) return;
+			this.last = performance.now();
+			this.raf = requestAnimationFrame(this.frame);
+		}
+
+		stop() {
+			if (this.raf !== null) cancelAnimationFrame(this.raf);
+			this.raf = null;
+			for (const w of this.waits) w.reject(ABORT);
+			this.waits.clear();
+		}
+
+		private frame = (now: number) => {
+			this.raf = requestAnimationFrame(this.frame);
+			const dt = Math.min(now - this.last, 250);
+			this.last = now;
+			if (this.paused) return;
+			for (const w of [...this.waits]) {
+				w.remaining -= dt;
+				if (w.remaining <= 0) {
+					this.waits.delete(w);
+					w.resolve();
+				}
+			}
+		};
+
+		/** Attend `ms` de temps *actif* : les pauses ne comptent pas. */
+		wait(ms: number) {
+			return new Promise<void>((resolve, reject) => {
+				this.waits.add({ remaining: ms, resolve, reject });
+			});
+		}
+	}
+
+	const play = (root: HTMLElement) => {
+		const q = <T extends HTMLElement>(sel: string) => root.querySelector<T>(sel);
+		const thread = q<HTMLElement>('[data-thread]');
+		const typed = q<HTMLElement>('[data-typed]');
+		const caret = q<HTMLElement>('[data-caret]');
+		const placeholder = q<HTMLElement>('[data-placeholder]');
+		const send = q<HTMLElement>('[data-send]');
+		const clockEl = q<HTMLElement>('[data-clock]');
+		if (!thread || !typed || !caret || !placeholder) return;
+
+		// L'heure de la barre d'état est celle du visiteur : un écran figé sur
+		// « 9:41 » signe le mockup.
+		if (clockEl) {
+			const now = new Date();
+			clockEl.textContent = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+		}
+
+		const userTurn = q<HTMLElement>('.turn--user');
+		const aiTurn = q<HTMLElement>('.turn--ai');
+		const answer = q<HTMLElement>('[data-answer]');
+		const dots = q<HTMLElement>('[data-dots]');
+		const sources = q<HTMLElement>('[data-sources]');
+		const sourcesRow = q<HTMLElement>('[data-sources-row]');
+		if (!userTurn || !aiTurn || !answer || !sources || !sourcesRow) return;
+
+		const question = q<HTMLElement>('.bubble--user')?.textContent ?? '';
+		const words = [...answer.querySelectorAll<HTMLElement>('.aw')];
+
+		const clock = new Clock();
+		const toEnd = () => {
+			thread.scrollTop = thread.scrollHeight;
+		};
+
+		/** Remet l'écran dans l'état « conversation pas encore commencée ». */
+		const reset = () => {
+			userTurn.classList.remove('is-in');
+			aiTurn.classList.remove('is-in');
+			answer.classList.remove('is-in');
+			sources.classList.remove('is-in');
+			answer.classList.remove('is-done');
+			answer.style.opacity = '';
+			if (dots) dots.style.display = '';
+			for (const w of words) w.classList.remove('is-in');
+			typed.textContent = '';
+			placeholder.style.display = '';
+			caret.style.display = 'none';
+			sourcesRow.scrollLeft = 0;
+			thread.scrollTop = 0;
+		};
+
+		/** Frappe la question dans le champ de saisie, caractère par caractère. */
+		const typeQuestion = async () => {
+			placeholder.style.display = 'none';
+			caret.style.display = '';
+			for (let i = 1; i <= question.length; i += 1) {
+				typed.textContent = question.slice(0, i);
+				// Une frappe humaine n'est pas régulière : la petite variation
+				// suffit à retirer l'impression de défilement mécanique.
+				await clock.wait(i % 7 === 0 ? 62 : 30);
+			}
+			await clock.wait(420);
+		};
+
+		const loop = async () => {
+			for (;;) {
+				reset();
+				await clock.wait(420);
+
+				await typeQuestion();
+
+				// « Envoi » : le champ se vide, la bulle rejoint le fil.
+				send?.classList.add('is-pressed');
+				typed.textContent = '';
+				caret.style.display = 'none';
+				placeholder.style.display = '';
+				await clock.wait(120);
+				send?.classList.remove('is-pressed');
+
+				userTurn.classList.add('is-in');
+				toEnd();
+				await clock.wait(620);
+
+				aiTurn.classList.add('is-in');
+				answer.classList.add('is-in');
+				toEnd();
+
+				// Les trois points d'attente de l'application, puis la suite.
+				await clock.wait(1700);
+
+				if (words.length > 0) {
+					if (dots) dots.style.display = 'none';
+					for (const word of words) word.classList.add('is-in');
+					await clock.wait(300 + words.length * 22);
+					toEnd();
+				}
+
+				// Aucune réponse capturée (`mibeko-site#18`) : la bulle d'attente
+				// s'efface au moment où les sources arrivent, plutôt que de
+				// laisser trois points tourner sur un tour de parole terminé.
+				if (words.length === 0) {
+					answer.style.opacity = '0';
+					await clock.wait(360);
+					answer.classList.add('is-done');
+				}
+
+				sources.classList.add('is-in');
+				toEnd();
+				await clock.wait(700 + cardsCount * 160);
+
+				// On pousse le rail d'un demi-cran : le visiteur voit qu'il y a
+				// d'autres cartes derrière la première.
+				if (cardsCount > 1) {
+					sourcesRow.scrollTo({ left: Math.round(sourcesRow.clientWidth * 0.42), behavior: 'smooth' });
+					await clock.wait(1200);
+				}
+				toEnd();
+
+				await clock.wait(3600);
+
+				thread.classList.add('is-clearing');
+				await clock.wait(520);
+				thread.classList.remove('is-clearing');
+			}
+		};
+
+		const cardsCount = sourcesRow.querySelectorAll('.card').length;
+
+		// Mise en pause hors écran et onglet masqué : la boucle ne consomme rien
+		// quand personne ne la regarde.
+		const sync = () => {
+			clock.paused = document.hidden || root.dataset.offscreen === 'true';
+		};
+		document.addEventListener('visibilitychange', sync);
+		new IntersectionObserver(
+			([entry]) => {
+				root.dataset.offscreen = String(!entry.isIntersecting);
+				sync();
+			},
+			{ threshold: 0.2 }
+		).observe(root);
+
+		clock.start();
+		loop().catch((err) => {
+			if (err !== ABORT) throw err;
+		});
+	};
+
+	for (const root of document.querySelectorAll<HTMLElement>('[data-conversation][data-armed]')) {
+		play(root);
+	}
+</script>
+
+<style>
+	/* ------------------------------------------------------------------
+	   L'appareil. Silhouette sobre : un filet de 1 px, pas de tranche
+	   métallique, pas de reflet, pas d'ombre portée (charte § 2). Ce qui
+	   doit être regardé est l'écran, pas le téléphone.
+	   ------------------------------------------------------------------ */
+	.device {
+		width: 100%;
+		max-width: 320px;
+		margin-inline: auto;
+		aspect-ratio: 9 / 19.3;
+		padding: 8px;
+		border: 1px solid var(--color-outline-variant);
+		border-radius: 38px;
+		background-color: var(--color-surface-container);
+	}
+	.device__screen {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		overflow: hidden;
+		border: 1px solid var(--color-surface-variant);
+		border-radius: 30px;
+		background-color: var(--color-background);
+	}
+
+	.statusbar {
+		display: flex;
+		flex: none;
+		align-items: center;
+		justify-content: space-between;
+		padding: 10px 18px 2px;
+		font-size: 11px;
+		font-weight: 600;
+		color: var(--color-on-surface);
+	}
+	.statusbar__icons {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		opacity: 0.8;
+	}
+
+	/* TopAppBar de l'application. */
+	.topbar {
+		flex: none;
+		padding: 8px 14px 10px;
+		border-bottom: 1px solid var(--color-surface-variant);
+		font-size: 14px;
+		font-weight: 600;
+		letter-spacing: -0.01em;
+		color: var(--color-on-surface);
+	}
+
+	.thread {
+		display: flex;
+		flex-direction: column;
+		flex: 1 1 auto;
+		min-height: 0;
+		overflow-y: auto;
+		padding: 10px 0 4px;
+		scrollbar-width: none;
+		transition:
+			opacity 0.5s ease,
+			transform 0.5s ease;
+	}
+	.thread::-webkit-scrollbar {
+		display: none;
+	}
+	/*
+	 * La conversation s'ancre en bas du fil. L'application, elle, empile depuis
+	 * le haut (`LazyColumn`) : c'est la seconde traduction volontaire. Un fil
+	 * ancré en haut laisse ici quatre cents pixels de vide pendant que la
+	 * question se tape — ce qui donne l'impression d'un écran cassé, alors que
+	 * dans l'application le fil est déjà rempli quand on arrive. `margin-top`
+	 * automatique plutôt que `justify-content: flex-end`, qui rogne le haut du
+	 * contenu dès qu'il déborde.
+	 */
+	.thread__inner {
+		margin-top: auto;
+	}
+	.thread.is-clearing {
+		opacity: 0;
+		transform: translateY(-8px);
+	}
+
+	/* ------------------------------------------------------------------
+	   Un tour de parole : en-tête (pastille + nom) puis bulle. C'est la
+	   structure de `ChatMessageItem` dans l'application.
+	   ------------------------------------------------------------------ */
+	.turn {
+		display: flex;
+		flex-direction: column;
+		margin-bottom: 6px;
+	}
+	.turn--user {
+		align-items: flex-end;
+	}
+	.turn--ai {
+		align-items: flex-start;
+	}
+	.turn__head {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 6px 14px;
+		font-size: 10.5px;
+		color: var(--color-on-surface-variant);
+	}
+	.avatar {
+		display: grid;
+		width: 26px;
+		height: 26px;
+		flex: none;
+		place-items: center;
+		/* Pastille purement graphique sans texte : la seule forme en gélule
+		   tolérée par la charte, et c'est celle de l'application. */
+		border-radius: 50%;
+	}
+	.avatar--ai {
+		/* MibekoGreen — `primary` de l'application. */
+		background-color: #1e6b47;
+		color: #ffffff;
+	}
+	.avatar--user {
+		/* MibekoForestContainer / MibekoOnForestContainer. */
+		background-color: var(--color-primary-container);
+		color: #84a895;
+	}
+
+	/* Bulle : 16 dp partout sauf l'angle qui pointe vers la pastille, à 4 dp. */
+	.bubble {
+		max-width: 230px;
+		padding: 11px 13px;
+		font-size: 12.5px;
+		line-height: 1.5;
+		margin-inline: 14px;
+	}
+	.bubble--user {
+		border-radius: 16px 4px 16px 16px;
+		background-color: var(--color-surface-variant);
+		color: var(--color-on-surface-variant);
+	}
+	.bubble--ai {
+		border-radius: 4px 16px 16px 16px;
+		border: 1px solid var(--color-surface-variant);
+		background-color: var(--color-surface-container-lowest);
+		color: var(--color-on-surface);
+	}
+
+	/* Les trois points d'attente : 600 ms, décalés de 200 ms, aller-retour —
+	   les valeurs exactes de `ThinkingDots` dans l'application. */
+	.dots {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		height: 1.2em;
+	}
+	.dots i {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background-color: var(--color-on-surface-muted);
+		opacity: 0.2;
+		animation: dot 600ms linear infinite alternate;
+	}
+	.dots i:nth-child(2) {
+		animation-delay: 200ms;
+	}
+	.dots i:nth-child(3) {
+		animation-delay: 400ms;
+	}
+	[data-answer] {
+		transition: opacity 0.35s ease;
+	}
+	[data-answer].is-done {
+		display: none;
+	}
+	@keyframes dot {
+		to {
+			opacity: 1;
+		}
+	}
+
+	/* ------------------------------------------------------------------
+	   L'étagère de sources. L'application pose ses cartes en `elevation
+	   2dp` — une ombre. Ici c'est un filet de 1 px : la charte fait la
+	   profondeur par le trait, jamais par l'ombre (§ 2). C'est la seule
+	   traduction volontaire ; tout le reste est repris tel quel.
+	   ------------------------------------------------------------------ */
+	.sources {
+		width: 100%;
+		margin-top: 14px;
+		transition: opacity 0.4s ease;
+	}
+	.sources__lead {
+		padding: 0 14px 8px;
+		font-size: 11.5px;
+		line-height: 1.45;
+		color: var(--color-on-surface-variant);
+	}
+	.sources__row {
+		display: flex;
+		gap: 10px;
+		overflow-x: auto;
+		padding: 2px 14px 4px;
+		scrollbar-width: none;
+		scroll-snap-type: x mandatory;
+	}
+	.sources__row::-webkit-scrollbar {
+		display: none;
+	}
+	.card {
+		width: 186px;
+		flex: none;
+		padding: 12px;
+		border: 1px solid var(--color-surface-variant);
+		border-radius: 8px;
+		background-color: var(--color-surface-container-lowest);
+		scroll-snap-align: start;
+	}
+	.card__head {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 6px;
+		margin-bottom: 10px;
+	}
+	.card__badge {
+		overflow: hidden;
+		padding: 2px 5px;
+		border-radius: 4px;
+		background-color: var(--color-surface-variant);
+		font-size: 8.5px;
+		font-weight: 700;
+		letter-spacing: 0.03em;
+		line-height: 1.3;
+		text-transform: uppercase;
+		color: var(--color-on-surface-variant);
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+	}
+	.card__mark {
+		flex: none;
+		color: var(--color-on-surface-muted);
+		opacity: 0.7;
+	}
+	.card__title {
+		margin-bottom: 5px;
+		font-size: 13px;
+		font-weight: 700;
+		color: var(--color-primary);
+	}
+	.card__excerpt {
+		font-size: 10.5px;
+		line-height: 1.45;
+		color: var(--color-on-surface-variant);
+		display: -webkit-box;
+		-webkit-line-clamp: 4;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	/* Sélecteur de mode et bouton « Référence » — 4 dp, comme l'application. */
+	.modes {
+		display: flex;
+		flex: none;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		padding: 6px 14px 2px;
+	}
+	.modes__group {
+		display: inline-flex;
+		border: 1px solid var(--color-outline-variant);
+		border-radius: 4px;
+		overflow: hidden;
+	}
+	.modes__item {
+		padding: 3px 10px;
+		font-size: 10.5px;
+		font-weight: 500;
+		color: var(--color-on-surface-variant);
+	}
+	.modes__item.is-selected {
+		background-color: var(--color-primary-container);
+		color: #ffffff;
+	}
+	.modes__ref {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		font-size: 10.5px;
+		font-weight: 500;
+		color: var(--color-primary);
+	}
+
+	/* Barre de saisie. */
+	.composer {
+		display: flex;
+		flex: none;
+		align-items: center;
+		gap: 8px;
+		padding: 6px 14px 4px;
+	}
+	.composer__field {
+		display: flex;
+		min-width: 0;
+		flex: 1;
+		align-items: center;
+		min-height: 34px;
+		padding: 6px 10px;
+		border: 1px solid var(--color-outline-variant);
+		border-radius: 4px;
+		font-size: 11.5px;
+		line-height: 1.35;
+		color: var(--color-on-surface);
+	}
+	.composer__placeholder {
+		color: var(--color-on-surface-variant);
+		opacity: 0.65;
+	}
+	.caret {
+		display: none;
+		width: 1.5px;
+		height: 1.1em;
+		flex: none;
+		margin-left: 1px;
+		background-color: var(--color-primary);
+		animation: blink 1.05s steps(1, end) infinite;
+	}
+	@keyframes blink {
+		0%,
+		50% {
+			opacity: 1;
+		}
+		50.01%,
+		100% {
+			opacity: 0;
+		}
+	}
+	.composer__send {
+		display: grid;
+		width: 34px;
+		height: 34px;
+		flex: none;
+		place-items: center;
+		border-radius: 4px;
+		background-color: var(--color-primary);
+		color: var(--color-on-primary);
+		transition: transform 0.12s ease;
+	}
+	.composer__send.is-pressed {
+		transform: scale(0.9);
+	}
+
+	.disclaimer {
+		flex: none;
+		padding: 4px 14px 12px;
+		font-size: 8px;
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-align: center;
+		text-transform: uppercase;
+		color: var(--color-on-surface-muted);
+	}
+
+	/* ------------------------------------------------------------------
+	   États de la reprise. Rien n'est masqué tant que `data-armed` n'est
+	   pas posé : sans JavaScript, l'écran rendu par le serveur montre la
+	   conversation terminée.
+	   ------------------------------------------------------------------ */
+	[data-armed] .turn,
+	[data-armed] [data-sources] {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	[data-armed] .turn.is-in,
+	[data-armed] [data-sources].is-in {
+		opacity: 1;
+		transform: none;
+		transition:
+			opacity 0.34s cubic-bezier(0.18, 0.9, 0.32, 1),
+			transform 0.34s cubic-bezier(0.18, 0.9, 0.32, 1);
+	}
+	/* La bulle de l'assistant entre séparément de son en-tête : le nom
+	   apparaît, puis la réponse — comme dans l'application, où la bulle
+	   n'est posée qu'à l'arrivée du premier octet. */
+	[data-armed] .turn--ai .bubble,
+	[data-armed] .turn--ai .sources {
+		opacity: 0;
+	}
+	[data-armed] .turn--ai [data-answer].is-in,
+	[data-armed] .turn--ai [data-sources].is-in {
+		opacity: 1;
+	}
+	/* Les cartes se posent l'une après l'autre, en venant de la droite. */
+	[data-armed] .card {
+		opacity: 0;
+		transform: translateX(14px);
+	}
+	[data-armed] [data-sources].is-in .card {
+		opacity: 1;
+		transform: none;
+		transition:
+			opacity 0.4s ease,
+			transform 0.4s cubic-bezier(0.18, 0.9, 0.32, 1);
+		transition-delay: calc(220ms + var(--i) * 160ms);
+	}
+	/* Réponse capturée : les mots s'éclaircissent sur place — aucun caractère
+	   n'est ajouté au fil du temps, donc aucune ligne ne se recompose. */
+	[data-armed] [data-answer] .aw {
+		opacity: 0.12;
+	}
+	[data-armed] [data-answer] .aw.is-in {
+		opacity: 1;
+		transition: opacity 0.4s ease;
+		transition-delay: calc(var(--i) * 22ms);
+	}
+</style>
