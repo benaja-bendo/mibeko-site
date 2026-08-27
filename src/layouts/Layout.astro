@@ -52,6 +52,7 @@ const isDefaultOgImage = Astro.props.image === undefined;
 const orgJsonLd = {
 	'@context': 'https://schema.org',
 	'@type': 'Organization',
+	'@id': `${siteRoot}#organization`,
 	name: 'Mibeko',
 	url: siteRoot,
 	logo: new URL('/logo.svg', siteOrigin).href,
