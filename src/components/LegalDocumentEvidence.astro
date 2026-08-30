@@ -1,57 +1,86 @@
 ---
+/**
+ * Bloc de provenance — la preuve, pas un avertissement (charte § 9 c).
+ *
+ * « La source officielle et le PDF d'origine ne se rangent pas dans un encart
+ * d'excuse : ils s'affichent en évidence sur la page document ET sur la page
+ * article. »
+ *
+ * Le statut juridique n'est plus ici : il a son bandeau dédié
+ * (`LegalStatusBanner.astro`, charte § 4). Deux composants qui disent le statut
+ * finiraient par se contredire — c'est précisément le défaut relevé sur les
+ * maquettes, où une puce verte « en vigueur » cohabitait avec un bandeau
+ * « statut non vérifié ».
+ *
+ * `consolidation_as_of` est la SEULE notion de version que le fonds porte
+ * réellement : il n'existe aucun historique de versions antérieures. On affiche
+ * ce qui est vrai, pas ce qu'on aimerait montrer.
+ */
 import type { DocumentMeta } from '../lib/api';
-import { formatFrenchDate, legalStatusPresentation } from '../lib/legalMetadata';
+import { formatFrenchDate } from '../lib/legalMetadata';
 import { UMAMI_EVENTS } from '../lib/analytics';
 
 interface Props {
   document: DocumentMeta;
   pdfUrl?: string | null;
+  heading?: string;
 }
 
-const { document, pdfUrl = null } = Astro.props;
-const status = legalStatusPresentation(document);
-const statusDate = status.verified ? formatFrenchDate(document.statut_verifie_le) : null;
+const { document, pdfUrl = null, heading = 'Provenance' } = Astro.props;
+
 const journal = document.official_journal;
 const journalDate = formatFrenchDate(journal?.publication_date);
+const consolidatedOn = formatFrenchDate(document.consolidation_as_of);
 ---
 
-<section aria-label="Statut et provenance du texte" class="grid gap-3 sm:grid-cols-2 mb-6">
-  <div class="border border-surface-variant bg-surface-container-lowest p-4">
-    <p class="text-xs font-semibold uppercase tracking-[0.06em] text-on-surface-variant mb-2">Statut juridique</p>
-    <p class:list={[
-      'font-semibold',
-      status.verified ? 'text-primary' : 'text-on-surface',
-    ]}>{status.label}</p>
-    <p class="mt-1 text-sm text-on-surface-variant leading-relaxed">
-      {status.verified
-        ? statusDate
-          ? `Vérifié par Mibeko le ${statusDate}.`
-          : 'Statut vérifié par Mibeko.'
-        : 'Mibeko n’a pas encore établi si ce texte est actuellement applicable.'}
-    </p>
-  </div>
+<section aria-label="Provenance du texte" class="rounded-lg border border-surface-variant bg-surface-container-lowest">
+  <h2 class="border-b border-surface-variant bg-surface-container-low px-3 py-2.5 text-xs font-bold uppercase tracking-[0.08em] text-on-surface-variant">
+    {heading}
+  </h2>
 
-  <div class="border border-surface-variant bg-surface-container-lowest p-4">
-    <p class="text-xs font-semibold uppercase tracking-[0.06em] text-on-surface-variant mb-2">Provenance</p>
-    {journal ? (
-      <>
-        <p class="font-semibold text-on-surface">Journal officiel</p>
-        <p class="mt-1 text-sm text-on-surface-variant leading-relaxed">
-          {journal.title}{journalDate ? ` — ${journalDate}` : ''}
+  <div class="flex flex-col gap-3 p-3.5">
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-[0.06em] text-on-surface-muted">Source officielle</p>
+      {journal ? (
+        <>
+          <p class="mt-0.5 font-semibold text-on-surface">Journal officiel</p>
+          <p class="mt-0.5 text-sm leading-relaxed text-on-surface-variant">
+            {journal.title}{journalDate ? ` — ${journalDate}` : ''}
+          </p>
+        </>
+      ) : (
+        <>
+          <p class="mt-0.5 font-semibold text-on-surface">Non reliée</p>
+          <p class="mt-0.5 text-sm leading-relaxed text-on-surface-variant">
+            La référence au <em>Journal officiel</em> n’est pas renseignée sur ce texte.
+          </p>
+        </>
+      )}
+    </div>
+
+    {consolidatedOn && (
+      <div class="border-t border-surface-variant pt-3">
+        <p class="text-xs font-semibold uppercase tracking-[0.06em] text-on-surface-muted">Version</p>
+        <p class="mt-0.5 font-semibold text-on-surface">Consolidée au {consolidatedOn}</p>
+        <p class="mt-0.5 text-sm leading-relaxed text-on-surface-variant">
+          Date à laquelle Mibeko a arrêté cette version du texte.
         </p>
-      </>
-    ) : (
-      <>
-        <p class="font-semibold text-on-surface">Source officielle non reliée</p>
-        <p class="mt-1 text-sm text-on-surface-variant leading-relaxed">
-          La référence au Journal officiel n’est pas renseignée sur cette page.
-        </p>
-      </>
+      </div>
     )}
+
     {pdfUrl && (
-      <a href={pdfUrl} target="_blank" rel="noopener noreferrer" data-umami-event={UMAMI_EVENTS.comprendreSource} class="inline-flex mt-3 text-sm font-semibold text-secondary hover:underline">
-        Consulter le document source
-      </a>
+      <div class="border-t border-surface-variant pt-3">
+        <a
+          href={pdfUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-umami-event={UMAMI_EVENTS.comprendreSource}
+          class="inline-flex items-center gap-1.5 text-sm font-semibold text-secondary hover:underline"
+        >
+          Consulter le document source
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </a>
+      </div>
     )}
   </div>
 </section>

@@ -187,3 +187,63 @@
 .legal-prose blockquote p {
   margin-bottom: 0;
 }
+
+/* ============================================================================
+   Impression d'un texte de loi
+   ----------------------------------------------------------------------------
+   Un juriste imprime pour annoter, un citoyen pour apporter le texte à un
+   guichet. Ce qui doit sortir sur le papier, c'est le TEXTE et sa provenance —
+   pas la navigation, pas les appels à l'action, pas le rail de sommaire.
+
+   La référence (URL publique + date d'impression) est ajoutée en pied de la
+   colonne de lecture : sans elle, la feuille imprimée ne dit plus d'où elle
+   vient, et un texte de droit sans source ne vaut rien.
+   ========================================================================== */
+@media print {
+  /* Chrome/Safari : sans cela, les fonds de teinte (bandeau de statut) sautent. */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    background: #fff;
+    font-size: 11pt;
+  }
+
+  /* Chrome de l'interface : en-tête, pied de page, bannière d'installation. */
+  body > header,
+  body > footer {
+    display: none !important;
+  }
+
+  /* La grille de lecture retombe en une seule colonne pleine largeur : les
+     rails sont déjà masqués par `print:hidden` côté composant. */
+  main .grid {
+    display: block !important;
+  }
+
+  /* Aucun encadré ne survit à l'impression : le papier porte déjà la limite. */
+  main section,
+  main article,
+  main div {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Un article ne doit pas se couper entre son numéro et son texte. */
+  main article {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  h1, h2, h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+}

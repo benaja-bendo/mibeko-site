@@ -1,268 +1,202 @@
 ---
+/**
+ * Rangs du sommaire : une division par ligne, récursivement.
+ *
+ * REFONTE DU 30/08/2026 — ce que le sommaire faisait mal, et ce qui change.
+ *
+ * ① **La division est devenue le point de lecture, pas l'article.** Depuis que
+ *    la page article rend la division entière, cliquer « Art. 1 » puis « Art. 2 »
+ *    mène deux fois à la même page. Chaque ligne de division est donc un LIEN
+ *    vers son premier article — donc vers son texte entier — et porte sa plage
+ *    (« Art. 1 à 12 »). Sur l'Acte uniforme, on navigue en 67 divisions au lieu
+ *    de 307 articles.
+ *
+ * ② **La nappe de pastilles est supprimée.** Elle rendait 2 826 puces sur le
+ *    Code civil (charte § 8 et § 11 : « un composant qui rend 2 826 éléments est
+ *    un défaut de conception »). Les numéros ne sont rendus que pour la division
+ *    COURAMMENT LUE. On ne perd rien : l'ouvrir affiche tous ses articles en
+ *    toutes lettres.
+ *
+ * ③ **Seule la branche lue est dépliée.** Auparavant tout le niveau racine
+ *    l'était, ce qui donnait un mur dès l'ouverture. Le dépliage est en CSS pure
+ *    (case à cocher + label) : il fonctionne sans JavaScript.
+ *
+ * ④ **Deux cibles distinctes sur une ligne.** Le chevron déplie, le reste de la
+ *    ligne ouvre le texte. Une seule cible faisant les deux obligeait à choisir
+ *    entre naviguer et explorer. Le chevron n'existe que si la division a des
+ *    sous-divisions — sinon ce serait un dépliant qui ne déplie rien.
+ *
+ * Le champ de recherche et l'enveloppe (repli mobile, défilement, « vous êtes
+ * ici ») vivent dans `DocumentOutline.astro` ; ici, l'arborescence seule.
+ */
 import type { StructureArticleRef, TreeNode } from '../lib/api';
-import { articlePath, documentPath } from '../lib/api';
+import { articlePath, subtreeArticles } from '../lib/api';
 import { articleLeafLabel } from '../lib/sanitize';
 
 interface Props {
   nodes: TreeNode[];
   slug: string;
+  /** Article couramment lu : déplie et marque la division qui le contient. */
   activeNumber?: string;
   level?: number;
-  initialNumbers?: string[];
 }
 
-const { nodes, slug, activeNumber, level = 0, initialNumbers: initialNumbersProp } = Astro.props;
-const isRoot = level === 0;
-const INITIAL_ARTICLE_LIMIT = 80;
+const { nodes, slug, activeNumber, level = 0 } = Astro.props;
 
-/** Le sous-arbre contient-il l'article actif ? (pour déplier la bonne branche) */
-const subtreeHasActive = (node: TreeNode): boolean => {
-  if (activeNumber && node.articles.some((article) => article.number === activeNumber)) return true;
-  return node.children.some(subtreeHasActive);
-};
+/** Nombre maximal de numéros listés sous la division lue. */
+const ARTICLE_LIST_LIMIT = 60;
 
-type Segment = { kind: 'articles'; items: StructureArticleRef[] } | { kind: 'node'; node: TreeNode };
-const segments: Segment[] = [];
-for (const node of nodes) {
-  if (node.type === 'ARTICLE' && node.number) {
-    const last = segments[segments.length - 1];
-    const article = { number: node.number, order: node.order };
-    if (last?.kind === 'articles') last.items.push(article);
-    else segments.push({ kind: 'articles', items: [article] });
-  } else {
-    segments.push({ kind: 'node', node });
-  }
-}
+const holdsActive = (node: TreeNode): boolean =>
+  activeNumber !== undefined && node.articles.some((article) => article.number === activeNumber);
+
+const subtreeHasActive = (node: TreeNode): boolean =>
+  holdsActive(node) || node.children.some(subtreeHasActive);
 
 const eyebrow = (node: TreeNode) => [node.type, node.number].filter(Boolean).join(' ');
-const chipBase = 'inline-flex items-center h-9 px-3 rounded-lg border text-xs font-semibold transition-colors';
-const chipIdle = 'border-surface-variant bg-surface-container-lowest text-on-surface-variant hover:border-primary/50 hover:text-primary';
-const chipActive = 'border-secondary/50 bg-secondary/10 text-secondary';
 
-type IndexEntry = [number: string, label: string, context: string];
-const treeIndex = new Map<string, IndexEntry>();
-const normalizeIndexValue = (value: string) =>
-  value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('fr').trim();
-const collectIndex = (treeNodes: TreeNode[], parentContext = '') => {
-  for (const node of treeNodes) {
-    if (node.type === 'ARTICLE' && node.number) {
-      treeIndex.set(node.number, [node.number, articleLeafLabel(node.number, { short: true }), parentContext]);
-      continue;
-    }
-
-    const context = [eyebrow(node), node.title].filter(Boolean).join(' — ');
-    const articleContext = context || parentContext;
-    for (const article of node.articles) {
-      treeIndex.set(article.number, [article.number, articleLeafLabel(article.number, { short: true }), articleContext]);
-    }
-    collectIndex(node.children, articleContext);
-  }
-};
-
-if (isRoot) collectIndex(nodes);
-const serverQuery = isRoot ? (Astro.url.searchParams.get('sommaire') ?? '').trim() : '';
-const normalizedServerQuery = normalizeIndexValue(serverQuery);
-const serverMatches = normalizedServerQuery
-  ? [...treeIndex.values()].filter((entry) => normalizeIndexValue(entry.join(' ')).includes(normalizedServerQuery))
-  : [];
-const initialNumbers = initialNumbersProp ?? (normalizedServerQuery
-  ? serverMatches.slice(0, INITIAL_ARTICLE_LIMIT).map(([number]) => number)
-  : [...treeIndex.keys()].slice(0, INITIAL_ARTICLE_LIMIT));
-if (activeNumber && !initialNumbers.includes(activeNumber)) initialNumbers.push(activeNumber);
-const initialNumberSet = new Set(initialNumbers);
-const initialArticles = (articles: StructureArticleRef[]) =>
-  articles.filter((article) => initialNumberSet.has(article.number));
-const serializedIndex = isRoot
-  ? JSON.stringify([...treeIndex.values()]).replaceAll('<', '\\u003c')
-  : '';
+/** « Art. 1 à 12 », « Art. 7 » — ce que la division contient, en un coup d'œil. */
+function rangeLabel(articles: StructureArticleRef[]): string {
+  if (articles.length === 0) return '';
+  const first = articleLeafLabel(articles[0].number, { short: true });
+  if (articles.length === 1) return first;
+  const last = articleLeafLabel(articles[articles.length - 1].number, { short: true });
+  return `${first} à ${last.replace(/^Art\.\s*/, '')}`;
+}
 ---
 
-{isRoot && (
-  <form method="get" action={documentPath(slug)} class="mb-3 border-b border-surface-variant pb-3" data-tree-controls>
-    <label class="block text-sm font-semibold text-on-surface mb-1.5" for={`tree-filter-${slug}`}>Trouver un article</label>
-    <div class="flex flex-col sm:flex-row gap-2">
-      <input
-        id={`tree-filter-${slug}`}
-        type="search"
-        name="sommaire"
-        value={serverQuery}
-        inputmode="search"
-        autocomplete="off"
-        placeholder="Numéro, livre, titre ou chapitre…"
-        class="min-w-0 flex-1 h-10 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 text-sm text-on-surface placeholder:text-on-surface-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
-        data-tree-filter
-      />
-      <button type="submit" class="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-on-primary hover:bg-primary-container">
-        Filtrer
-      </button>
-      <button type="button" class="hidden h-10 rounded-lg border border-primary px-3 text-sm font-semibold text-primary hover:bg-primary/5" data-tree-show-all>
-        Afficher tous les articles
-      </button>
-    </div>
-    <p class="mt-1.5 text-xs text-on-surface-muted" aria-live="polite" data-tree-status>
-      {normalizedServerQuery
-        ? `${serverMatches.length} résultat${serverMatches.length > 1 ? 's' : ''} ; ${Math.min(serverMatches.length, INITIAL_ARTICLE_LIMIT)} affiché${Math.min(serverMatches.length, INITIAL_ARTICLE_LIMIT) > 1 ? 's' : ''}.`
-        : 'Le sommaire affiche un aperçu. Utilisez le filtre pour atteindre n’importe quel article.'}
-    </p>
-  </form>
-)}
+<ul class:list={['mibeko-tree flex flex-col gap-px', level > 0 && 'ml-2.5 border-l border-surface-variant pl-2 mt-px']}>
+  {nodes.map((node) => {
+    const articles = subtreeArticles(node);
+    const target = articles[0];
+    const current = holdsActive(node);
+    const hasChildren = node.children.length > 0;
+    const numbers = current ? node.articles.slice(0, ARTICLE_LIST_LIMIT) : [];
 
-{isRoot && <div class="hidden" data-tree-results></div>}
-
-<div class={`mibeko-tree ${level > 0 ? 'mt-0.5' : 'space-y-1'}`} data-tree-outline={isRoot ? '' : undefined}>
-  {segments.map((segment) =>
-    segment.kind === 'articles' ? (
-      <div class="flex flex-wrap gap-1.5 px-1 py-1">
-        {initialArticles(segment.items).map((article) => (
-          <a
-            href={articlePath(slug, article.number)}
-            aria-current={article.number === activeNumber ? 'true' : undefined}
-            class:list={[chipBase, article.number === activeNumber ? chipActive : chipIdle]}
-          >
-            {articleLeafLabel(article.number, { short: true })}
-          </a>
-        ))}
-        {segment.items.length > initialArticles(segment.items).length && initialArticles(segment.items).length > 0 && (
-          <span class="inline-flex items-center h-9 px-2 text-xs text-on-surface-muted">
-            +{segment.items.length - initialArticles(segment.items).length} dans le filtre
-          </span>
+    return (
+      <li class="tree-node">
+        {hasChildren && (
+          <input
+            type="checkbox"
+            id={`tree-${node.id}`}
+            class="sr-only"
+            checked={subtreeHasActive(node)}
+          />
         )}
-      </div>
-    ) : (
-      <details open={level === 0 || subtreeHasActive(segment.node)} class="rounded-lg">
-        <summary class="flex items-start gap-2 py-2 px-2.5 rounded-lg cursor-pointer hover:bg-surface-container select-none">
-          <svg class="tree-chevron mt-1 shrink-0 text-on-surface-muted" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
-          <span class="flex flex-col gap-0.5 min-w-0">
-            {eyebrow(segment.node) && <span class="text-[11px] font-bold uppercase tracking-[0.08em] text-secondary">{eyebrow(segment.node)}</span>}
-            {segment.node.title && <span class="text-sm font-medium text-on-surface leading-snug">{segment.node.title}</span>}
-          </span>
-        </summary>
-        <div class="pl-3 ml-3 border-l border-surface-variant">
-          {segment.node.articles.length > 0 && (
-            <div class="flex flex-wrap gap-1.5 px-1 py-1.5">
-              {initialArticles(segment.node.articles).map((article) => (
-                <a
-                  href={articlePath(slug, article.number)}
-                  aria-current={article.number === activeNumber ? 'true' : undefined}
-                  class:list={[chipBase, article.number === activeNumber ? chipActive : chipIdle]}
-                >
-                  {articleLeafLabel(article.number, { short: true })}
-                </a>
-              ))}
-              {segment.node.articles.length > initialArticles(segment.node.articles).length && initialArticles(segment.node.articles).length > 0 && (
-                <span class="inline-flex items-center h-9 px-2 text-xs text-on-surface-muted">
-                  +{segment.node.articles.length - initialArticles(segment.node.articles).length} dans le filtre
+
+        <div class:list={['tree-row flex items-start gap-0.5 rounded', current && 'bg-secondary-tint']}>
+          {hasChildren ? (
+            <label
+              for={`tree-${node.id}`}
+              class="flex h-7 w-6 shrink-0 cursor-pointer items-center justify-center rounded text-on-surface-muted hover:bg-surface-container hover:text-on-surface"
+              title="Déplier cette division"
+            >
+              <span class="sr-only">Déplier {[eyebrow(node), node.title].filter(Boolean).join(' ')}</span>
+              <svg class="tree-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+            </label>
+          ) : (
+            <span class="h-7 w-6 shrink-0" aria-hidden="true"></span>
+          )}
+
+          {/* La ligne EST le lien vers le texte de la division. Un nœud sans
+              aucun article reste un intitulé, jamais un lien mort. */}
+          {target ? (
+            <a
+              href={articlePath(slug, target.number)}
+              aria-current={current ? 'true' : undefined}
+              class="flex min-w-0 flex-1 items-baseline justify-between gap-2 rounded px-1.5 py-1 hover:bg-surface-container"
+            >
+              <span class="flex min-w-0 flex-col gap-px">
+                {eyebrow(node) && (
+                  <span class:list={[
+                    'text-[10.5px] font-bold uppercase tracking-[0.07em]',
+                    current ? 'text-secondary' : 'text-on-surface-muted',
+                  ]}>{eyebrow(node)}</span>
+                )}
+                {node.title ? (
+                  <span class:list={[
+                    'text-[13px] leading-snug',
+                    current ? 'font-semibold text-secondary' : 'text-on-surface',
+                  ]}>{node.title}</span>
+                ) : (
+                  !eyebrow(node) && (
+                    <span class="text-[13px] text-on-surface">{articleLeafLabel(target.number)}</span>
+                  )
+                )}
+              </span>
+              {articles.length > 0 && (
+                <span class="shrink-0 text-[10.5px] tabular-nums text-on-surface-muted">
+                  {rangeLabel(articles)}
                 </span>
               )}
-            </div>
-          )}
-          {segment.node.children.length > 0 && (
-            <Astro.self
-              nodes={segment.node.children}
-              slug={slug}
-              activeNumber={activeNumber}
-              level={level + 1}
-              initialNumbers={initialNumbers}
-            />
+            </a>
+          ) : (
+            <p class="flex-1 px-1.5 py-1 text-[13px] text-on-surface-muted">
+              {[eyebrow(node), node.title].filter(Boolean).join(' — ')}
+            </p>
           )}
         </div>
-      </details>
-    ),
-  )}
-</div>
 
-{isRoot && <script type="application/json" data-tree-index set:html={serializedIndex} />}
+        {/* Numéros d'articles : uniquement sous la division LUE. Les rendre
+            partout mettrait 2 826 liens dans le DOM du Code civil sans qu'aucun
+            soit visible. */}
+        {numbers.length > 1 && (
+          <div class="flex flex-wrap gap-1 px-2 pb-1.5 pl-8">
+            {numbers.map((article) => (
+              <a
+                href={articlePath(slug, article.number)}
+                aria-current={article.number === activeNumber ? 'page' : undefined}
+                class:list={[
+                  'inline-flex h-6 min-w-[1.75rem] items-center justify-center rounded border px-1.5 text-[11px] font-semibold tabular-nums transition-colors',
+                  article.number === activeNumber
+                    ? 'border-secondary bg-secondary text-on-secondary'
+                    : 'border-surface-variant text-on-surface-variant hover:border-primary/50 hover:text-primary',
+                ]}
+              >
+                {articleLeafLabel(article.number, { short: true }).replace(/^Art\.\s*/, '')}
+              </a>
+            ))}
+            {node.articles.length > numbers.length && (
+              <span class="inline-flex h-6 items-center px-1 text-[11px] text-on-surface-muted">
+                +{node.articles.length - numbers.length}
+              </span>
+            )}
+          </div>
+        )}
 
-<script>
-  const normalizeTreeQuery = (value: string) =>
-    value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('fr').trim();
-
-  document.querySelectorAll<HTMLElement>('[data-tree-controls]').forEach((controls) => {
-    const root = controls.parentElement;
-    const input = controls.querySelector<HTMLInputElement>('[data-tree-filter]');
-    const showAll = controls.querySelector<HTMLButtonElement>('[data-tree-show-all]');
-    const status = controls.querySelector<HTMLElement>('[data-tree-status]');
-    const results = root?.querySelector<HTMLElement>(':scope > [data-tree-results]');
-    const outline = root?.querySelector<HTMLElement>(':scope > [data-tree-outline]');
-    const indexNode = root?.querySelector<HTMLScriptElement>(':scope > [data-tree-index]');
-    if (!input || !showAll || !status || !results || !outline || !indexNode) return;
-
-    const entries = JSON.parse(indexNode.textContent ?? '[]') as [string, string, string][];
-    const slug = input.id.replace(/^tree-filter-/, '');
-    const resultLimit = 80;
-    showAll.classList.remove('hidden');
-
-    const render = (matches: [string, string, string][], mode: 'filter' | 'all') => {
-      results.replaceChildren();
-      const list = document.createElement('div');
-      list.className = 'grid gap-1';
-
-      const shown = mode === 'filter' ? matches.slice(0, resultLimit) : matches;
-      for (const [number, label, context] of shown) {
-        const link = document.createElement('a');
-        link.href = `/textes/${encodeURIComponent(slug)}/article-${encodeURIComponent(number)}`;
-        link.className = 'flex flex-col rounded-lg border border-surface-variant px-3 py-2 text-sm hover:border-primary/50 hover:bg-primary/5';
-        const title = document.createElement('span');
-        title.className = 'font-semibold text-primary';
-        title.textContent = label;
-        link.append(title);
-        if (context) {
-          const detail = document.createElement('span');
-          detail.className = 'text-xs text-on-surface-muted';
-          detail.textContent = context;
-          link.append(detail);
-        }
-        list.append(link);
-      }
-      results.append(list);
-      results.classList.remove('hidden');
-      outline.classList.add('hidden');
-
-      if (mode === 'all') {
-        status.textContent = `${matches.length} articles affichés.`;
-        showAll.textContent = 'Revenir au sommaire';
-        showAll.dataset.mode = 'all';
-      } else if (matches.length > resultLimit) {
-        status.textContent = `${matches.length} résultats ; les ${resultLimit} premiers sont affichés. Précisez la recherche.`;
-      } else {
-        status.textContent = `${matches.length} résultat${matches.length > 1 ? 's' : ''}.`;
-      }
-    };
-
-    const restoreOutline = () => {
-      results.classList.add('hidden');
-      outline.classList.remove('hidden');
-      showAll.textContent = 'Afficher tous les articles';
-      showAll.dataset.mode = '';
-      status.textContent = 'Le sommaire affiche un aperçu. Utilisez le filtre pour atteindre n’importe quel article.';
-    };
-
-    input.addEventListener('input', () => {
-      const query = normalizeTreeQuery(input.value);
-      if (!query) {
-        restoreOutline();
-        return;
-      }
-      const matches = entries.filter((entry) => normalizeTreeQuery(entry.join(' ')).includes(query));
-      render(matches, 'filter');
-    });
-
-    controls.addEventListener('submit', (event) => {
-      event.preventDefault();
-      input.dispatchEvent(new Event('input'));
-    });
-
-    showAll.addEventListener('click', () => {
-      input.value = '';
-      if (showAll.dataset.mode === 'all') restoreOutline();
-      else render(entries, 'all');
-    });
-  });
-</script>
+        {hasChildren && (
+          <div class="tree-kids">
+            <Astro.self nodes={node.children} slug={slug} activeNumber={activeNumber} level={level + 1} />
+          </div>
+        )}
+      </li>
+    );
+  })}
+</ul>
 
 <style>
-  .mibeko-tree summary { list-style: none; }
-  .mibeko-tree summary::-webkit-details-marker { display: none; }
-  .mibeko-tree details[open] > summary .tree-chevron { transform: rotate(90deg); }
-  .mibeko-tree .tree-chevron { transition: transform 0.18s ease; }
+  /* Dépliage sans JavaScript : la case pilote ses frères suivants. Les styles
+     sont écrits ici plutôt qu'en variantes utilitaires parce que la cible
+     (`.tree-kids`, le chevron) n'est pas un frère direct de la case. */
+  .tree-node > .tree-kids {
+    display: none;
+  }
+  .tree-node > input:checked ~ .tree-kids {
+    display: block;
+  }
+  .tree-chevron {
+    transition: transform 0.18s ease;
+  }
+  .tree-node > input:checked ~ .tree-row .tree-chevron {
+    transform: rotate(90deg);
+  }
+  /* Le focus clavier doit rester visible alors que la case est en `sr-only`. */
+  .tree-node > input:focus-visible ~ .tree-row label {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tree-chevron {
+      transition: none;
+    }
+  }
 </style>

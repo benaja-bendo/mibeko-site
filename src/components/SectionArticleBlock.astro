@@ -1,0 +1,85 @@
+---
+/**
+ * Un article à l'intérieur d'une division en lecture continue.
+ *
+ * Le numéro est TOUJOURS un lien vers la page propre de l'article : cette page
+ * reste l'adresse canonique et citable. La lecture continue ajoute du confort,
+ * elle ne remplace jamais l'URL qu'un juriste colle dans ses conclusions.
+ *
+ * **La page source est la seule provenance qui existe à l'échelle de
+ * l'article** (marqueurs `[[MIBEKO_PAGE:N]]` de l'ingestion, présente sur
+ * 116 641 des 209 382 versions en base au 30/08/2026). Elle rend chaque article
+ * vérifiable un par un contre le scan d'origine — c'est la preuve, pas un
+ * ornement. On n'affiche À AUCUN PRIX une date « en vigueur » ou « modifié le »
+ * par article : la seule date disponible, la borne basse de `validity_period`,
+ * vaut la date d'INGESTION (le 07/08/2026 pour 178 646 versions), et
+ * l'afficher sur un texte de 2010 fabriquerait une date juridique fausse.
+ */
+import type { SectionArticle } from '../lib/api';
+import { articlePath } from '../lib/api';
+import { articleLeafLabel } from '../lib/sanitize';
+import LegalArticleBody from './LegalArticleBody.astro';
+
+interface Props {
+  article: SectionArticle;
+  slug: string;
+  /** PDF d'origine : sans lui, la page source ne mène nulle part. */
+  pdfUrl?: string | null;
+  /** Article couramment adressé par l'URL (page article). */
+  active?: boolean;
+  /** Filet de séparation au-dessus (tous sauf le premier d'une pile). */
+  separated?: boolean;
+}
+
+const { article, slug, pdfUrl = null, active = false, separated = false } = Astro.props;
+
+// `#page=N` est le fragment standard des visionneuses PDF : le document
+// s'ouvre directement à la bonne page. Sans PDF joint, le numéro reste affiché
+// en clair — savoir à quelle page du Journal officiel vérifier reste utile même
+// quand Mibeko n'héberge pas le scan.
+const sourceHref = pdfUrl && article.page ? `${pdfUrl}#page=${article.page}` : null;
+---
+
+<article
+  id={`article-${article.number}`}
+  class:list={[
+    'scroll-mt-24',
+    separated && 'mt-7 border-t border-surface-variant pt-7',
+    /* L'article couramment adressé est marqué par un filet terracotta — jamais
+       par un fond de couleur de statut, qui se lirait comme une information
+       juridique (charte, loi 4 : on ne décore pas avec ce qui informe). */
+    active && 'border-l-[3px] border-l-secondary pl-4 sm:pl-5',
+  ]}
+>
+  <div class="mb-2 flex items-baseline justify-between gap-3">
+    <h3 class="text-sm font-bold text-on-surface">
+      <a
+        href={articlePath(slug, article.number)}
+        class="hover:text-secondary hover:underline"
+        aria-current={active ? 'page' : undefined}
+      >
+        {articleLeafLabel(article.number)}
+      </a>
+    </h3>
+    {article.page && (
+      sourceHref ? (
+        <a
+          href={sourceHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="shrink-0 text-[11px] text-on-surface-muted transition-colors hover:text-secondary hover:underline print:hidden"
+          title={`Ouvrir le PDF d’origine à la page ${article.page}`}
+        >
+          Page <span class="tabular-nums">{article.page}</span> du document source
+        </a>
+      ) : (
+        <span class="shrink-0 text-[11px] text-on-surface-muted">
+          Page <span class="tabular-nums">{article.page}</span> du document source
+        </span>
+      )
+    )}
+  </div>
+  <div>
+    <LegalArticleBody content={article.content} tables={article.tables} />
+  </div>
+</article>

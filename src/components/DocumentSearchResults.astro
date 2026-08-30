@@ -1,0 +1,138 @@
+---
+/**
+ * Résultats de la recherche plein-texte À L'INTÉRIEUR d'un document.
+ *
+ * Distincte du filtre du sommaire, qui ne connaît que des numéros et des
+ * titres de division : ici on cherche dans le texte des articles. Sur un code
+ * de 2 826 articles, c'est la seule navigation réellement utilisable.
+ *
+ * L'extrait n'est jamais injecté en HTML : il est découpé en segments et rendu
+ * par Astro, qui échappe. Le corpus vient d'OCR, il peut contenir n'importe
+ * quoi — on ne lui fait pas confiance pour du balisage.
+ */
+import type { ArticleIndexItem, LibrarySearchResult } from '../lib/api';
+import { articlePath } from '../lib/api';
+import { articleLeafLabel } from '../lib/sanitize';
+
+interface Props {
+  query: string;
+  results: LibrarySearchResult[];
+  total: number;
+  slug: string;
+  /** Chemin de la page document, pour revenir à la lecture. */
+  documentPath: string;
+  /**
+   * Article dont le NUMÉRO correspond à la requête (« 1204 », « art. 5 »).
+   * Le moteur cherche dans le contenu : sans ce saut, taper un numéro ne mène
+   * jamais à l'article portant ce numéro.
+   */
+  directArticle?: ArticleIndexItem | null;
+}
+
+const { query, results, total, slug, documentPath, directArticle = null } = Astro.props;
+
+const fold = (value: string) =>
+  value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('fr');
+
+/**
+ * Fenêtre de ~260 caractères autour de la première occurrence, découpée en
+ * segments {texte, match} pour surligner sans construire de balise.
+ */
+function excerpt(content: string | null, term: string): Array<{ text: string; hit: boolean }> {
+  if (!content) return [];
+
+  const haystack = fold(content);
+  const needle = fold(term.trim());
+  const at = needle ? haystack.indexOf(needle) : -1;
+
+  const start = at > 90 ? content.lastIndexOf(' ', at - 90) + 1 : 0;
+  const window = content.slice(start, start + 260).trim();
+  const prefix = start > 0 ? '… ' : '';
+  const suffix = start + 260 < content.length ? ' …' : '';
+
+  if (!needle) return [{ text: prefix + window + suffix, hit: false }];
+
+  const segments: Array<{ text: string; hit: boolean }> = [{ text: prefix, hit: false }];
+  const folded = fold(window);
+  let cursor = 0;
+  let found = folded.indexOf(needle);
+
+  while (found !== -1) {
+    if (found > cursor) segments.push({ text: window.slice(cursor, found), hit: false });
+    segments.push({ text: window.slice(found, found + needle.length), hit: true });
+    cursor = found + needle.length;
+    found = folded.indexOf(needle, cursor);
+  }
+
+  segments.push({ text: window.slice(cursor) + suffix, hit: false });
+  return segments.filter((segment) => segment.text !== '');
+}
+---
+
+<section aria-label="Résultats dans ce texte" class="rounded-lg border border-surface-variant bg-surface-container-lowest p-5 sm:p-7">
+  <div class="mb-5 flex flex-wrap items-baseline justify-between gap-3 border-b border-surface-variant pb-4">
+    <h2 class="text-lg font-bold text-on-surface">
+      {total === 0
+        ? directArticle
+          ? 'Un article porte ce numéro'
+          : 'Aucun article ne contient cette expression'
+        : `${total} article${total > 1 ? 's' : ''} dans ce texte`}
+    </h2>
+    <a href={documentPath} class="text-sm font-semibold text-secondary hover:underline">
+      Revenir à la lecture
+    </a>
+  </div>
+
+  {directArticle && (
+    <a
+      href={articlePath(slug, directArticle.number)}
+      class="mb-4 flex items-center gap-3 rounded-lg border border-secondary/40 bg-secondary-tint p-4 transition-colors hover:border-secondary"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-secondary" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+      <span class="flex flex-col">
+        <span class="font-semibold text-secondary">Aller à l’{articleLeafLabel(directArticle.number).toLocaleLowerCase('fr')}</span>
+        <span class="text-sm text-on-surface-variant">Vous avez saisi un numéro d’article.</span>
+      </span>
+    </a>
+  )}
+
+  {results.length === 0 ? (
+    <p class="text-on-surface-variant">
+      {directArticle ? 'Aucun autre article' : 'Aucun article'} de ce texte ne contient «&nbsp;{query}&nbsp;».
+      Essayez un terme plus court, ou cherchez dans <a href={`/recherche?q=${encodeURIComponent(query)}`} class="font-semibold text-secondary hover:underline">tout le fonds</a>.
+    </p>
+  ) : (
+    <ul class="flex flex-col gap-3">
+      {results.map((result) => (
+        <li>
+          <a
+            href={articlePath(slug, result.number)}
+            class="block rounded-lg border border-surface-variant p-4 transition-colors hover:border-primary/40 hover:bg-surface-container-low"
+          >
+            <p class="mb-1 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+              <span class="text-sm font-bold text-on-surface">{articleLeafLabel(result.number)}</span>
+              {result.breadcrumb && (
+                <span class="text-xs text-on-surface-muted">{result.breadcrumb}</span>
+              )}
+            </p>
+            <p class="font-serif text-sm leading-relaxed text-on-surface-variant">
+              {excerpt(result.content, query).map((segment) =>
+                segment.hit ? (
+                  <mark class="bg-secondary-tint font-semibold text-secondary">{segment.text}</mark>
+                ) : (
+                  <>{segment.text}</>
+                ),
+              )}
+            </p>
+          </a>
+        </li>
+      ))}
+    </ul>
+  )}
+
+  {total > results.length && (
+    <p class="mt-5 border-t border-surface-variant pt-4 text-sm text-on-surface-variant">
+      Les {results.length} premiers résultats sont affichés. Précisez la recherche pour la resserrer.
+    </p>
+  )}
+</section>

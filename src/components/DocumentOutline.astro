@@ -1,0 +1,220 @@
+---
+/**
+ * Sommaire du texte : enveloppe, recherche, repli mobile, « vous êtes ici ».
+ *
+ * REFONTE DU 30/08/2026 — quatre défauts corrigés.
+ *
+ * ① **Un seul champ, pas deux.** Le rail portait « Rechercher dans ce texte »
+ *    ET « Aller à un article » : deux boîtes de recherche voisines et
+ *    indiscernables. Il n'en reste qu'une. Elle filtre le sommaire à la frappe
+ *    (divisions, sans JavaScript rien n'est perdu) et cherche dans le TEXTE à
+ *    la validation. Un numéro saisi seul est reconnu côté serveur et proposé
+ *    comme saut direct.
+ *
+ * ② **Plus d'index JSON embarqué.** L'ancien filtre sérialisait les 2 826
+ *    articles du Code civil dans la page pour pouvoir chercher côté client —
+ *    une des causes des 1,5 Mo dénoncés par la charte § 11. Le filtre travaille
+ *    désormais sur le DOM déjà rendu : zéro octet de plus.
+ *
+ * ③ **Plus de bascule de mode.** « Afficher tous les articles » remplaçait le
+ *    sommaire par une liste plate, puis « Revenir au sommaire ». Un sommaire
+ *    n'a qu'un seul état.
+ *
+ * ④ **Le repli mobile dit où l'on est.** Fermé, le bandeau porte la division
+ *    en cours de lecture au lieu du seul mot « Sommaire » : c'est l'information
+ *    dont on a besoin sans l'ouvrir.
+ *
+ * Sans JavaScript : le champ reste un formulaire GET, le repli mobile et le
+ * dépliage des divisions sont en CSS pure. Seul le filtre à la frappe disparaît.
+ */
+import type { TreeNode } from '../lib/api';
+import DocumentTree from './DocumentTree.astro';
+
+interface Props {
+  nodes: TreeNode[];
+  slug: string;
+  /** Chemin du document : cible du formulaire de recherche. */
+  documentPath: string;
+  articleCount: number;
+  /** Article couramment lu : déplie et marque sa division. */
+  activeNumber?: string;
+  /** Division en cours, pour le bandeau replié en mobile. */
+  currentLabel?: string;
+  /** Requête en cours, réaffichée dans le champ. */
+  query?: string;
+}
+
+const {
+  nodes,
+  slug,
+  documentPath,
+  articleCount,
+  activeNumber,
+  currentLabel,
+  query = '',
+} = Astro.props;
+---
+
+<section
+  aria-label="Sommaire du texte"
+  class="rounded-lg border border-surface-variant bg-surface-container-lowest lg:flex lg:max-h-[calc(100vh-7rem)] lg:flex-col print:hidden"
+  data-outline
+>
+  <!-- Repli mobile : le bandeau porte la division lue, pas seulement le mot
+       « Sommaire ». Fermé, il informe déjà. -->
+  <input type="checkbox" id={`outline-${slug}`} class="peer sr-only" />
+  <label
+    for={`outline-${slug}`}
+    class="flex cursor-pointer select-none items-center gap-2.5 px-3 py-2.5 lg:hidden"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-secondary" aria-hidden="true"><line x1="8" x2="21" y1="6" y2="6"></line><line x1="8" x2="21" y1="12" y2="12"></line><line x1="8" x2="21" y1="18" y2="18"></line><line x1="3" x2="3.01" y1="6" y2="6"></line><line x1="3" x2="3.01" y1="12" y2="12"></line><line x1="3" x2="3.01" y1="18" y2="18"></line></svg>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="text-[11px] font-bold uppercase tracking-[0.07em] text-on-surface-muted">Sommaire</span>
+      <span class="truncate text-sm font-semibold text-on-surface">
+        {currentLabel ?? `${articleCount} articles`}
+      </span>
+    </span>
+    <svg class="outline-chevron shrink-0 text-on-surface-muted" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+  </label>
+
+  <div class="hidden border-t border-surface-variant peer-checked:block lg:block lg:border-t-0">
+    <div class="hidden items-center gap-2 border-b border-surface-variant bg-surface-container-low px-3 py-2.5 lg:flex">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-secondary" aria-hidden="true"><line x1="8" x2="21" y1="6" y2="6"></line><line x1="8" x2="21" y1="12" y2="12"></line><line x1="8" x2="21" y1="18" y2="18"></line><line x1="3" x2="3.01" y1="6" y2="6"></line><line x1="3" x2="3.01" y1="12" y2="12"></line><line x1="3" x2="3.01" y1="18" y2="18"></line></svg>
+      <span class="text-xs font-bold uppercase tracking-[0.08em] text-on-surface-variant">Sommaire</span>
+      <span class="ml-auto text-[11px] tabular-nums text-on-surface-muted">{articleCount} articles</span>
+    </div>
+
+    <!-- Formulaire GET : sans JavaScript, il cherche dans le texte. Avec, il
+         filtre aussi le sommaire à la frappe. -->
+    <form method="get" action={documentPath} role="search" class="border-b border-surface-variant p-3">
+      <label class="mb-1.5 block text-sm font-semibold text-on-surface" for={`outline-search-${slug}`}>
+        Rechercher dans ce texte
+      </label>
+      <div class="flex gap-2">
+        <input
+          id={`outline-search-${slug}`}
+          type="search"
+          name="q"
+          value={query}
+          minlength="2"
+          inputmode="search"
+          autocomplete="off"
+          placeholder="Un mot, ou un n° d’article"
+          class="h-9 min-w-0 flex-1 rounded border border-outline-variant bg-surface-container-lowest px-2.5 text-sm text-on-surface placeholder:text-on-surface-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
+          data-outline-filter
+        />
+        <button type="submit" class="h-9 shrink-0 rounded bg-primary px-3 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-container">
+          Chercher
+        </button>
+      </div>
+      <p class="mt-1.5 text-[11px] leading-snug text-on-surface-muted" aria-live="polite" data-outline-status>
+        Entrée pour chercher dans le texte des {articleCount} articles.
+      </p>
+    </form>
+
+    <div class="overflow-y-auto p-1.5 lg:min-h-0 lg:flex-1" data-outline-scroll>
+      {nodes.length > 0 ? (
+        <>
+          <DocumentTree nodes={nodes} slug={slug} activeNumber={activeNumber} />
+          <p class="hidden px-2 py-4 text-sm text-on-surface-variant" data-outline-empty>
+            Aucune division ne porte ce mot. Appuyez sur <b>Entrée</b> pour chercher dans le texte.
+          </p>
+        </>
+      ) : (
+        <p class="px-2 py-3 text-sm italic text-on-surface-variant">Aucun article publié pour ce texte.</p>
+      )}
+    </div>
+  </div>
+</section>
+
+<style>
+  [data-outline] > input:checked ~ label .outline-chevron {
+    transform: rotate(180deg);
+  }
+  .outline-chevron {
+    transition: transform 0.18s ease;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .outline-chevron {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  const fold = (value: string) =>
+    value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('fr').trim();
+
+  document.querySelectorAll<HTMLElement>('[data-outline]').forEach((outline) => {
+    const input = outline.querySelector<HTMLInputElement>('[data-outline-filter]');
+    const status = outline.querySelector<HTMLElement>('[data-outline-status]');
+    const scroll = outline.querySelector<HTMLElement>('[data-outline-scroll]');
+    const empty = outline.querySelector<HTMLElement>('[data-outline-empty]');
+    if (!input || !status || !scroll) return;
+
+    const nodes = [...scroll.querySelectorAll<HTMLElement>('.tree-node')];
+    const idle = status.textContent ?? '';
+
+    // État de dépliage initial (branche lue), pour le restaurer à l'effacement.
+    const boxes = [...scroll.querySelectorAll<HTMLInputElement>('.tree-node > input')];
+    const initiallyOpen = new WeakMap<HTMLInputElement, boolean>();
+    for (const box of boxes) initiallyOpen.set(box, box.checked);
+
+    /** Texte propre d'une division, sans celui de ses sous-divisions. */
+    const ownText = new WeakMap<HTMLElement, string>();
+    for (const node of nodes) {
+      const row = node.querySelector<HTMLElement>(':scope > .tree-row');
+      ownText.set(node, fold(row?.textContent ?? ''));
+    }
+
+    const restore = () => {
+      for (const node of nodes) node.style.removeProperty('display');
+      for (const box of boxes) box.checked = initiallyOpen.get(box) ?? false;
+      empty?.classList.add('hidden');
+      status.textContent = idle;
+    };
+
+    input.addEventListener('input', () => {
+      const query = fold(input.value);
+      if (!query) {
+        restore();
+        return;
+      }
+
+      // Une division reste visible si elle correspond, ou si l'une de ses
+      // sous-divisions correspond — sinon on masquerait le chemin qui y mène.
+      let matches = 0;
+      for (let i = nodes.length - 1; i >= 0; i -= 1) {
+        const node = nodes[i];
+        const self = (ownText.get(node) ?? '').includes(query);
+        const child = node.querySelector('.tree-node[data-match]') !== null;
+        if (self) matches += 1;
+        if (self || child) {
+          node.setAttribute('data-match', '');
+          node.style.removeProperty('display');
+        } else {
+          node.removeAttribute('data-match');
+          node.style.display = 'none';
+        }
+      }
+
+      // Tout ce qui reste visible est déplié : un résultat caché dans une
+      // branche fermée n'est pas un résultat.
+      for (const box of boxes) {
+        box.checked = box.closest('.tree-node')?.hasAttribute('data-match') ?? false;
+      }
+
+      empty?.classList.toggle('hidden', matches > 0);
+      status.textContent = matches > 0
+        ? `${matches} division${matches > 1 ? 's' : ''} — Entrée pour chercher dans le texte.`
+        : 'Aucune division. Entrée pour chercher dans le texte.';
+    });
+
+    // « Vous êtes ici » : on amène la division lue dans le rail sans bouger la
+    // page (un `scrollIntoView` ferait sauter le lecteur au chargement).
+    const current = scroll.querySelector<HTMLElement>('[aria-current="true"]');
+    if (current && scroll.scrollHeight > scroll.clientHeight) {
+      scroll.scrollTop = Math.max(0, current.offsetTop - scroll.offsetTop - scroll.clientHeight / 3);
+    }
+  });
+</script>

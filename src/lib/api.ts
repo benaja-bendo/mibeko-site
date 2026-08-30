@@ -53,6 +53,12 @@ export interface DocumentMeta {
   date_publication: string | null;
   date_signature: string | null;
   date_entree_vigueur: string | null;
+  /**
+   * Date à laquelle Mibeko a arrêté cette version consolidée du texte. C'est
+   * la seule notion de « version » que le fonds porte réellement : il n'existe
+   * aucun historique de versions antérieures publiable.
+   */
+  consolidation_as_of?: string | null;
   /** Date d’intégration dans le fonds, distincte de la date juridique. */
   created_at?: string | null;
   updated_at?: string | null;
@@ -87,6 +93,14 @@ export interface CurrentArticle {
   content_format?: string | null;
   /** Tableaux structurés portés par l'article (cf. `lib/tables.ts`). */
   tables?: ApiTable[];
+  /**
+   * Page du PDF source où cet article a été trouvé (marqueurs
+   * `[[MIBEKO_PAGE:N]]` posés par l'ingestion). C'est la seule provenance
+   * disponible à l'échelle de l'article — et la seule qui soit exacte : la
+   * borne basse de `validity_period` vaut la date d'ingestion, pas une date
+   * juridique, et ne peut donc jamais être affichée comme telle.
+   */
+  page?: number | null;
   related?: RelatedText[];
 }
 
@@ -123,12 +137,60 @@ export interface TreeNode {
   children: TreeNode[];
 }
 
+/** Un maillon du fil d'une division : « LIVRE 1 », « CHAPITRE 2 — De la capacité ». */
+export interface SectionPathPart {
+  type: string | null;
+  number: string | null;
+  title: string | null;
+}
+
+/** Article servi avec son texte à l'intérieur d'une division. */
+export interface SectionArticle {
+  id: string;
+  number: string;
+  order: number;
+  content: string | null;
+  content_format?: string | null;
+  tables?: ApiTable[];
+  /** Page du PDF source (voir {@link CurrentArticle.page}). */
+  page?: number | null;
+}
+
+/** Division voisine (navigation de lecture). */
+export interface SectionRef {
+  id: string | null;
+  path: SectionPathPart[];
+}
+
+/**
+ * Texte d'une division entière (`?section=`), pour la lecture continue.
+ * `id` vaut `null` quand les articles pendent directement au document (actes
+ * courts sans structure). `truncated` signale que la division dépassait le
+ * plafond de caractères de l'API : les articles restants sont accessibles par
+ * leur page propre.
+ */
+export interface PublicSection {
+  id: string | null;
+  path: SectionPathPart[];
+  articles: SectionArticle[];
+  total_articles: number;
+  truncated: boolean;
+  previous: SectionRef | null;
+  next: SectionRef | null;
+}
+
 export interface PublicDocument {
   document: DocumentMeta;
   articles: ArticleIndexItem[];
   structure?: PublicStructure;
   has_pdf?: boolean;
   current_article: CurrentArticle | null;
+  /**
+   * Absent tant que `?section=` n'est pas demandé — et absent aussi tant que
+   * l'API n'a pas été déployée avec cette évolution. Les pages doivent donc
+   * toujours prévoir le repli, jamais supposer sa présence.
+   */
+  section?: PublicSection | null;
 }
 
 interface Envelope<T> {
@@ -155,17 +217,23 @@ export interface PaginationMeta {
 
 /**
  * Récupère un document publié par son slug. Optionnellement le texte intégral
- * d'un article (par numéro). Renvoie `null` sur 404 (document absent ou non
+ * d'un article (par numéro) et/ou celui d'une division entière (`section` :
+ * `first`, `auto` — celle de l'article demandé — ou un identifiant de nœud).
+ * Renvoie `null` sur 404 (document absent ou non
  * publié) ; lève sur les autres erreurs pour que le rendu renvoie un 5xx
  * (Google réessaiera plutôt que de désindexer la page).
  */
 export async function fetchPublicDocument(
   slug: string,
   articleNumber?: string,
+  section?: 'first' | 'auto' | (string & {}),
 ): Promise<PublicDocument | null> {
   const url = new URL(`${API_BASE}/legal-documents/slug/${encodeURIComponent(slug)}`);
   if (articleNumber) {
     url.searchParams.set('article', articleNumber);
+  }
+  if (section) {
+    url.searchParams.set('section', section);
   }
 
   const res = await fetch(url, { headers: { Accept: 'application/json' } });
@@ -185,6 +253,14 @@ export async function fetchPublicDocument(
   // tous deux dérivés de `current_article.content`.
   if (data.current_article) {
     data.current_article.content = sanitizeLegalText(data.current_article.content);
+  }
+
+  // Même traitement pour la division servie en lecture continue : c'est le
+  // même texte, il ne doit pas être assaini d'un côté et brut de l'autre.
+  if (data.section?.articles) {
+    for (const article of data.section.articles) {
+      article.content = sanitizeLegalText(article.content);
+    }
   }
 
   return data;
@@ -334,6 +410,25 @@ export function buildTree(structure?: PublicStructure): TreeNode[] {
   return pruneEmpty(sortRec(roots));
 }
 
+/**
+ * Articles d'une division ET de toutes ses sous-divisions, dans l'ordre de
+ * lecture (les articles propres d'un nœud précèdent ceux de ses enfants —
+ * c'est l'ordre que l'API produit par parcours en profondeur).
+ *
+ * Sert au sommaire : une division est un point de lecture, elle a donc besoin
+ * d'un premier article (cible du lien) et d'une plage à afficher. Un LIVRE ne
+ * porte souvent aucun article en propre — tout est dans ses chapitres.
+ */
+export function subtreeArticles(node: TreeNode): StructureArticleRef[] {
+  const own = [...node.articles].sort((a, b) => a.order - b.order);
+  // Un nœud « ARTICLE » (feuille orpheline) se porte lui-même.
+  if (node.type === 'ARTICLE' && node.number && own.length === 0) {
+    return [{ number: node.number, order: node.order }];
+  }
+
+  return [...own, ...node.children.flatMap(subtreeArticles)];
+}
+
 /** Compte les nœuds de structure « division » (hors articles), récursivement. */
 export function countStructureDivisions(nodes: TreeNode[]): number {
   let count = 0;
@@ -451,6 +546,82 @@ export async function fetchLibrarySearchPage(
       lastPage: p?.last_page ?? 1,
     },
   };
+}
+
+/**
+ * Recherche plein-texte RESTREINTE à un document (rail « Rechercher dans ce
+ * texte » de la page document).
+ *
+ * Le filtre `document_id` existe déjà côté API — aucune surface web ne s'en
+ * servait. Best-effort : une erreur du moteur renvoie une liste vide plutôt
+ * que de faire tomber une page qui, sans la recherche, reste parfaitement
+ * lisible. Le back exige `q` ≥ 2 caractères : à filtrer côté appelant.
+ */
+export async function fetchDocumentSearch(
+  documentId: string,
+  query: string,
+  perPage = 20,
+): Promise<LibrarySearchPageResult> {
+  const empty: LibrarySearchPageResult = {
+    items: [],
+    meta: { total: 0, perPage, currentPage: 1, lastPage: 1 },
+  };
+
+  if (query.trim().length < 2) return empty;
+
+  const url = new URL(`${API_BASE}/library/search`);
+  url.searchParams.set('q', query.trim());
+  url.searchParams.set('document_id', documentId);
+  url.searchParams.set('sort', 'relevance');
+  url.searchParams.set('per_page', String(perPage));
+
+  try {
+    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!res.ok) return empty;
+
+    const json = (await res.json()) as PaginatedEnvelope<LibrarySearchResult[]>;
+    const p = json.pagination;
+    return {
+      items: json.data.map((result) => ({ ...result, content: sanitizeLegalText(result.content) })),
+      meta: {
+        total: p?.total ?? json.data.length,
+        perPage: p?.per_page ?? perPage,
+        currentPage: p?.current_page ?? 1,
+        lastPage: p?.last_page ?? 1,
+      },
+    };
+  } catch {
+    return empty;
+  }
+}
+
+export interface ReportPayload {
+  documentId?: string;
+  articleId?: string;
+  problemType: string;
+  description?: string;
+}
+
+/**
+ * Signalement public d'une erreur dans un texte (`POST /reports`).
+ *
+ * L'endpoint est public, limité par le quota `reports`, et force côté serveur
+ * `source='report'` + `severity='info'` : un signalement anonyme ne peut donc
+ * jamais bloquer une publication. Appel serveur-à-serveur depuis la route
+ * Astro, qui refait elle-même le contrôle d'origine.
+ */
+export async function submitReport(payload: ReportPayload): Promise<{ ok: boolean; status: number }> {
+  const res = await fetch(`${API_BASE}/reports`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({
+      document_id: payload.documentId,
+      article_id: payload.articleId,
+      type_probleme: payload.problemType,
+      description: payload.description,
+    }),
+  });
+  return { ok: res.ok, status: res.status };
 }
 
 export interface ThemeSummary {

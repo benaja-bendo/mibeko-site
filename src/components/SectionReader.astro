@@ -1,0 +1,103 @@
+---
+/**
+ * Lecture continue : le texte d'une division entière (livre, titre, chapitre,
+ * section), articles à la suite.
+ *
+ * C'est le composant qui fait qu'une page de texte montre du texte. La page
+ * document en affiche la première division ; la page article affiche celle qui
+ * contient l'article demandé.
+ *
+ * **Sur la page article, les articles qui PRÉCÈDENT celui demandé sont repliés.**
+ * Sans cela, quelqu'un qui arrive de Google sur l'article 5 verrait d'abord les
+ * articles 3 et 4 : la page ne répondrait plus à la demande qui l'a ouverte.
+ * Repliés et non supprimés, l'ordre de lecture reste intact et le début du
+ * chapitre est à un clic.
+ *
+ * La mesure reste plafonnée à 68 caractères (charte § 5) par
+ * `SectionArticleBlock`, quelle que soit la largeur de la colonne : c'est le
+ * texte qui se limite, pas la grille.
+ */
+import type { PublicSection } from '../lib/api';
+import { articleLeafLabel } from '../lib/sanitize';
+import { formatSectionPath } from '../lib/legalMetadata';
+import SectionArticleBlock from './SectionArticleBlock.astro';
+
+interface Props {
+  section: PublicSection;
+  slug: string;
+  /** Article mis en avant (page article). Absent sur la page document. */
+  activeNumber?: string;
+  /** PDF d'origine, pour le renvoi « page N du document source ». */
+  pdfUrl?: string | null;
+}
+
+const { section, slug, activeNumber, pdfUrl = null } = Astro.props;
+
+const heading = formatSectionPath(section.path);
+
+const activeIndex = activeNumber === undefined
+  ? -1
+  : section.articles.findIndex((article) => article.number === activeNumber);
+
+const before = activeIndex > 0 ? section.articles.slice(0, activeIndex) : [];
+const flow = activeIndex > 0 ? section.articles.slice(activeIndex) : section.articles;
+
+/**
+ * « Articles 6 à 9 » quand les deux bornes sont des numéros ordinaires, sinon
+ * la forme longue des deux bornes (« Préambule à Article 3 ») : les feuilles
+ * techniques du pipeline — préambule, signature, tableau — n'entrent pas dans
+ * une plage numérique.
+ */
+const plainNumber = (value: string) => /^\d+$/.test(value.trim());
+
+const beforeLabel = before.length === 0
+  ? ''
+  : before.length === 1
+    ? articleLeafLabel(before[0].number)
+    : plainNumber(before[0].number) && plainNumber(before[before.length - 1].number)
+      ? `Articles ${before[0].number.trim()} à ${before[before.length - 1].number.trim()}`
+      : `${articleLeafLabel(before[0].number)} à ${articleLeafLabel(before[before.length - 1].number)}`;
+---
+
+<section
+  aria-label={heading || 'Texte du document'}
+  class="rounded-lg border border-surface-variant bg-surface-container-lowest p-5 sm:p-7 md:p-8"
+>
+  {heading && (
+    <h2 class="mb-6 border-b border-surface-variant pb-3 text-xs font-bold uppercase tracking-[0.08em] text-secondary">
+      {heading}
+    </h2>
+  )}
+
+  {before.length > 0 && (
+    <details class="group mb-7 border-b border-surface-variant pb-7">
+      <summary class="inline-flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-on-surface-variant hover:text-secondary">
+        <svg class="shrink-0 transition-transform group-open:rotate-90" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+        Début de la division ({beforeLabel})
+      </summary>
+      <div class="mt-6">
+        {before.map((article, index) => (
+          <SectionArticleBlock article={article} slug={slug} pdfUrl={pdfUrl} separated={index > 0} />
+        ))}
+      </div>
+    </details>
+  )}
+
+  {flow.map((article, index) => (
+    <SectionArticleBlock
+      article={article}
+      slug={slug}
+      pdfUrl={pdfUrl}
+      active={activeNumber !== undefined && article.number === activeNumber}
+      separated={index > 0}
+    />
+  ))}
+
+  {section.truncated && (
+    <p class="mt-7 border-t border-surface-variant pt-5 text-sm text-on-surface-variant">
+      Cette division compte <span class="font-semibold text-on-surface">{section.total_articles}</span> articles&nbsp;;
+      les {section.articles.length} premiers sont affichés ici pour garder la page légère.
+      Les suivants s’ouvrent depuis le sommaire, chacun sur sa page.
+    </p>
+  )}
+</section>

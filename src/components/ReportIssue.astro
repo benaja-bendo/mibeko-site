@@ -1,0 +1,113 @@
+---
+/**
+ * Signalement d'une erreur dans un texte (charte § 9 b).
+ *
+ * « La partie la plus utile de l'idée initiale : elle transforme un défaut en
+ * contribution et ouvre un canal de curation sur tout le corpus. Elle ne prend
+ * pas la forme d'une phrase dans un encart d'avertissement, mais d'une action
+ * discrète en fin d'article et en fin de document. »
+ *
+ * Repliée par défaut (`<details>`), donc aucune surface de formulaire n'occupe
+ * la page tant que personne ne signale rien. Formulaire POST natif vers
+ * `/api/report`, qui relaie serveur-à-serveur : fonctionne sans JavaScript, et
+ * aucun état utilisateur n'est créé sur le site.
+ */
+interface Props {
+  documentId?: string;
+  articleId?: string;
+  /** Chemin de retour après envoi (le champ n'accepte qu'un chemin interne). */
+  returnTo: string;
+  /** Valeur de `?signalement=` relue par la page appelante. */
+  status?: string | null;
+}
+
+const { documentId, articleId, returnTo, status = null } = Astro.props;
+
+const MESSAGES: Record<string, { text: string; ok: boolean }> = {
+  ok: { text: 'Merci. Nous comparons au Journal officiel et corrigeons.', ok: true },
+  invalid: { text: 'Le signalement n’a pas pu être enregistré : indiquez la nature du problème.', ok: false },
+  throttled: { text: 'Trop de signalements envoyés depuis cette connexion. Réessayez dans quelques minutes.', ok: false },
+  error: { text: 'Le signalement n’a pas pu être transmis. Réessayez plus tard.', ok: false },
+};
+
+const feedback = status ? MESSAGES[status] : undefined;
+
+const PROBLEM_TYPES: Array<{ value: string; label: string }> = [
+  { value: 'texte_errone', label: 'Le texte affiché ne correspond pas au Journal officiel' },
+  { value: 'texte_manquant', label: 'Il manque du texte (article coupé ou absent)' },
+  { value: 'mauvais_numero', label: 'La numérotation ou le découpage est faux' },
+  { value: 'statut_juridique', label: 'Ce texte est abrogé ou modifié' },
+  { value: 'autre', label: 'Autre' },
+];
+---
+
+<section id="signaler" class="mt-10 scroll-mt-24 print:hidden">
+  {feedback && (
+    <p
+      role="status"
+      class:list={[
+        'mb-3 border-l-[3px] px-4 py-3 text-sm',
+        feedback.ok
+          ? 'border-statut-vigueur bg-statut-vigueur-tint text-on-surface'
+          : 'border-error bg-surface-container text-on-surface',
+      ]}
+    >
+      {feedback.text}
+    </p>
+  )}
+
+  <details class="group">
+    <summary class="inline-flex cursor-pointer list-none items-center gap-2 text-sm text-on-surface-variant hover:text-secondary">
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+      Une erreur dans ce texte&nbsp;? <span class="font-semibold text-secondary underline">Signaler</span>
+    </summary>
+
+    <form method="post" action="/api/report" class="mt-4 max-w-xl rounded-lg border border-surface-variant bg-surface-container-lowest p-4 sm:p-5">
+      <input type="hidden" name="return_to" value={returnTo} />
+      {documentId && <input type="hidden" name="document_id" value={documentId} />}
+      {articleId && <input type="hidden" name="article_id" value={articleId} />}
+
+      <fieldset>
+        <legend class="mb-2 text-sm font-semibold text-on-surface">Nature du problème</legend>
+        <div class="flex flex-col gap-1.5">
+          {PROBLEM_TYPES.map((type, index) => (
+            <label class="flex items-start gap-2.5 py-1 text-sm text-on-surface-variant">
+              <input
+                type="radio"
+                name="type_probleme"
+                value={type.value}
+                required={index === 0}
+                class="mt-1 shrink-0 accent-primary"
+              />
+              <span>{type.label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <label class="mt-4 block text-sm font-semibold text-on-surface" for="report-description">
+        Précisions <span class="font-normal text-on-surface-muted">(facultatif)</span>
+      </label>
+      <textarea
+        id="report-description"
+        name="description"
+        rows="3"
+        maxlength="5000"
+        placeholder="Numéro d’article concerné, passage attendu, référence du Journal officiel…"
+        class="mt-1.5 w-full rounded border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm text-on-surface placeholder:text-on-surface-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
+      ></textarea>
+
+      <p class="mt-3 text-xs leading-relaxed text-on-surface-muted">
+        Le signalement est anonyme et n’exige aucun compte. Il ouvre une vérification éditoriale&nbsp;;
+        il ne modifie jamais le texte publié par lui-même.
+      </p>
+
+      <button
+        type="submit"
+        class="mt-4 inline-flex h-10 items-center rounded px-4 text-sm font-semibold text-on-primary bg-primary hover:bg-primary-container transition-colors"
+      >
+        Envoyer le signalement
+      </button>
+    </form>
+  </details>
+</section>

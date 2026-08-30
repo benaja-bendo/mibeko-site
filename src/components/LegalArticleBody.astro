@@ -8,6 +8,11 @@
  * composant ne rend jamais de HTML fourni par la donnée — il reconstruit la
  * table à partir de cellules de texte, seule forme sûre pour du contenu OCR.
  *
+ * La mesure (charte § 5 : 18 px, interlignage 1,75, 68 caractères) est portée
+ * par le SEGMENT DE TEXTE lui-même, pas par le conteneur appelant : posée plus
+ * haut, elle se calcule dans la mauvaise police et à la mauvaise taille, et
+ * elle écraserait les tableaux, qui eux doivent rester larges.
+ *
  * Le texte hors tableau garde la mise en page du PDF source (une ligne du scan
  * = une ligne stockée). La charte (§ 8, « Corps d'article ») demande que ces
  * retours à la ligne soient supprimés à l'affichage : `reflowLegalText` les
@@ -34,7 +39,7 @@ const isNumeric = (cell: string) => /^[\d.,\s]*\d[\d.,\s]*\s*(%|FCFA|XAF)?$/i.te
 ) : (
   segments.map((segment) =>
     segment.kind === 'text' ? (
-      <div class="font-serif text-on-surface text-base sm:text-lg leading-relaxed break-words space-y-4">
+      <div class="font-serif text-on-surface text-base sm:text-lg leading-[1.75] break-words space-y-4 max-w-[68ch]">
         {reflowLegalText(segment.text).map((block) =>
           block.kind === 'paragraph' ? (
             <p>{block.text}</p>

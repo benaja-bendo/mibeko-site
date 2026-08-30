@@ -1,0 +1,52 @@
+---
+/**
+ * Bandeau de statut juridique — composant de signature de la charte (§ 4).
+ *
+ * Trois règles y sont matérialisées, et aucune n'est décorative :
+ *
+ * 1. **Ce n'est pas une puce, c'est un bandeau.** Filet vertical de 3 px dans
+ *    la couleur du statut, fond en teinte, rayon 0. La forme diffère des puces
+ *    de catégorie pour que l'œil ne les confonde jamais (loi 4 : on ne décore
+ *    jamais avec ce qui informe).
+ * 2. **Le statut ne se lit jamais par la couleur seule** (WCAG 1.4.1) : le mot
+ *    est toujours écrit, et suivi d'une phrase en clair.
+ * 3. **Il s'affiche sur toute page qui montre du texte de loi** — page document
+ *    ET page article. Une personne arrivée par Google sur un article isolé doit
+ *    savoir, sans remonter d'un niveau, si le texte s'applique.
+ *
+ * Les couples couleur/teinte sont les jetons `statut-*` de `global.css`, tous
+ * vérifiés ≥ 4,5:1. Ils ne servent à rien d'autre sur le site.
+ */
+import type { DocumentMeta } from '../lib/api';
+import { legalStatusPresentation, type LegalStatusTone } from '../lib/legalMetadata';
+
+interface Props {
+  document: DocumentMeta;
+  /** Marge basse, désactivable quand le bandeau est déjà dans une pile espacée. */
+  class?: string;
+}
+
+const { document, class: className = 'mb-6' } = Astro.props;
+const status = legalStatusPresentation(document);
+
+// Classes littérales par état : Tailwind ne peut pas générer une classe
+// construite par interpolation, et un jeton de statut absent du CSS produit
+// un bandeau sans couleur — donc sans information.
+const TONES: Record<LegalStatusTone, { rule: string; tint: string; ink: string }> = {
+  vigueur: { rule: 'border-statut-vigueur', tint: 'bg-statut-vigueur-tint', ink: 'text-statut-vigueur' },
+  modifie: { rule: 'border-statut-modifie', tint: 'bg-statut-modifie-tint', ink: 'text-statut-modifie' },
+  abroge: { rule: 'border-statut-abroge', tint: 'bg-statut-abroge-tint', ink: 'text-statut-abroge' },
+  inconnu: { rule: 'border-statut-inconnu', tint: 'bg-statut-inconnu-tint', ink: 'text-statut-inconnu' },
+};
+
+const tone = TONES[status.tone];
+---
+
+<section
+  aria-label="Statut juridique du texte"
+  class:list={['border-l-[3px] px-4 py-3 sm:px-5', tone.rule, tone.tint, className]}
+>
+  <p class:list={['text-xs font-semibold uppercase tracking-[0.08em]', tone.ink]}>Statut juridique</p>
+  <p class="mt-1 font-semibold text-on-surface">{status.headline}</p>
+  <p class="mt-1 max-w-[68ch] text-sm leading-relaxed text-on-surface-variant">{status.sentence}</p>
+</section>

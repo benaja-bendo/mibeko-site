@@ -1,0 +1,190 @@
+---
+/**
+ * Outils du texte : consulter, emporter, partager — en un seul bloc.
+ *
+ * Le partage vivait dans un encart séparé (`ShareActions.astro`) posé sous le
+ * texte, à distance des autres actions du document ; il est fusionné ici le
+ * 30/08/2026. Deux groupes nommés — « Ce document » et « Partager » — parce que
+ * télécharger un PDF et envoyer un lien sur WhatsApp ne sont pas le même geste.
+ *
+ * Ce qui est repris tel quel de l'ancien composant, et ne doit pas se perdre :
+ *
+ * — **WhatsApp est un vrai lien**, premier canal de diffusion du pays : il
+ *   fonctionne sans JavaScript. Le message porte le titre puis l'URL sur sa
+ *   propre ligne (les aperçus WhatsApp/Signal se déclenchent mieux ainsi).
+ * — **L'URL partagée est toujours l'URL publique `https://mibeko.fr/textes/…`**,
+ *   déclarée en App Link Android et Universal Link iOS : elle ouvre
+ *   l'application chez qui l'a installée, et le site sinon. Jamais `mibeko://`.
+ * — **Repli `execCommand` pour la copie** : les WebView intégrées (WhatsApp,
+ *   Facebook) exposent souvent une API presse-papiers absente ou refusée. C'est
+ *   exactement là que le partage compte le plus.
+ * — **Ce qui exige JavaScript reste masqué sans lui** plutôt que de mentir sur
+ *   une action qui ne se produirait pas.
+ */
+import { UMAMI_EVENTS } from '../lib/analytics';
+
+interface Props {
+  /** Référence prête à coller : intitulé, article, date, URL. */
+  reference: string;
+  /** URL publique absolue de la page. */
+  url: string;
+  /** Titre lisible, repris dans le message de partage. */
+  title: string;
+  pdfUrl?: string | null;
+  pdfDownloadUrl?: string | null;
+  heading?: string;
+}
+
+const { reference, url, title, pdfUrl = null, pdfDownloadUrl = null, heading = 'Outils du texte' } = Astro.props;
+
+const shareText = `${title}\n${url}`;
+const whatsappHref = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+
+const item =
+  'flex w-full items-center gap-2.5 rounded px-2.5 py-2 text-left text-sm text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-on-surface';
+const groupLabel = 'px-2.5 pb-1 pt-2 text-[10.5px] font-bold uppercase tracking-[0.08em] text-on-surface-muted';
+---
+
+<section
+  aria-label="Outils du texte"
+  class="rounded-lg border border-surface-variant bg-surface-container-lowest print:hidden"
+  data-doc-tools
+  data-share-url={url}
+  data-share-title={title}
+  data-share-text={shareText}
+>
+  <h2 class="border-b border-surface-variant bg-surface-container-low px-3 py-2.5 text-xs font-bold uppercase tracking-[0.08em] text-on-surface-variant">
+    {heading}
+  </h2>
+
+  <div class="p-1.5">
+    <p class={groupLabel}>Ce document</p>
+    <div class="flex flex-col gap-0.5">
+      {pdfDownloadUrl && (
+        <a href={pdfDownloadUrl} class={item} data-umami-event={UMAMI_EVENTS.comprendreSource}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-on-surface-muted" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>
+          Télécharger le PDF d’origine
+        </a>
+      )}
+
+      {pdfUrl && !pdfDownloadUrl && (
+        <a href={pdfUrl} target="_blank" rel="noopener noreferrer" class={item} data-umami-event={UMAMI_EVENTS.comprendreSource}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-on-surface-muted" aria-hidden="true"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg>
+          Ouvrir le PDF d’origine
+        </a>
+      )}
+
+      <button type="button" class:list={[item, 'hidden']} data-tool-print>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-on-surface-muted" aria-hidden="true"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><path d="M6 14h12v8H6z"></path></svg>
+        Imprimer le texte
+      </button>
+
+      <button type="button" class:list={[item, 'hidden']} data-tool-copy data-copy-value={reference}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-on-surface-muted" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+        <span data-copy-label>Copier la référence</span>
+      </button>
+    </div>
+
+    <p class={`${groupLabel} mt-1 border-t border-surface-variant`}>Partager</p>
+    <div class="flex flex-col gap-0.5">
+      <!-- Partage natif : révélé par le script uniquement si l'appareil le gère. -->
+      <button type="button" class:list={[item, 'hidden']} data-share-native>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-on-surface-muted" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line></svg>
+        Partager…
+      </button>
+
+      <a href={whatsappHref} target="_blank" rel="noopener noreferrer" class={item}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="shrink-0 text-on-surface-muted" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884a9.82 9.82 0 0 1 6.987 2.896 9.83 9.83 0 0 1 2.893 6.994c-.003 5.45-4.437 9.885-9.884 9.885M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .104 5.359.101 11.945c0 2.096.549 4.14 1.595 5.945L0 24l6.305-1.654a11.9 11.9 0 0 0 5.683 1.448h.005c6.585 0 11.946-5.359 11.949-11.945a11.9 11.9 0 0 0-3.421-8.4"></path></svg>
+        Envoyer sur WhatsApp
+      </a>
+
+      <button type="button" class:list={[item, 'hidden']} data-tool-copy data-copy-value={url}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-on-surface-muted" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+        <span data-copy-label>Copier le lien</span>
+      </button>
+    </div>
+
+    <p class="px-2.5 pb-1 pt-2.5 text-[11px] leading-snug text-on-surface-muted">
+      Le lien ouvre l’application Mibeko si elle est installée, et cette page sinon.
+    </p>
+    <p class="sr-only" aria-live="polite" data-tools-status></p>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-doc-tools]').forEach((root) => {
+    const status = root.querySelector<HTMLElement>('[data-tools-status]');
+
+    const print = root.querySelector<HTMLButtonElement>('[data-tool-print]');
+    if (print) {
+      print.classList.remove('hidden');
+      print.addEventListener('click', () => window.print());
+    }
+
+    // Repli historique : les WebView intégrées (WhatsApp, Facebook) exposent
+    // souvent une API presse-papiers absente ou refusée. C'est exactement là que
+    // le partage compte le plus, donc on garde le bouton et on bascule sur
+    // `execCommand` plutôt que de le faire disparaître.
+    const legacyCopy = (value: string) => {
+      const field = document.createElement('textarea');
+      field.value = value;
+      field.setAttribute('readonly', '');
+      field.style.position = 'fixed';
+      field.style.opacity = '0';
+      document.body.appendChild(field);
+      field.select();
+      let ok = false;
+      try {
+        ok = document.execCommand('copy');
+      } catch {
+        ok = false;
+      }
+      field.remove();
+      return ok;
+    };
+
+    root.querySelectorAll<HTMLButtonElement>('[data-tool-copy]').forEach((button) => {
+      button.classList.remove('hidden');
+      const label = button.querySelector<HTMLElement>('[data-copy-label]');
+      const initial = label?.textContent ?? '';
+      let timer: number | undefined;
+
+      button.addEventListener('click', async () => {
+        const value = button.dataset.copyValue ?? '';
+        let copied = false;
+        try {
+          await navigator.clipboard.writeText(value);
+          copied = true;
+        } catch {
+          copied = legacyCopy(value);
+        }
+        if (label) label.textContent = copied ? 'Copié' : 'Copie impossible';
+        if (status) status.textContent = copied ? 'Copié dans le presse-papiers.' : 'La copie a échoué.';
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => {
+          if (label) label.textContent = initial;
+        }, 2200);
+      });
+    });
+
+    const native = root.querySelector<HTMLButtonElement>('[data-share-native]');
+    if (native && typeof navigator.share === 'function') {
+      native.classList.remove('hidden');
+      native.addEventListener('click', async () => {
+        try {
+          await navigator.share({
+            title: root.dataset.shareTitle ?? document.title,
+            text: root.dataset.shareText ?? '',
+            url: root.dataset.shareUrl ?? window.location.href,
+          });
+        } catch (error) {
+          // AbortError = la feuille de partage a été fermée : ce n'est pas un
+          // échec, on ne dit rien. Le reste est signalé honnêtement.
+          if ((error as DOMException)?.name !== 'AbortError' && status) {
+            status.textContent = "Le partage n'a pas pu s'ouvrir.";
+          }
+        }
+      });
+    }
+  });
+</script>
