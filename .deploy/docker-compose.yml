@@ -1,8 +1,15 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "3"
+
 services:
   site:
     image: ghcr.io/${GITHUB_REPOSITORY}:latest
     container_name: mibeko-site
     restart: unless-stopped
+    logging: *default-logging
     networks: [proxy]
     environment:
       - HOST=0.0.0.0
