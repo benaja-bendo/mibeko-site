@@ -17,7 +17,7 @@ const isActive = (href: string) =>
 const query = Astro.url.pathname === '/textes' ? (Astro.url.searchParams.get('q') ?? '') : '';
 ---
 
-<header class="sticky top-0 z-50 w-full bg-background/95 border-b border-surface-variant/60">
+<header class="sticky top-0 z-50 w-full bg-background border-b border-surface-variant/60" data-sticky-header>
   <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center gap-4 lg:gap-6">
     <!-- Logo -->
     <a href="/" class="flex items-center gap-2 group shrink-0" aria-label="Mibeko — Accueil">
@@ -119,6 +119,19 @@ const query = Astro.url.pathname === '/textes' ? (Astro.url.searchParams.get('q'
     </div>
   </div>
 </header>
+
+<style>
+  /*
+   * iOS Safari fait « fuir » le contenu déjà défilé dans la zone de
+   * rebond (rubber-band scroll) : un en-tête `position: sticky` sans
+   * calque de composition dédié se voit ré-afficher, en fantôme, le fil
+   * d'Ariane et le titre qui viennent de défiler derrière lui. Le forcer
+   * sur son propre calque GPU élimine ce fantôme (bug WebKit connu).
+   */
+  [data-sticky-header] {
+    transform: translateZ(0);
+  }
+</style>
 
 <script>
   const toggle = document.getElementById('mobile-menu-toggle');
