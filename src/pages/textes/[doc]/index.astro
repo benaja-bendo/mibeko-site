@@ -184,7 +184,7 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
         <div class="grid gap-6 lg:gap-8 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_272px]">
 
           <!-- ─────────── Rail gauche : le sommaire ─────────── -->
-          <aside class="order-2 lg:order-none lg:col-start-1 lg:row-start-1 lg:row-span-3 lg:self-start lg:sticky lg:top-24 print:hidden">
+          <aside class="order-2 lg:order-none min-w-0 lg:col-start-1 lg:row-start-1 lg:row-span-3 lg:self-start lg:sticky lg:top-24 print:hidden">
             <DocumentOutline
               nodes={tree}
               slug={document!.slug}

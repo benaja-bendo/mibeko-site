@@ -184,7 +184,7 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
           <!-- Sommaire : rail sticky (desktop) + accordéon (mobile). Rendu UNE
                seule fois (l'arbre peut être volumineux) ; bascule CSS pure. -->
           <!-- Rail gauche : le sommaire -->
-          <aside class="order-2 lg:order-none lg:col-start-1 lg:row-start-1 lg:row-span-3 lg:self-start lg:sticky lg:top-24 print:hidden">
+          <aside class="order-2 lg:order-none min-w-0 lg:col-start-1 lg:row-start-1 lg:row-span-3 lg:self-start lg:sticky lg:top-24 print:hidden">
             <DocumentOutline
               nodes={tree}
               slug={document!.slug}
