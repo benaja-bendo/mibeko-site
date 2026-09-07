@@ -11,7 +11,7 @@ const dateFmt = (iso?: string | null) =>
   iso ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso)) : null;
 ---
 
-<section class="py-16 md:py-20 bg-surface-container-low border-y border-surface-variant/50">
+<section class="py-16 md:py-20 bg-surface-container-low border-t border-surface-variant/50">
   <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
     <div class="max-w-2xl mb-10">
       <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-2">Le fonds vit</p>
