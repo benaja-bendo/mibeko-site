@@ -1,15 +1,31 @@
 ---
 // Le fonds est le produit : la recherche vit dans l'en-tête comme un champ,
-// pas une icône, et le menu se limite à trois destinations réelles (fonds,
-// guides, application). Méthode et Nouveautés restent accessibles depuis le
-// pied de page et les pages de contenu — ce sont des destinations de second
-// contact, pas des portes d'entrée. Le SaaS pro reste une entrée à part
-// (« Professionnels » → /professionnels).
+// pas une icône. Méthode et Nouveautés restent accessibles depuis le pied de
+// page et les pages de contenu — ce sont des destinations de second contact,
+// pas des portes d'entrée.
+//
+// Le menu nomme ce qu'on peut FAIRE ici, pas ce que Mibeko est : lire le
+// fonds, comprendre une situation, poser une question, emporter le tout.
+// « Assistant » y est entré parce que la page existait sans être atteignable
+// autrement qu'en déroulant l'accueil jusqu'au sixième écran — c'est pourtant
+// ce que les visiteurs viennent chercher.
+//
+// « Professionnels » a quitté la barre : il y était la SEULE porte vers un
+// compte, si bien qu'un étudiant ou un citoyen — le public réellement mesuré —
+// devait se déclarer professionnel pour créer le sien. La page reste un
+// second contact légitime (pied de page, page Application, pages d'article) ;
+// la porte d'entrée, elle, est désormais le compte, ouvert à tous et gratuit.
+import { UMAMI_EVENTS } from '../lib/analytics';
+
 const navLinks = [
   { href: '/textes', label: 'Le fonds' },
   { href: '/guides', label: 'Guides' },
+  { href: '/assistant', label: 'Assistant' },
   { href: '/application', label: "L'application" },
 ];
+
+const REGISTER_URL = 'https://app.mibeko.fr/auth/register';
+const LOGIN_URL = 'https://app.mibeko.fr/auth/login';
 
 const pathname = Astro.url.pathname;
 const isActive = (href: string) =>
@@ -26,7 +42,7 @@ const query = Astro.url.pathname === '/textes' ? (Astro.url.searchParams.get('q'
     </a>
 
     <!-- Recherche (Desktop) : champ persistant, composant le plus important du site -->
-    <form action="/textes" method="get" role="search" class="hidden lg:block flex-1 max-w-[260px]">
+    <form action="/textes" method="get" role="search" class="hidden lg:block flex-1 lg:max-w-[190px] xl:max-w-[260px]">
       <label for="header-search" class="sr-only">Rechercher un texte, un article ou un thème</label>
       <div class="flex items-center h-10 bg-surface-container-lowest border border-outline-variant/60 rounded-lg focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all pl-3">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-on-surface-variant/60 shrink-0"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line></svg>
@@ -53,18 +69,21 @@ const query = Astro.url.pathname === '/textes' ? (Astro.url.searchParams.get('q'
       ))}
     </nav>
 
-    <!-- Séparateur + entrée pro (Desktop) -->
-    <div class="hidden lg:flex items-center gap-6 shrink-0">
+    <!-- Séparateur + entrée compte (Desktop) -->
+    <div class="hidden lg:flex items-center gap-4 shrink-0">
       <span class="h-6 w-px bg-surface-variant" aria-hidden="true"></span>
       <a
-        href="/professionnels"
-        aria-current={pathname.startsWith('/professionnels') ? 'page' : undefined}
-        class:list={[
-          'text-sm font-medium transition-colors whitespace-nowrap',
-          pathname.startsWith('/professionnels') ? 'text-primary' : 'text-on-surface-variant hover:text-primary',
-        ]}
+        href={LOGIN_URL}
+        class="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap"
       >
-        Professionnels
+        Se connecter
+      </a>
+      <a
+        href={REGISTER_URL}
+        data-umami-event={UMAMI_EVENTS.compteCreer}
+        class="inline-flex items-center h-10 px-4 bg-primary text-on-primary text-sm font-semibold rounded-lg hover:bg-primary-container transition-colors whitespace-nowrap"
+      >
+        Créer un compte
       </a>
     </div>
 
@@ -112,10 +131,25 @@ const query = Astro.url.pathname === '/textes' ? (Astro.url.searchParams.get('q'
             {link.label}
           </a>
         ))}
-        <a href="/professionnels" class="py-3 text-base font-medium transition-colors text-on-surface-variant hover:text-primary">
-          Professionnels
+        <a href="/professionnels" class="py-3 text-base font-medium border-b border-surface-variant/40 transition-colors text-on-surface-variant hover:text-primary">
+          Cabinets et juristes
         </a>
       </nav>
+      <div class="flex flex-col gap-2 pt-4">
+        <a
+          href={REGISTER_URL}
+          data-umami-event={UMAMI_EVENTS.compteCreer}
+          class="inline-flex items-center justify-center h-11 px-5 bg-primary text-on-primary text-sm font-semibold rounded-lg hover:bg-primary-container transition-colors"
+        >
+          Créer un compte gratuit
+        </a>
+        <a
+          href={LOGIN_URL}
+          class="inline-flex items-center justify-center h-11 px-5 border border-outline-variant/70 text-on-surface text-sm font-semibold rounded-lg hover:bg-surface-container transition-colors"
+        >
+          Se connecter
+        </a>
+      </div>
     </div>
   </div>
 </header>
