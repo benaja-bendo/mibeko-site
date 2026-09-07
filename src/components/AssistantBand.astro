@@ -14,6 +14,16 @@
  * La séparation est volontaire — une animation ne prouve rien, un lien qui
  * répond 200 prouve quelque chose (loi 1). Et l'offre vient en dernier, une fois
  * les deux administrées (loi 2).
+ *
+ * 07/09/2026 : l'invitation ne renvoie plus « à l'espace professionnel ».
+ * L'Assistant est ouvert à tout compte et différencié par quota, jamais par
+ * rôle (mibeko-dashboard#76, mibeko-front#7 puis #24) — le dire autrement
+ * vendait un mur qui n'existe plus et écartait le public réellement mesuré,
+ * étudiants et citoyens. Le mot « gratuit » est porté par le bouton parce
+ * qu'un visiteur ne devine pas qu'un compte ne se paie pas ; le nombre de
+ * questions n'y figure pas, il se règle en base par palier
+ * (`AiQuotaTierSetting`) et un chiffre en dur ici mentirait au prochain
+ * réglage.
  */
 import AssistantConversation from './AssistantConversation.astro';
 import { featuredDemo } from '../data/assistant-demos';
@@ -54,8 +64,8 @@ import { UMAMI_EVENTS } from '../lib/analytics';
 
 				<div class="border-t border-surface-variant pt-6">
 					<p class="text-sm text-on-surface-variant mb-4">
-						Lire les textes reste libre et sans compte. Pour poser vos propres questions, l'Assistant
-						vous attend dans l'application mobile et dans l'espace professionnel.
+						Lire les textes reste libre et sans compte. Pour poser vos propres questions, créez un
+						compte gratuit : l'Assistant s'ouvre à tous, sur le web comme dans l'application mobile.
 					</p>
 					<div class="flex flex-col sm:flex-row gap-3">
 						<a
@@ -65,7 +75,7 @@ import { UMAMI_EVENTS } from '../lib/analytics';
 							data-umami-event={UMAMI_EVENTS.compteCreer}
 							class="inline-flex items-center justify-center h-11 px-6 bg-primary text-on-primary text-sm font-semibold rounded-lg hover:bg-primary-container transition-colors"
 						>
-							Créer un compte
+							Créer un compte gratuit
 						</a>
 						<a
 							href="/assistant"

@@ -35,14 +35,27 @@ const guides = (await getCollection('guides', ({ data }) => !data.draft))
 		{/* Chaque bloc porte un contenu réel — un texte, une nouveauté, un guide —
 		    au lieu d'une affirmation sur Mibeko. Voir docs/produit/positionnement-site-app.md
 		    et la charte visuelle v2 (§ 6, densité) pour la doctrine. */}
+		{/* ORDRE DE LA PAGE (07/09/2026) — il répond à « qu'est-ce que je peux
+		    faire ici ? », dans l'ordre où un visiteur se pose la question :
+		    chercher (hero), lire (le fonds), demander (l'Assistant), vérifier
+		    (l'engagement), comprendre (les guides), constater que le fonds vit
+		    (les nouveautés), l'emporter (l'app).
+
+		    L'Assistant est remonté du sixième au troisième rang : c'est le seul
+		    bloc qui montre ce que le produit fait de plus que consulter un PDF,
+		    et le seul qui mène à un compte — il était servi après un bloc de
+		    nouveautés qui affiche des arrêtés de 1959, ce qui faisait dépendre
+		    la découverte du produit de la patience du visiteur. Les nouveautés
+		    descendent d'autant : elles prouvent que le fonds vit, ce qui est un
+		    argument de retour, pas d'accueil. */}
 		<HomeHero stats={fundStats} />
 		{fundStats && fundStats.essentialDocuments.length > 0 && (
 			<EssentialTexts documents={fundStats.essentialDocuments} />
 		)}
-		{recentDocuments.length > 0 && <RecentAdditions documents={recentDocuments} />}
-		{guides.length > 0 && <GuidesBand guides={guides} />}
-		<WhyMibeko />
 		<AssistantBand />
+		<WhyMibeko />
+		{guides.length > 0 && <GuidesBand guides={guides} />}
+		{recentDocuments.length > 0 && <RecentAdditions documents={recentDocuments} />}
 		<AppExit />
 	</main>
 	<Footer />
