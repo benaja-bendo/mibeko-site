@@ -5,14 +5,17 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import CTASection from '../../components/CTASection.astro';
+import EssentialTexts from '../../components/EssentialTexts.astro';
 import {
   fetchPublishedDocuments,
   fetchDocumentTypes,
   fetchLibrarySearchPage,
+  fetchLibraryFundStats,
   documentPath,
   articlePath,
   type DocumentMeta,
   type DocumentTypeOption,
+  type EssentialDocument,
   type LibrarySearchResult,
   type PaginationMeta,
 } from '../../lib/api';
@@ -55,11 +58,31 @@ const sortOptions = hasQuery && view === 'articles' ? searchSorts : catalogSorts
 const defaultSort = hasQuery && view === 'articles' ? 'relevance' : '-date_publication';
 const sort = params.get('sort') ?? defaultSort;
 
+const hasFilters = Boolean(type || scope || fromRaw || toRaw || (sort && sort !== defaultSort));
+
+// Porte d'entrée vs catalogue (mibeko-site#26) : ouverte sans paramètre, la
+// page triait déjà par date décroissante (#11) — ce qui, appliqué à un fonds
+// dominé en volume par des arrêtés administratifs, ouvre sur une série
+// d'intitulés quasi identiques plutôt que sur la Constitution ou les codes.
+// Les deux tris ont leur usage ; ils ne se remplacent pas l'un l'autre. Sur
+// cet état nu, les textes fondamentaux (même sélection que l'accueil)
+// passent devant ; le catalogue trié par date reste juste en dessous.
+const showFundamentals = !hasQuery && !hasFilters;
+let essentialDocuments: EssentialDocument[] = [];
+
 let documents: DocumentMeta[] = [];
 let articleResults: LibrarySearchResult[] = [];
 let meta: PaginationMeta = { total: 0, perPage: 24, currentPage: 1, lastPage: 1 };
 let types: DocumentTypeOption[] = [];
 let loadError = false;
+
+if (showFundamentals) {
+  try {
+    essentialDocuments = (await fetchLibraryFundStats()).essentialDocuments;
+  } catch {
+    // Repli silencieux : le catalogue trié par date en dessous reste utilisable.
+  }
+}
 
 try {
   const typeList = await fetchDocumentTypes();
@@ -89,8 +112,6 @@ try {
 } catch {
   loadError = true;
 }
-
-const hasFilters = Boolean(type || scope || fromRaw || toRaw || (sort && sort !== defaultSort));
 
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: currentYear - 1958 }, (_, i) => currentYear - i);
@@ -147,8 +168,20 @@ const pageTitle = hasQuery ? `« ${q} » — Le fonds juridique` : 'Textes offic
       </div>
     </section>
 
-    <section class="pb-20">
+    {showFundamentals && essentialDocuments.length > 0 && (
+      <EssentialTexts
+        documents={essentialDocuments}
+        moreHref="#tout-le-fonds"
+        moreLabel="Voir tout le fonds, trié par date"
+      />
+    )}
+
+    <section id="tout-le-fonds" class="pb-20 scroll-mt-20">
       <div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+
+        {showFundamentals && essentialDocuments.length > 0 && (
+          <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-3">Tout le fonds, trié par date</p>
+        )}
 
         <!-- Recherche + filtres : un seul formulaire GET, fonctionne sans JS -->
         <form method="get" class="mb-6 p-4 sm:p-5 rounded-lg border border-surface-variant bg-surface-container-low">
