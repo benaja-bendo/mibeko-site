@@ -301,15 +301,19 @@ const answerWords = (demo.answer ?? '').split(/(?<=\s)/).filter((word) => word !
 				typed.textContent = question.slice(0, i);
 				// Une frappe humaine n'est pas régulière : la petite variation
 				// suffit à retirer l'impression de défilement mécanique.
-				await clock.wait(i % 7 === 0 ? 62 : 30);
+				await clock.wait(i % 7 === 0 ? 45 : 20);
 			}
-			await clock.wait(420);
+			await clock.wait(220);
 		};
 
 		const loop = async () => {
 			for (;;) {
+				// Amorce et frappe raccourcies (mibeko-site#28) : à 420 ms + une
+				// frappe à 30/62 ms par caractère, le téléphone restait ~3 s sans
+				// rien de lisible avant que la bulle n'atteigne le fil — près du
+				// quart des 12 s de la boucle.
 				reset();
-				await clock.wait(420);
+				await clock.wait(220);
 
 				await typeQuestion();
 

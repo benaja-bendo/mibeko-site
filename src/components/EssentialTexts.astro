@@ -15,10 +15,13 @@ const { documents } = Astro.props;
       <h2 class="text-2xl md:text-3xl font-bold text-on-surface tracking-tight">Entrer dans le fonds</h2>
     </div>
 
-    <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+    {/* 2 colonnes dès le mobile (mibeko-site#28) : en 1 colonne, les 6 cartes
+        empilées en pleine largeur repoussaient l'Assistant, plus bas sur la
+        page, à ~4 défilements du haut. */}
+    <ul class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
       {documents.map((doc) => (
         <li>
-          <a href={documentPath(doc.slug)} class="group flex flex-col h-full p-5 rounded-lg border border-surface-variant bg-surface-container-lowest hover:border-primary/40 transition-colors">
+          <a href={documentPath(doc.slug)} class="group flex flex-col h-full p-3 sm:p-5 rounded-lg border border-surface-variant bg-surface-container-lowest hover:border-primary/40 transition-colors">
             <span class="inline-flex items-center self-start px-2.5 py-1 rounded bg-surface-container text-on-surface-variant text-xs font-semibold uppercase tracking-wider mb-3 group-hover:bg-secondary/10 group-hover:text-secondary transition-colors">
               {publicTypeLabel(doc.type_code, doc.type_name)}
             </span>
