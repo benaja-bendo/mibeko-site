@@ -16,6 +16,7 @@
 // second contact légitime (pied de page, page Application, pages d'article) ;
 // la porte d'entrée, elle, est désormais le compte, ouvert à tous et gratuit.
 import { UMAMI_EVENTS } from '../lib/analytics';
+import { registerUrl, loginUrl } from '../lib/appLinks';
 
 const navLinks = [
   { href: '/textes', label: 'Le fonds' },
@@ -24,8 +25,8 @@ const navLinks = [
   { href: '/application', label: "L'application" },
 ];
 
-const REGISTER_URL = 'https://app.mibeko.fr/auth/register';
-const LOGIN_URL = 'https://app.mibeko.fr/auth/login';
+const REGISTER_URL = registerUrl();
+const LOGIN_URL = loginUrl();
 
 const pathname = Astro.url.pathname;
 const isActive = (href: string) =>

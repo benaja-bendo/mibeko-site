@@ -1,5 +1,6 @@
 ---
 import NewsletterForm from './NewsletterForm.astro';
+import { registerUrl } from '../lib/appLinks';
 
 const year = new Date().getFullYear();
 // Rendu seulement si le canal existe (userAction : le créer et fournir l'URL).
@@ -25,7 +26,7 @@ const columns = [
       { href: '/methode', label: 'Notre méthode' },
       { href: '/application', label: "L'application" },
       { href: '/professionnels', label: 'Professionnels' },
-      { href: 'https://app.mibeko.fr/auth/register', label: 'Créer un compte', external: true },
+      { href: registerUrl(), label: 'Créer un compte', external: true },
       { href: '/contact', label: 'Contact' },
     ],
   },

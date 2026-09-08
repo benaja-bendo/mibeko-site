@@ -6,6 +6,7 @@ import AssistantDemo from '../components/AssistantDemo.astro';
 import Footer from '../components/Footer.astro';
 import { assistantDemos } from '../data/assistant-demos';
 import { UMAMI_EVENTS } from '../lib/analytics';
+import { registerUrl } from '../lib/appLinks';
 
 const playStoreUrl = 'https://play.google.com/store/apps/details?id=cg.mibeko.app';
 const appStoreUrl = 'https://apps.apple.com/app/id6768865781';
@@ -109,7 +110,7 @@ const guarantees = [
 				</p>
 				<div class="flex flex-col sm:flex-row gap-3 justify-center">
 					<a
-						href="https://app.mibeko.fr/auth/register"
+						href={registerUrl('assistant')}
 						target="_blank"
 						rel="noopener noreferrer"
 						data-umami-event={UMAMI_EVENTS.compteCreer}
