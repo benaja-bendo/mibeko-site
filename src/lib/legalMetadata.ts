@@ -44,6 +44,27 @@ export function isUnclassifiedType(code?: string | null): boolean {
   return !code || code === 'TEXTE';
 }
 
+// Ordre de significativité pour une vitrine (« Nouveautés du fonds »,
+// mibeko-site#32) : un texte fondamental d'abord, un arrêté administratif
+// en dernier — jamais utilisé pour trier le catalogue lui-même (#11), qui
+// reste purement chronologique.
+const SIGNIFICANCE_RANK: Record<string, number> = {
+  CONST: 0,
+  CODE: 1,
+  ACTE_UNIFORME: 2,
+  LOI: 3,
+  ORD: 4,
+  JO: 5,
+  ARR: 6,
+  DEC: 7,
+};
+
+/** Rang de significativité d'un type ; les types non classés ou inconnus vont en dernier. */
+export function typeSignificanceRank(code?: string | null): number {
+  if (code && code in SIGNIFICANCE_RANK) return SIGNIFICANCE_RANK[code];
+  return Object.keys(SIGNIFICANCE_RANK).length;
+}
+
 export function publicTypeLabel(code?: string | null, apiLabel?: string | null): string {
   if (code && TYPE_LABELS[code]) return TYPE_LABELS[code];
 

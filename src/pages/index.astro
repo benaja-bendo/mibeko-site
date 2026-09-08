@@ -12,17 +12,37 @@ import AssistantBand from '../components/AssistantBand.astro';
 import AppExit from '../components/AppExit.astro';
 import Footer from '../components/Footer.astro';
 import { fetchLibraryFundStats, fetchPublishedDocuments, type LibraryFundStats, type DocumentMeta } from '../lib/api';
+import { typeSignificanceRank } from '../lib/legalMetadata';
 import { getCollection } from 'astro:content';
 
 // Deux appels réseau indépendants, en parallèle : chacun dégrade seul (une
 // panne de l'un n'empêche pas l'autre bloc de s'afficher).
 const [fundStatsResult, recentResult] = await Promise.allSettled([
 	fetchLibraryFundStats(),
-	fetchPublishedDocuments({ sort: '-created_at', perPage: 5 }),
+	// 20 candidats plutôt que 5 : le bloc affiche les plus SIGNIFICATIFS parmi
+	// les derniers intégrés, pas les 5 derniers par ordre d'insertion — sur un
+	// fonds dominé en volume par des arrêtés administratifs, ces deux idées
+	// divergent presque toujours (mibeko-site#32).
+	fetchPublishedDocuments({ sort: '-created_at', perPage: 20 }),
 ]);
 
 const fundStats: LibraryFundStats | null = fundStatsResult.status === 'fulfilled' ? fundStatsResult.value : null;
-const recentDocuments: DocumentMeta[] = recentResult.status === 'fulfilled' ? recentResult.value.items : [];
+const recentCandidates: DocumentMeta[] = recentResult.status === 'fulfilled' ? recentResult.value.items : [];
+
+// Un texte fondamental d'abord, un arrêté en dernier ; à rang égal, l'ordre
+// d'intégration (le tri de l'API) est conservé — `Array#sort` est stable.
+const recentSignificant = [...recentCandidates]
+	.sort((a, b) => typeSignificanceRank(a.type_code) - typeSignificanceRank(b.type_code))
+	.slice(0, 5);
+
+// « Le fonds vit » ne tient pas si la dernière intégration remonte à plus de
+// deux semaines : le bloc s'efface plutôt que de contredire son propre titre.
+const FRESHNESS_THRESHOLD_DAYS = 14;
+const mostRecentCreatedAt = recentCandidates[0]?.created_at ? new Date(recentCandidates[0].created_at).getTime() : null;
+const isFreshEnough = mostRecentCreatedAt !== null
+	&& (Date.now() - mostRecentCreatedAt) / 86_400_000 <= FRESHNESS_THRESHOLD_DAYS;
+
+const recentDocuments: DocumentMeta[] = isFreshEnough ? recentSignificant : [];
 
 const guides = (await getCollection('guides', ({ data }) => !data.draft))
 	.sort((a, b) => b.data.publishedDate.getTime() - a.data.publishedDate.getTime())
