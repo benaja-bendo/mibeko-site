@@ -13,6 +13,14 @@ export default defineConfig({
   // Le mode middleware laisse `server.mjs` appliquer compression et politique
   // de cache à toute la réponse, actifs statiques compris.
   adapter: node({ mode: 'middleware' }),
+  // Forme canonique sans barre oblique finale, déjà celle de tous les liens
+  // internes et du sitemap (mibeko-site#33). Le format de sortie reste
+  // `directory` (`page/index.html`) : `build.format: 'file'` casse les pages
+  // de redirection générées par `redirects` ci-dessous (fichier vide au
+  // build) ; le 301 restant vient d'`express.static`, corrigé dans
+  // `server.mjs` par une réécriture d'URL interne plutôt qu'un changement de
+  // format.
+  trailingSlash: 'never',
   // Renommage du fonds juridique `/codes` → `/textes` (le répertoire mêle
   // codes, lois, arrêtés, décrets). Redirections 301 pour préserver le SEO et
   // les liens existants. Le `[...rest]` couvre les pages document et article.
