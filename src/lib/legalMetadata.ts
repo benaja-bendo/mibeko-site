@@ -5,10 +5,11 @@ import type { DocumentMeta, SectionPathPart } from './api';
 // `publicTypeLabel`/`documentChapeauSubject` plutôt que de se faire passer
 // pour une classification réelle.
 const TYPE_LABELS: Record<string, string> = {
-  ACTE_UNIFORME: 'Acte uniforme',
   ARR: 'Arrêté',
+  AU: 'Acte uniforme',
   CODE: 'Code',
   CONST: 'Constitution',
+  CONV: 'Convention collective',
   DEC: 'Décret',
   JO: 'Journal officiel',
   LOI: 'Loi',
@@ -16,10 +17,11 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 const CHAPEAU_SUBJECTS: Record<string, string> = {
-  ACTE_UNIFORME: 'Cet acte uniforme',
   ARR: 'Cet arrêté',
+  AU: 'Cet acte uniforme',
   CODE: 'Ce code',
   CONST: 'Cette constitution',
+  CONV: 'Cette convention collective',
   DEC: 'Ce décret',
   JO: 'Ce Journal officiel',
   LOI: 'Cette loi',
@@ -51,7 +53,7 @@ export function isUnclassifiedType(code?: string | null): boolean {
 const SIGNIFICANCE_RANK: Record<string, number> = {
   CONST: 0,
   CODE: 1,
-  ACTE_UNIFORME: 2,
+  AU: 2,
   LOI: 3,
   ORD: 4,
   JO: 5,
