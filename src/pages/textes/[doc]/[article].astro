@@ -147,6 +147,7 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
 <Layout
   title={notFound ? 'Texte introuvable — Mibeko' : `${pageTitle} — Mibeko`}
   description={description}
+  image={document ? `/og/${document.slug}/${articleParam}.png` : undefined}
   ogType="article"
   canonical={selfUrl || undefined}
   jsonLd={jsonLd}
