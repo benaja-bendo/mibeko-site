@@ -16,6 +16,7 @@ import { fetchPublicDocument, buildTree, documentPath, articlePath, pdfProxyUrl 
 import { articleLeafLabel, documentLineLabel } from '../../../lib/sanitize';
 import { articlePlainText } from '../../../lib/tables';
 import { documentTypeLabel, formatFrenchDate, formatSectionPath, isUnclassifiedType } from '../../../lib/legalMetadata';
+import { UMAMI_EVENTS } from '../../../lib/analytics';
 
 const ARTICLE_PREFIX = 'article-';
 const { doc, article: articleParam } = Astro.params;
@@ -301,20 +302,26 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
             )}
 
             <!-- Pour aller plus loin : orientation citoyenne (guides / démarches
-                 / app), avec une mention pro discrète en pied. -->
+                 / app), avec une mention pro discrète en pied. Le lecteur d'un
+                 article est la personne la plus engagée du site (mibeko-site#24) :
+                 la carte Assistant part de ce qu'il vient de lire, pas du produit. -->
             <aside class="mt-12 rounded-lg border border-surface-variant bg-surface-container-low p-6 sm:p-8 print:hidden">
-              <h2 class="text-xl font-bold text-on-surface mb-2">Pour aller plus loin</h2>
+              <h2 class="text-xl font-bold text-on-surface mb-2">Une question sur cet article ?</h2>
               <p class="text-on-surface-variant font-serif mb-8 max-w-xl">
-                Ce texte s'applique à des situations concrètes. Comprenez-le en français clair et passez à l'action.
+                Ce texte s'applique à des situations concrètes. Comprenez-le en français clair, ou demandez à l'Assistant.
               </p>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <a href="/guides" class="flex flex-col gap-2 p-5 rounded-lg border border-surface-variant bg-surface-container-lowest hover:border-primary/40 transition-all group">
                   <span class="text-primary font-bold">Guides et démarches</span>
                   <span class="text-sm text-on-surface-variant">Les grands principes en français simple, et le pas-à-pas pour agir.</span>
                 </a>
-                <a href="/assistant" class="flex flex-col gap-2 p-5 rounded-lg border border-surface-variant bg-surface-container-lowest hover:border-primary/40 transition-all group">
+                <a
+                  href="/assistant"
+                  data-umami-event={UMAMI_EVENTS.travaillerAssistantTexte}
+                  class="flex flex-col gap-2 p-5 rounded-lg border border-surface-variant bg-surface-container-lowest hover:border-primary/40 transition-all group"
+                >
                   <span class="text-primary font-bold">Demander à l'Assistant Mibeko</span>
-                  <span class="text-sm text-on-surface-variant">Il répond à partir des textes publiés et cite l'article exact. Voyez comment.</span>
+                  <span class="text-sm text-on-surface-variant">Il cherche dans les textes publiés et cite l'article exact. Compte gratuit, sans engagement.</span>
                 </a>
               </div>
               <p class="mt-6 text-sm text-on-surface-variant">

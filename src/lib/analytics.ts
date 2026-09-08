@@ -12,4 +12,7 @@ export const UMAMI_EVENTS = {
   travaillerOffre: 'travailler_offre',
   travaillerDemo: 'travailler_demo',
   compteCreer: 'compte_creer',
+  // Clic vers l'Assistant depuis une page de texte lue (article ou document) :
+  // le point d'intention maximale du site, jusqu'ici sans mesure (mibeko-site#24).
+  travaillerAssistantTexte: 'travailler_assistant_texte',
 } as const;
