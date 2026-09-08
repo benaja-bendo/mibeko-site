@@ -7,6 +7,15 @@ import Footer from '../../components/Footer.astro';
 import ThemeIcon from '../../components/ThemeIcon.astro';
 import { fetchThemes, themePath, type ThemeSummary } from '../../lib/api';
 
+// En dessous de ce seuil, le compteur dit la faiblesse du rattachement plutôt
+// que la couverture du droit (« Famille & personnes — 1 texte » : le Code de
+// la famille compte 835 articles, il est publié, il n'est simplement pas
+// encore rattaché à ce thème). Le thème reste affiché — il continue de mener
+// vers ce qu'il a — mais le chiffre décourageant s'efface (mibeko-site#31).
+// Rattacher davantage de textes reste le seul correctif qui tienne la
+// promesse ; celui-ci n'en est qu'un pansement, assumé comme tel.
+const THEME_COUNT_DISPLAY_THRESHOLD = 3;
+
 let themes: ThemeSummary[] = [];
 let failed = false;
 try {
@@ -50,7 +59,7 @@ try {
                 </span>
                 <div>
                   <h2 class="text-base font-bold text-on-surface group-hover:text-primary transition-colors leading-snug mb-1">{theme.name}</h2>
-                  {theme.documents_count > 0 && <span class="text-xs text-on-surface-muted">{theme.documents_count} texte{theme.documents_count > 1 ? 's' : ''}</span>}
+                  {theme.documents_count >= THEME_COUNT_DISPLAY_THRESHOLD && <span class="text-xs text-on-surface-muted">{theme.documents_count} textes</span>}
                 </div>
               </a>
             ))}
