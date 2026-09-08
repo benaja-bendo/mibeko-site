@@ -150,6 +150,7 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
   description={notFound
     ? "Ce texte n'est pas disponible dans le fonds Mibeko."
     : `${intituleUneLigne} — ${typeName} de la République du Congo. ${articles.length} articles, consultables librement sur Mibeko.`}
+  image={document ? `/og/${document.slug}.png` : undefined}
   ogType="article"
   canonical={selfUrl || undefined}
   jsonLd={jsonLd}
