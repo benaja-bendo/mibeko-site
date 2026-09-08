@@ -23,6 +23,7 @@ import {
 } from '../../../lib/api';
 import { articleLeafLabel, documentLineLabel } from '../../../lib/sanitize';
 import { documentTypeLabel, formatFrenchDate, formatSectionPath, isUnclassifiedType } from '../../../lib/legalMetadata';
+import { UMAMI_EVENTS } from '../../../lib/analytics';
 
 const { doc } = Astro.params;
 
@@ -343,16 +344,27 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
 
             <!-- Pour aller plus loin : SOUS le texte. Aucun appel à l'action ne
                  s'interpose entre une personne et le texte qu'elle est venue lire
-                 (charte, loi 2). -->
+                 (charte, loi 2). Assistant ajouté en second lien (mibeko-site#24) :
+                 même point d'intention maximale qu'un article, sans suite jusque-là. -->
             <section aria-label="Pour aller plus loin" class="mt-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-lg border border-surface-variant bg-surface-container-low p-5 sm:p-6 print:hidden">
               <div>
                 <h2 class="text-base font-bold text-on-surface mb-1">Pour aller plus loin</h2>
-                <p class="text-sm text-on-surface-variant">Comprenez ce texte en français clair, ou suivez la démarche correspondante pas à pas.</p>
+                <p class="text-sm text-on-surface-variant">Comprenez ce texte en français clair, ou demandez à l'Assistant (compte gratuit).</p>
               </div>
-              <a href="/guides" class="shrink-0 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline whitespace-nowrap">
-                Guides et démarches
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-              </a>
+              <div class="flex flex-col sm:items-end gap-2 shrink-0">
+                <a href="/guides" class="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline whitespace-nowrap">
+                  Guides et démarches
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                </a>
+                <a
+                  href="/assistant"
+                  data-umami-event={UMAMI_EVENTS.travaillerAssistantTexte}
+                  class="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline whitespace-nowrap"
+                >
+                  Demander à l'Assistant Mibeko
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                </a>
+              </div>
             </section>
           </div>
 
