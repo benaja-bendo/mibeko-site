@@ -4,8 +4,11 @@ import { publicTypeLabel } from '../lib/legalMetadata';
 
 interface Props {
   documents: EssentialDocument[];
+  /** Surchargé sur /textes (mibeko-site#26) : la page elle-même, pas un renvoi vers elle. */
+  moreHref?: string;
+  moreLabel?: string;
 }
-const { documents } = Astro.props;
+const { documents, moreHref = '/textes', moreLabel = 'Parcourir tout le fonds' } = Astro.props;
 ---
 
 <section class="py-16 md:py-20 bg-background border-t border-surface-variant/50">
@@ -32,8 +35,8 @@ const { documents } = Astro.props;
     </ul>
 
     <div class="mt-8">
-      <a href="/textes" class="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
-        Parcourir tout le fonds
+      <a href={moreHref} class="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
+        {moreLabel}
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
       </a>
     </div>
