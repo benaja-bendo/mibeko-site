@@ -68,6 +68,17 @@ export interface DocumentMeta {
   type?: { code: string; name: string } | null;
   official_journal?: { id: string; title: string; publication_date: string | null } | null;
   themes?: DocumentTheme[];
+  /**
+   * Provenance externe (mibeko-front#32) : renseignée seulement quand
+   * l'ingestion l'a capturée (le pipeline standard le fait ; un import manuel
+   * ne le fait pas toujours). Chaque champ vaut `null`, jamais absent, quand
+   * l'information est inconnue — à écrire comme telle, jamais deviner.
+   */
+  provenance?: {
+    source_url: string | null;
+    fetched_at: string | null;
+    autorite: string | null;
+  };
 }
 
 export interface ArticleIndexItem {

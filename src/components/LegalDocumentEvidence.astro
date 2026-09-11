@@ -31,6 +31,15 @@ const { document, pdfUrl = null, heading = 'Provenance' } = Astro.props;
 const journal = document.official_journal;
 const journalDate = formatFrenchDate(journal?.publication_date);
 const consolidatedOn = formatFrenchDate(document.consolidation_as_of);
+
+// Un texte non-FLUX (Acte uniforme OHADA, code consolidé) n'a pas de Journal
+// officiel congolais rattaché — sa source, quand l'ingestion l'a capturée,
+// vit dans `provenance` (mibeko-front#32). On ne montre la réserve « non
+// confirmée » que si ni l'un ni l'autre n'est disponible : pas de silence sur
+// ce qu'on ne sait pas, mais pas de doublon quand le JO suffit déjà.
+const sourceUrl = document.provenance?.source_url ?? null;
+const sourceFetchedOn = formatFrenchDate(document.provenance?.fetched_at ?? null);
+const sourceAutorite = document.provenance?.autorite ?? null;
 ---
 
 <section aria-label="Provenance du texte" class="rounded-lg border border-surface-variant bg-surface-container-lowest">
@@ -48,11 +57,26 @@ const consolidatedOn = formatFrenchDate(document.consolidation_as_of);
             {journal.title}{journalDate ? ` — ${journalDate}` : ''}
           </p>
         </>
+      ) : sourceUrl ? (
+        <>
+          <p class="mt-0.5 font-semibold text-on-surface">{sourceAutorite ?? 'Source externe'}</p>
+          <p class="mt-0.5 text-sm leading-relaxed text-on-surface-variant">
+            <a
+              href={sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-secondary hover:underline break-all"
+            >{sourceUrl}</a>
+          </p>
+          <p class="mt-1 text-xs leading-relaxed text-on-surface-muted">
+            Lien externe, hors du contrôle de Mibeko{sourceFetchedOn ? ` — récupéré le ${sourceFetchedOn}` : ''}.
+          </p>
+        </>
       ) : (
         <>
-          <p class="mt-0.5 font-semibold text-on-surface">Non reliée</p>
+          <p class="mt-0.5 font-semibold text-on-surface">Non confirmée</p>
           <p class="mt-0.5 text-sm leading-relaxed text-on-surface-variant">
-            La référence au <em>Journal officiel</em> n’est pas renseignée sur ce texte.
+            La source officielle de ce texte n’est pas documentée dans le fonds Mibeko.
           </p>
         </>
       )}
