@@ -82,7 +82,11 @@ const websiteJsonLd = {
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<link rel="icon" type="image/svg+xml" href="/logo.svg" />
+		{/* URL versionnée pour remplacer les anciennes icônes mises en cache. */}
+		<link rel="icon" type="image/x-icon" href="/favicon.ico?v=mibeko-20260911" sizes="16x16 32x32 48x48" />
+		<link rel="icon" type="image/png" href="/mibeko-icon-48.png" sizes="48x48" />
+		<link rel="icon" type="image/svg+xml" href="/logo.svg?v=mibeko-20260911" sizes="any" />
+		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=mibeko-20260911" />
 		<meta name="generator" content={Astro.generator} />
 		<link rel="canonical" href={canonical} />
 		{noindex && <meta name="robots" content="noindex, follow" />}
