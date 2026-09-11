@@ -25,6 +25,19 @@ services:
       - "traefik.http.routers.mibeko-site.tls.certresolver=myresolver"
       - "traefik.http.routers.mibeko-site.priority=1"
 
+      # Le DNS du .cg pointe déjà vers ce VPS. Le routeur HTTPS déclenche
+      # le certificat des deux noms avant de rediriger vers le domaine canonique.
+      # Le point d'entrée web de Traefik assure déjà HTTP → HTTPS.
+      - "traefik.http.routers.mibeko-site-cg.rule=Host(`mibeko.cg`) || Host(`www.mibeko.cg`)"
+      - "traefik.http.routers.mibeko-site-cg.entrypoints=websecure"
+      - "traefik.http.routers.mibeko-site-cg.tls.certresolver=myresolver"
+      - "traefik.http.routers.mibeko-site-cg.service=mibeko-site"
+      - "traefik.http.routers.mibeko-site-cg.middlewares=mibeko-site-cg-canonical"
+      - "traefik.http.middlewares.mibeko-site-cg-canonical.redirectregex.regex=^https?://(?:www[.])?mibeko[.]cg(?::[0-9]+)?/(.*)"
+      # $$ protège la capture de l'interpolation Docker Compose.
+      - "traefik.http.middlewares.mibeko-site-cg-canonical.redirectregex.replacement=https://mibeko.fr/$${1}"
+      - "traefik.http.middlewares.mibeko-site-cg-canonical.redirectregex.permanent=true"
+
       # Serveur SSR Astro (adapter @astrojs/node) — écoute sur 4321.
       - "traefik.http.services.mibeko-site.loadbalancer.server.port=4321"
 
