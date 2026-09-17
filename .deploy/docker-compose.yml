@@ -41,6 +41,9 @@ services:
       # Serveur SSR Astro (adapter @astrojs/node) — écoute sur 4321.
       - "traefik.http.services.mibeko-site.loadbalancer.server.port=4321"
 
+      - "dev.dozzle.group=mibeko"
+      - "dev.dozzle.icon=astro"
+
 networks:
   proxy:
     external: true
