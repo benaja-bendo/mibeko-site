@@ -13,6 +13,70 @@ const runtimeApiUrl = (globalThis as unknown as { process?: { env?: Record<strin
   .process?.env?.MIBEKO_API_URL;
 const API_BASE = (runtimeApiUrl ?? import.meta.env.MIBEKO_API_URL ?? 'https://api.mibeko.fr/api/v1').replace(/\/$/, '');
 
+/**
+ * Budgets d'attente par nature d'appel, en millisecondes (mibeko-site#48).
+ *
+ * Sans budget, undici attend les en-têtes jusqu'à 300 s : une API qui ralentit
+ * immobilise chaque requête visiteur pendant cinq minutes sur un processus Node
+ * unique, et le site entier devient injoignable au lieu de dégrader. Ces
+ * valeurs sont des plafonds de survie, pas des objectifs : un appel qui les
+ * approche est déjà un incident (TTFB de recherche mesuré à 5 535 ms le
+ * 25/08/2026 sur le scoring trigram — d'où un budget de recherche au-dessus).
+ */
+export const API_TIMEOUTS = {
+  /** Lecture d'un texte ou d'un article : l'utilisateur attend la page. */
+  read: 8_000,
+  /** Recherche et autocomplétion : l'échec est acceptable, la page reste lisible sans. */
+  search: 6_000,
+  /** Blocs annexes (compteurs, thèmes, types) : masqués s'ils tardent, le reste est rendu. */
+  aside: 4_000,
+  /** Écritures relayées (signalement, contact, newsletter) : l'API valide et persiste. */
+  write: 10_000,
+  /** Sitemap : un crawler patiente, et l'API agrège tout le fonds publié. */
+  sitemap: 30_000,
+} as const;
+
+/**
+ * L'API n'a pas répondu de façon exploitable (délai dépassé, réseau, 5xx).
+ * Distincte d'un 404, qui est une réponse : les pages du fonds la traduisent
+ * en 503 + `Retry-After` pour que Google réessaie au lieu de désindexer.
+ */
+export class ApiUnavailableError extends Error {
+  constructor(
+    message: string,
+    readonly timedOut: boolean,
+    options?: { cause?: unknown },
+  ) {
+    super(message, options);
+    this.name = 'ApiUnavailableError';
+  }
+}
+
+/**
+ * `fetch()` borné dans le temps. Point de passage unique de tous les appels du
+ * client : aucun appel ne part sans budget, et chaque expiration laisse une
+ * ligne dans la sortie du conteneur (Dozzle) — une panne silencieuse n'existe
+ * pas. L'abandon détruit la connexion côté undici : la requête n'occupe plus
+ * rien une fois le délai passé.
+ */
+async function apiFetch(
+  input: URL | string,
+  init: RequestInit & { timeout: number; label: string },
+): Promise<Response> {
+  const { timeout, label, ...rest } = init;
+  try {
+    return await fetch(input, { ...rest, signal: AbortSignal.timeout(timeout) });
+  } catch (error) {
+    const timedOut = error instanceof Error && error.name === 'TimeoutError';
+    console.error(
+      timedOut
+        ? `[api] délai de ${timeout} ms dépassé : ${label}`
+        : `[api] échec réseau : ${label} — ${error instanceof Error ? error.message : String(error)}`,
+    );
+    throw new ApiUnavailableError(`API injoignable : ${label}`, timedOut, { cause: error });
+  }
+}
+
 export interface DocumentTheme {
   id: string;
   name: string;
@@ -231,8 +295,9 @@ export interface PaginationMeta {
  * d'un article (par numéro) et/ou celui d'une division entière (`section` :
  * `first`, `auto` — celle de l'article demandé — ou un identifiant de nœud).
  * Renvoie `null` sur 404 (document absent ou non
- * publié) ; lève sur les autres erreurs pour que le rendu renvoie un 5xx
- * (Google réessaiera plutôt que de désindexer la page).
+ * publié) ; lève `ApiUnavailableError` sur toute autre défaillance (délai,
+ * réseau, 5xx) pour que la page réponde 503 + `Retry-After` — Google réessaie
+ * au lieu de désindexer.
  */
 export async function fetchPublicDocument(
   slug: string,
@@ -247,16 +312,26 @@ export async function fetchPublicDocument(
     url.searchParams.set('section', section);
   }
 
-  const res = await fetch(url, { headers: { Accept: 'application/json' } });
+  const label = `document « ${slug} »`;
+  const res = await apiFetch(url, { headers: { Accept: 'application/json' }, timeout: API_TIMEOUTS.read, label });
 
   if (res.status === 404) {
     return null;
   }
   if (!res.ok) {
-    throw new Error(`API ${res.status} sur le document « ${slug} »`);
+    console.error(`[api] réponse ${res.status} : ${label}`);
+    throw new ApiUnavailableError(`API ${res.status} sur le ${label}`, false);
   }
 
-  const json = (await res.json()) as Envelope<PublicDocument>;
+  // Le budget couvre aussi la lecture du corps : un abandon en cours de
+  // transfert lève ici, avec le même sens qu'un délai dépassé sur les en-têtes.
+  let json: Envelope<PublicDocument>;
+  try {
+    json = (await res.json()) as Envelope<PublicDocument>;
+  } catch (error) {
+    console.error(`[api] corps illisible : ${label} — ${error instanceof Error ? error.message : String(error)}`);
+    throw new ApiUnavailableError(`Corps illisible : ${label}`, error instanceof Error && error.name === 'TimeoutError', { cause: error });
+  }
   const data = json.data;
 
   // Assainit le texte de l'article (artefacts LaTeX/OCR de l'ingestion) à la
@@ -323,7 +398,7 @@ export async function fetchPublishedDocuments(filters: DocumentListFilters = {})
   url.searchParams.set('per_page', String(perPage));
   url.searchParams.set('page', String(page));
 
-  const res = await fetch(url, { headers: { Accept: 'application/json' } });
+  const res = await apiFetch(url, { headers: { Accept: 'application/json' }, timeout: API_TIMEOUTS.read, label: 'catalogue' });
   if (!res.ok) {
     throw new Error(`API ${res.status} sur le catalogue`);
   }
@@ -354,7 +429,7 @@ export interface DocumentTypeOption {
  */
 export async function fetchDocumentTypes(): Promise<DocumentTypeOption[]> {
   try {
-    const res = await fetch(`${API_BASE}/document-types`, { headers: { Accept: 'application/json' } });
+    const res = await apiFetch(`${API_BASE}/document-types`, { headers: { Accept: 'application/json' }, timeout: API_TIMEOUTS.aside, label: 'types de texte' });
     if (!res.ok) return [];
     const json = (await res.json()) as Envelope<Array<{ code: string; nom?: string; name?: string }>>;
     return json.data
@@ -461,7 +536,7 @@ export interface SitemapEntry {
  * `sitemap.xml`. Une seule requête côté API (mise en cache serveur).
  */
 export async function fetchSitemap(): Promise<SitemapEntry[]> {
-  const res = await fetch(`${API_BASE}/sitemap`, { headers: { Accept: 'application/json' } });
+  const res = await apiFetch(`${API_BASE}/sitemap`, { headers: { Accept: 'application/json' }, timeout: API_TIMEOUTS.sitemap, label: 'sitemap' });
   if (!res.ok) {
     throw new Error(`API ${res.status} sur le sitemap`);
   }
@@ -495,7 +570,7 @@ export async function fetchLibrarySearch(query: string, perPage = 20): Promise<L
   url.searchParams.set('q', query);
   url.searchParams.set('per_page', String(perPage));
 
-  const res = await fetch(url, { headers: { Accept: 'application/json' } });
+  const res = await apiFetch(url, { headers: { Accept: 'application/json' }, timeout: API_TIMEOUTS.search, label: 'autocomplétion' });
   if (!res.ok) {
     throw new Error(`API ${res.status} sur la recherche`);
   }
@@ -541,7 +616,7 @@ export async function fetchLibrarySearchPage(
   url.searchParams.set('per_page', String(perPage));
   url.searchParams.set('page', String(page));
 
-  const res = await fetch(url, { headers: { Accept: 'application/json' } });
+  const res = await apiFetch(url, { headers: { Accept: 'application/json' }, timeout: API_TIMEOUTS.search, label: 'recherche dans le fonds' });
   if (!res.ok) {
     throw new Error(`API ${res.status} sur la recherche`);
   }
@@ -587,7 +662,7 @@ export async function fetchDocumentSearch(
   url.searchParams.set('per_page', String(perPage));
 
   try {
-    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    const res = await apiFetch(url, { headers: { Accept: 'application/json' }, timeout: API_TIMEOUTS.search, label: 'recherche dans un texte' });
     if (!res.ok) return empty;
 
     const json = (await res.json()) as PaginatedEnvelope<LibrarySearchResult[]>;
@@ -622,8 +697,10 @@ export interface ReportPayload {
  * Astro, qui refait elle-même le contrôle d'origine.
  */
 export async function submitReport(payload: ReportPayload): Promise<{ ok: boolean; status: number }> {
-  const res = await fetch(`${API_BASE}/reports`, {
+  const res = await apiFetch(`${API_BASE}/reports`, {
     method: 'POST',
+    timeout: API_TIMEOUTS.write,
+    label: 'signalement',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({
       document_id: payload.documentId,
@@ -668,7 +745,7 @@ export interface LibraryFundStats {
  * produites par l'API et ne doivent jamais être recopiées en dur dans le site.
  */
 export async function fetchLibraryFundStats(): Promise<LibraryFundStats> {
-  const res = await fetch(`${API_BASE}/library/home`, { headers: { Accept: 'application/json' } });
+  const res = await apiFetch(`${API_BASE}/library/home`, { headers: { Accept: 'application/json' }, timeout: API_TIMEOUTS.aside, label: 'compteurs du fonds' });
   if (!res.ok) {
     throw new Error(`API ${res.status} sur les statistiques du fonds`);
   }
@@ -705,7 +782,7 @@ export interface ThemeDetail {
 
 /** Thèmes de vie (taxonomie éditoriale) + nombre de textes publiés rattachés. */
 export async function fetchThemes(): Promise<ThemeSummary[]> {
-  const res = await fetch(`${API_BASE}/library/themes`, { headers: { Accept: 'application/json' } });
+  const res = await apiFetch(`${API_BASE}/library/themes`, { headers: { Accept: 'application/json' }, timeout: API_TIMEOUTS.aside, label: 'thèmes' });
   if (!res.ok) {
     throw new Error(`API ${res.status} sur les thèmes`);
   }
@@ -717,7 +794,11 @@ export async function fetchThemes(): Promise<ThemeSummary[]> {
 
 /** Textes publiés rattachés à un thème (parcours par situation). */
 export async function fetchThemeDocuments(slug: string): Promise<ThemeDetail | null> {
-  const res = await fetch(`${API_BASE}/library/themes/${encodeURIComponent(slug)}`, { headers: { Accept: 'application/json' } });
+  const res = await apiFetch(`${API_BASE}/library/themes/${encodeURIComponent(slug)}`, {
+    headers: { Accept: 'application/json' },
+    timeout: API_TIMEOUTS.read,
+    label: `thème « ${slug} »`,
+  });
   if (res.status === 404) {
     return null;
   }
@@ -745,8 +826,10 @@ export interface ContactPayload {
 
 /** Relaie un message de contact à l'API (appel serveur-à-serveur, pas de CORS). */
 export async function submitContact(payload: ContactPayload): Promise<{ ok: boolean; status: number }> {
-  const res = await fetch(`${API_BASE}/contact`, {
+  const res = await apiFetch(`${API_BASE}/contact`, {
     method: 'POST',
+    timeout: API_TIMEOUTS.write,
+    label: 'contact',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify(payload),
   });
@@ -767,8 +850,10 @@ export interface NewsletterPayload {
 export async function submitNewsletter(
   payload: NewsletterPayload,
 ): Promise<{ ok: boolean; status: number }> {
-  const res = await fetch(`${API_BASE}/newsletter-subscriptions`, {
+  const res = await apiFetch(`${API_BASE}/newsletter-subscriptions`, {
     method: 'POST',
+    timeout: API_TIMEOUTS.write,
+    label: 'newsletter',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify(payload),
   });

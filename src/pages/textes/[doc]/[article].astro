@@ -12,7 +12,7 @@ import ReportIssue from '../../../components/ReportIssue.astro';
 import OpenInAppBanner from '../../../components/OpenInAppBanner.astro';
 import LegalArticleBody from '../../../components/LegalArticleBody.astro';
 import LegalDocumentEvidence from '../../../components/LegalDocumentEvidence.astro';
-import { fetchPublicDocument, buildTree, documentPath, articlePath, pdfProxyUrl } from '../../../lib/api';
+import { fetchPublicDocument, buildTree, documentPath, articlePath, pdfProxyUrl, ApiUnavailableError } from '../../../lib/api';
 import { articleLeafLabel, documentLineLabel } from '../../../lib/sanitize';
 import { articlePlainText } from '../../../lib/tables';
 import { documentTypeLabel, formatFrenchDate, formatSectionPath, isUnclassifiedType } from '../../../lib/legalMetadata';
@@ -24,19 +24,33 @@ const { doc, article: articleParam } = Astro.params;
 let payload = null;
 let invalid = !doc || !articleParam || !articleParam.startsWith(ARTICLE_PREFIX);
 let numero = '';
+let unavailable = false;
 
 if (!invalid) {
   numero = decodeURIComponent(articleParam!.slice(ARTICLE_PREFIX.length));
   // `section=auto` : la division qui CONTIENT cet article, pour la lecture
   // continue. Un seul aller-retour, et l'URL de l'article ne bouge pas — elle
   // reste canonique, déclarée en App Link et présente au sitemap.
-  payload = await fetchPublicDocument(doc!, numero, 'auto');
+  try {
+    payload = await fetchPublicDocument(doc!, numero, 'auto');
+  } catch (error) {
+    // API injoignable (mibeko-site#48) : 503 + Retry-After, jamais un 404 —
+    // Google réessaie au lieu de désindexer l'article.
+    if (!(error instanceof ApiUnavailableError)) throw error;
+    unavailable = true;
+  }
 }
 
-const notFound = invalid || !payload || !payload.current_article;
+const notFound = !unavailable && (invalid || !payload || !payload.current_article);
+const empty = notFound || unavailable;
 
 if (notFound) {
   Astro.response.status = 404;
+}
+if (unavailable) {
+  Astro.response.status = 503;
+  Astro.response.headers.set('Retry-After', '120');
+  Astro.response.headers.set('Cache-Control', 'no-store');
 }
 
 const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
@@ -145,7 +159,7 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
 ---
 
 <Layout
-  title={notFound ? 'Texte introuvable — Mibeko' : `${pageTitle} — Mibeko`}
+  title={unavailable ? 'Texte momentanément indisponible — Mibeko' : notFound ? 'Texte introuvable — Mibeko' : `${pageTitle} — Mibeko`}
   description={description}
   image={document ? `/og/${document.slug}/${articleParam}.png` : undefined}
   ogType="article"
@@ -155,15 +169,19 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
 >
   <Header />
   <main id="main" class="flex-grow bg-background">
-    {notFound ? (
+    {empty ? (
       <section class="max-w-[700px] mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
-        <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-4">Erreur 404</p>
-        <h1 class="text-3xl md:text-4xl font-bold text-on-surface mb-6">Ce texte est introuvable</h1>
+        <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-4">{unavailable ? 'Erreur 503' : 'Erreur 404'}</p>
+        <h1 class="text-3xl md:text-4xl font-bold text-on-surface mb-6">
+          {unavailable ? 'Ce texte est momentanément indisponible' : 'Ce texte est introuvable'}
+        </h1>
         <p class="text-on-surface-variant font-serif mb-8">
-          L'article ou le texte que vous cherchez n'existe pas, ou n'est pas encore publié dans le fonds Mibeko.
+          {unavailable
+            ? "Le fonds juridique ne répond pas pour l'instant. Le texte existe toujours : réessayez dans quelques minutes."
+            : "L'article ou le texte que vous cherchez n'existe pas, ou n'est pas encore publié dans le fonds Mibeko."}
         </p>
-        <a href="/textes" class="inline-flex items-center h-11 px-6 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">
-          Parcourir le fonds juridique
+        <a href={unavailable ? Astro.url.pathname : '/textes'} class="inline-flex items-center h-11 px-6 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">
+          {unavailable ? 'Réessayer' : 'Parcourir le fonds juridique'}
         </a>
       </section>
     ) : (
@@ -348,7 +366,7 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
     )}
   </main>
   <Footer />
-  {!notFound && (
+  {!empty && (
     <OpenInAppBanner
       path={selfPath}
       label={`${articleLabel} — ${intituleParent}`}
