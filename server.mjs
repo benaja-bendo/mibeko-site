@@ -9,6 +9,21 @@ const host = process.env.HOST ?? '0.0.0.0';
 const port = Number(process.env.PORT ?? 4321);
 const clientDir = path.resolve('dist/client');
 
+// Sonde de vie pour le `healthcheck` Docker (mibeko-site#50). Elle dit « le
+// processus Node répond », rien de plus : ni Astro, ni l'API Laravel — une
+// API en panne ne doit pas faire retirer le site du routage Traefik, il sait
+// dégrader (mibeko-site#48). Posée avant tout autre middleware pour ne
+// mesurer que la boucle d'événements. `noindex` et `no-store` : ce n'est pas
+// une page, et elle est absente du sitemap (liste codée en dur). Le préfixe
+// `_` la tient hors du routage Astro, où il désigne un fichier non public.
+app.get('/_sante', (_req, res) => {
+  res.set({
+    'Cache-Control': 'no-store',
+    'X-Robots-Tag': 'noindex, nofollow',
+  });
+  res.json({ status: 'ok', uptime: Math.round(process.uptime()) });
+});
+
 // Compresse les réponses textuelles suffisamment grandes. Le middleware gère
 // Accept-Encoding, Vary, HEAD et les réponses qui portent déjà un encodage.
 app.use(compression({ threshold: 1024 }));
