@@ -256,6 +256,15 @@ export interface PublicSection {
 
 export interface PublicDocument {
   document: DocumentMeta;
+  /**
+   * Slug canonique du document. Diffère du slug demandé quand l'URL appelée
+   * est un ancien slug (filet d'alias, mibeko-dashboard#155) : la page doit
+   * alors répondre 301 vers le canonique, jamais rendre sous l'ancienne URL.
+   * Absent tant que l'API n'est pas déployée avec cette évolution — et alors
+   * un ancien slug est un 404, il n'y a rien à rediriger : `canonicalSlug()`
+   * se replie sur `document.slug`, toujours canonique.
+   */
+  canonical_slug?: string;
   articles: ArticleIndexItem[];
   structure?: PublicStructure;
   has_pdf?: boolean;
@@ -858,6 +867,11 @@ export async function submitNewsletter(
     body: JSON.stringify(payload),
   });
   return { ok: res.ok, status: res.status };
+}
+
+/** Slug canonique d'un document servi par `fetchPublicDocument()`. */
+export function canonicalSlug(payload: PublicDocument): string {
+  return payload.canonical_slug ?? payload.document.slug;
 }
 
 /** Construit le chemin canonique d'un document. */

@@ -12,7 +12,15 @@ import ReportIssue from '../../../components/ReportIssue.astro';
 import OpenInAppBanner from '../../../components/OpenInAppBanner.astro';
 import LegalArticleBody from '../../../components/LegalArticleBody.astro';
 import LegalDocumentEvidence from '../../../components/LegalDocumentEvidence.astro';
-import { fetchPublicDocument, buildTree, documentPath, articlePath, pdfProxyUrl, ApiUnavailableError } from '../../../lib/api';
+import {
+  fetchPublicDocument,
+  buildTree,
+  canonicalSlug,
+  documentPath,
+  articlePath,
+  pdfProxyUrl,
+  ApiUnavailableError,
+} from '../../../lib/api';
 import { articleLeafLabel, documentLineLabel } from '../../../lib/sanitize';
 import { articlePlainText } from '../../../lib/tables';
 import { documentTypeLabel, formatFrenchDate, formatSectionPath, isUnclassifiedType } from '../../../lib/legalMetadata';
@@ -51,6 +59,15 @@ if (unavailable) {
   Astro.response.status = 503;
   Astro.response.headers.set('Retry-After', '120');
   Astro.response.headers.set('Cache-Control', 'no-store');
+}
+
+// Ancien slug du document (filet d'alias, mibeko-dashboard#155) : 301 vers
+// l'article sous le slug canonique, avant tout rendu, requête conservée. Seulement
+// quand la page aurait rendu — un article inconnu reste un 404, même sous un
+// ancien slug : rediriger vers une adresse qui répondra 404 n'aiderait personne.
+// Ni quand l'API est injoignable (`payload` nul) : c'est la page 503.
+if (!empty && canonicalSlug(payload!) !== doc) {
+  return Astro.redirect(`${articlePath(canonicalSlug(payload!), numero)}${Astro.url.search}`, 301);
 }
 
 const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
