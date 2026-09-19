@@ -11,6 +11,24 @@ services:
     restart: unless-stopped
     logging: *default-logging
     networks: [proxy]
+    # Sans plafond, une montée mémoire de Node laisserait l'OOM killer de
+    # l'hôte choisir sa victime parmi Postgres, MinIO, MinerU ou Laravel
+    # (mibeko-site#50) — même raisonnement que sur le worker de queue du
+    # dashboard. Un seul processus Node + rendu d'images OG (resvg) tient
+    # largement dans 512 Mo ; à revoir si `node:cluster` (mibeko-site#49)
+    # multiplie les processus.
+    mem_limit: 512m
+    # Sonde de vie (`/_sante`, servie par server.mjs sans toucher à l'API) :
+    # Traefik ne route plus vers un conteneur `unhealthy`, la panne cesse
+    # d'être silencieuse. Docker ne redémarre pas de lui-même un conteneur
+    # vivant mais figé — seule la sortie du processus déclenche `restart`.
+    # busybox `wget` : `curl` n'existe pas dans node:alpine.
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:4321/_sante"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     environment:
       - HOST=0.0.0.0
       - PORT=4321
