@@ -17,6 +17,7 @@ import {
   fetchDocumentSearch,
   buildTree,
   countStructureDivisions,
+  canonicalSlug,
   documentPath,
   articlePath,
   pdfProxyUrl,
@@ -39,6 +40,15 @@ const notFound = !payload;
 
 if (notFound) {
   Astro.response.status = 404;
+}
+
+// Ancien slug (filet d'alias, mibeko-dashboard#155) : 301 vers le canonique
+// AVANT tout rendu, en gardant la requête (`?q=`, `?signalement=`). Servir la
+// page sous l'ancienne URL laisserait deux adresses indexées pour le même
+// texte. Un slug inconnu n'arrive pas ici : `payload` est nul, c'est le 404
+// ci-dessus.
+if (payload && canonicalSlug(payload) !== doc) {
+  return Astro.redirect(`${documentPath(canonicalSlug(payload))}${Astro.url.search}`, 301);
 }
 
 const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
