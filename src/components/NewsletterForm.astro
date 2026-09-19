@@ -23,8 +23,12 @@ interface Props {
 const { source = 'site', variant = 'light', title, description, compact = false } = Astro.props;
 const onPrimary = variant === 'onPrimary';
 
-// Identifiant unique pour lier plusieurs instances (home + footer) sans collision.
-const uid = `nl-${Math.random().toString(36).slice(2, 8)}`;
+// Identifiant pour lier plusieurs instances (footer + actualités) sans
+// collision. Dérivé de `source`, jamais tiré au sort : un rendu doit être
+// identique d'une requête à l'autre pour que l'ETag des pages du fonds
+// (mibeko-site#46) coïncide et permette le 304 — un id aléatoire changeait
+// tout le HTML à chaque rendu.
+const uid = `nl-${source.replace(/[^a-z0-9-]/gi, '-')}`;
 ---
 
 <form
