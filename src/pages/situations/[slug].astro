@@ -10,14 +10,23 @@ import { publicTypeLabel } from '../../lib/legalMetadata';
 
 const { slug } = Astro.params;
 let data: ThemeDetail | null = null;
+// Une API injoignable n'est pas un thème absent : 503 + Retry-After
+// (mibeko-site#48), sinon Google prend la panne pour une disparition et
+// désindexe la page.
+let unavailable = false;
 try {
   data = slug ? await fetchThemeDocuments(slug) : null;
 } catch {
-  data = null;
+  unavailable = true;
 }
-const notFound = !data;
+const notFound = !unavailable && !data;
 if (notFound) {
   Astro.response.status = 404;
+}
+if (unavailable) {
+  Astro.response.status = 503;
+  Astro.response.headers.set('Retry-After', '120');
+  Astro.response.headers.set('Cache-Control', 'no-store');
 }
 
 const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
@@ -42,18 +51,25 @@ const jsonLd = breadcrumbLd ? [breadcrumbLd as Record<string, unknown>] : [];
 ---
 
 <Layout
-  title={notFound ? 'Thème introuvable — Mibeko' : `${theme!.name} — Le droit par situation — Mibeko`}
-  description={notFound ? 'Ce thème est introuvable.' : (theme!.description ?? `Les textes du droit congolais sur le thème « ${theme!.name} ».`)}
+  title={unavailable ? 'Thème momentanément indisponible — Mibeko' : notFound ? 'Thème introuvable — Mibeko' : `${theme!.name} — Le droit par situation — Mibeko`}
+  description={notFound || unavailable ? 'Ce thème est introuvable.' : (theme!.description ?? `Les textes du droit congolais sur le thème « ${theme!.name} ».`)}
   canonical={canonical}
   jsonLd={jsonLd}
 >
   <Header />
   <main id="main" class="flex-grow bg-background">
-    {notFound ? (
+    {notFound || unavailable ? (
       <section class="max-w-[700px] mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
-        <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-4">Erreur 404</p>
-        <h1 class="text-3xl md:text-4xl font-bold text-on-surface mb-6">Ce thème est introuvable</h1>
-        <a href="/textes" class="inline-flex items-center h-11 px-6 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">Parcourir le fonds</a>
+        <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-4">{unavailable ? 'Erreur 503' : 'Erreur 404'}</p>
+        <h1 class="text-3xl md:text-4xl font-bold text-on-surface mb-6">
+          {unavailable ? 'Ce thème est momentanément indisponible' : 'Ce thème est introuvable'}
+        </h1>
+        {unavailable && (
+          <p class="text-on-surface-variant font-serif mb-8">Le fonds juridique ne répond pas pour l'instant : réessayez dans quelques minutes.</p>
+        )}
+        <a href={unavailable ? Astro.url.pathname : '/textes'} class="inline-flex items-center h-11 px-6 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">
+          {unavailable ? 'Réessayer' : 'Parcourir le fonds'}
+        </a>
       </section>
     ) : (
       <div class="max-w-[860px] mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">

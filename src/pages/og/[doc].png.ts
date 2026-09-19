@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { fetchPublicDocument } from '../../lib/api';
+import { fetchPublicDocument, ApiUnavailableError } from '../../lib/api';
 import { documentLineLabel } from '../../lib/sanitize';
 import { documentTypeLabel, isUnclassifiedType } from '../../lib/legalMetadata';
 import { renderOgImage, ogSourceFromScope } from '../../lib/ogImage';
@@ -11,7 +11,14 @@ export const GET: APIRoute = async ({ params }) => {
   const { doc } = params;
   if (!doc) return new Response(null, { status: 404 });
 
-  const payload = await fetchPublicDocument(doc);
+  let payload;
+  try {
+    payload = await fetchPublicDocument(doc);
+  } catch (error) {
+    // API injoignable (mibeko-site#48) : 503, le partage retentera plus tard.
+    if (!(error instanceof ApiUnavailableError)) throw error;
+    return new Response(null, { status: 503, headers: { 'Retry-After': '120' } });
+  }
   const document = payload?.document;
   if (!document) return new Response(null, { status: 404 });
 

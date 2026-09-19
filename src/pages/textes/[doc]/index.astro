@@ -21,6 +21,7 @@ import {
   documentPath,
   articlePath,
   pdfProxyUrl,
+  ApiUnavailableError,
 } from '../../../lib/api';
 import { articleLeafLabel, documentLineLabel } from '../../../lib/sanitize';
 import { documentTypeLabel, formatFrenchDate, formatSectionPath, isUnclassifiedType } from '../../../lib/legalMetadata';
@@ -35,11 +36,27 @@ const rawQuery = (Astro.url.searchParams.get('q') ?? '').trim();
 const query = rawQuery.length >= 2 ? rawQuery : '';
 const reportStatus = Astro.url.searchParams.get('signalement');
 
-const payload = doc ? await fetchPublicDocument(doc, undefined, query ? undefined : 'first') : null;
-const notFound = !payload;
+// API injoignable (délai dépassé, réseau, 5xx — mibeko-site#48) : page
+// d'attente explicite en 503 + Retry-After, jamais un 404 ni un 500 muet.
+// Pour Google, 503 est temporaire : il réessaie au lieu de désindexer.
+let payload = null;
+let unavailable = false;
+try {
+  payload = doc ? await fetchPublicDocument(doc, undefined, query ? undefined : 'first') : null;
+} catch (error) {
+  if (!(error instanceof ApiUnavailableError)) throw error;
+  unavailable = true;
+}
+const notFound = !unavailable && !payload;
+const empty = notFound || unavailable;
 
 if (notFound) {
   Astro.response.status = 404;
+}
+if (unavailable) {
+  Astro.response.status = 503;
+  Astro.response.headers.set('Retry-After', '120');
+  Astro.response.headers.set('Cache-Control', 'no-store');
 }
 
 // Ancien slug (filet d'alias, mibeko-dashboard#155) : 301 vers le canonique
@@ -157,8 +174,8 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
 ---
 
 <Layout
-  title={notFound ? 'Texte introuvable — Mibeko' : `${intituleUneLigne} — Mibeko`}
-  description={notFound
+  title={unavailable ? 'Texte momentanément indisponible — Mibeko' : notFound ? 'Texte introuvable — Mibeko' : `${intituleUneLigne} — Mibeko`}
+  description={empty
     ? "Ce texte n'est pas disponible dans le fonds Mibeko."
     : `${intituleUneLigne} — ${typeName} de la République du Congo. ${articles.length} articles, consultables librement sur Mibeko.`}
   image={document ? `/og/${document.slug}.png` : undefined}
@@ -170,12 +187,19 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
 >
   <Header />
   <main id="main" class="flex-grow bg-background">
-    {notFound ? (
+    {empty ? (
       <section class="max-w-[700px] mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
-        <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-4">Erreur 404</p>
-        <h1 class="text-3xl md:text-4xl font-bold text-on-surface mb-6">Ce texte est introuvable</h1>
-        <a href="/textes" class="inline-flex items-center h-11 px-6 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">
-          Parcourir le fonds juridique
+        <p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-4">{unavailable ? 'Erreur 503' : 'Erreur 404'}</p>
+        <h1 class="text-3xl md:text-4xl font-bold text-on-surface mb-6">
+          {unavailable ? 'Ce texte est momentanément indisponible' : 'Ce texte est introuvable'}
+        </h1>
+        {unavailable && (
+          <p class="text-on-surface-variant font-serif mb-8">
+            Le fonds juridique ne répond pas pour l'instant. Le texte existe toujours : réessayez dans quelques minutes.
+          </p>
+        )}
+        <a href={unavailable ? Astro.url.pathname : '/textes'} class="inline-flex items-center h-11 px-6 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">
+          {unavailable ? 'Réessayer' : 'Parcourir le fonds juridique'}
         </a>
       </section>
     ) : (
@@ -394,5 +418,5 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
     )}
   </main>
   <Footer />
-  {!notFound && <OpenInAppBanner path={selfPath} label={intituleUneLigne} />}
+  {!empty && <OpenInAppBanner path={selfPath} label={intituleUneLigne} />}
 </Layout>
