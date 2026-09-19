@@ -32,8 +32,14 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=4321
-      # API Laravel consommée par le serveur SSR. Surchargeable via .env (CI).
-      - MIBEKO_API_URL=${MIBEKO_API_URL:-https://api.mibeko.fr/api/v1}
+      # API Laravel consommée par le serveur SSR, par le réseau Docker `proxy`
+      # que partagent `mibeko-site` et `mibeko-nginx` (vhost en `server_name _`) :
+      # ni DNS public, ni TLS, ni Traefik pour un appel qui reste sur la machine
+      # (mibeko-site#47). Surchargeable via .env (CI).
+      - MIBEKO_API_URL=${MIBEKO_API_URL:-http://mibeko-nginx/api/v1}
+      # Base PUBLIQUE, pour les seules URL servies dans le HTML au navigateur
+      # (liens PDF) : un nom de conteneur n'existe pas hors du VPS.
+      - MIBEKO_API_PUBLIC_URL=${MIBEKO_API_PUBLIC_URL:-https://api.mibeko.fr/api/v1}
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
