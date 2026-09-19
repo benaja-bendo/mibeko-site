@@ -2,16 +2,36 @@
  * Client de l'API Mibeko pour le site vitrine.
  *
  * Le site consomme la lecture publique du fonds juridique (mêmes endpoints que
- * le mobile et le pro). Base configurable via la variable d'environnement
- * `MIBEKO_API_URL` ; défaut = production.
+ * le mobile et le pro). Deux bases, parce que deux destinataires
+ * (mibeko-site#47) :
+ *
+ * - `MIBEKO_API_URL` — base **interne**, pour les appels que fait le serveur
+ *   SSR lui-même. En production, `http://mibeko-nginx/api/v1` : les deux
+ *   conteneurs partagent le réseau Docker `proxy`, et le vhost nginx de l'API
+ *   est en `server_name _`. Passer par `https://api.mibeko.fr` coûtait, à
+ *   chaque appel, une résolution DNS publique, une poignée de main TLS et un
+ *   aller-retour Traefik — et doublait la charge de Traefik, chaque visite
+ *   ressortant en N requêtes entrantes.
+ * - `MIBEKO_API_PUBLIC_URL` — base **publique**, pour les seules URL qui
+ *   partent dans le HTML vers le navigateur du visiteur (`pdfProxyUrl()`). Un
+ *   nom de conteneur n'a aucun sens hors du VPS : ces liens doivent rester
+ *   sur `https://api.mibeko.fr`. Absente, elle retombe sur la base interne —
+ *   juste en développement local (une seule API, sur `localhost`), à condition
+ *   de la définir en production (le `docker-compose.yml` de déploiement s'en
+ *   charge).
  */
 import { sanitizeLegalText } from './sanitize';
 import type { ApiTable } from './tables';
 // Runtime (process.env, SSR Node — configurable sans rebuild) prioritaire sur
 // le build-time (import.meta.env), puis défaut production.
-const runtimeApiUrl = (globalThis as unknown as { process?: { env?: Record<string, string | undefined> } })
-  .process?.env?.MIBEKO_API_URL;
-const API_BASE = (runtimeApiUrl ?? import.meta.env.MIBEKO_API_URL ?? 'https://api.mibeko.fr/api/v1').replace(/\/$/, '');
+const runtimeEnv = (globalThis as unknown as { process?: { env?: Record<string, string | undefined> } })
+  .process?.env;
+const API_BASE = (runtimeEnv?.MIBEKO_API_URL ?? import.meta.env.MIBEKO_API_URL ?? 'https://api.mibeko.fr/api/v1').replace(/\/$/, '');
+const API_PUBLIC_BASE = (
+  runtimeEnv?.MIBEKO_API_PUBLIC_URL
+  ?? import.meta.env.MIBEKO_API_PUBLIC_URL
+  ?? API_BASE
+).replace(/\/$/, '');
 
 export interface DocumentTheme {
   id: string;
@@ -789,9 +809,12 @@ export function articlePath(slug: string, number: string): string {
  * URL du PDF d'origine (proxy API). `download=true` force le téléchargement ;
  * sinon le PDF s'affiche en ligne (intégrable en <iframe> sur le site, cf.
  * l'en-tête `frame-ancestors` du PdfProxyController).
+ *
+ * Seule URL d'API qui part dans le HTML, vers le navigateur : elle se construit
+ * sur la base PUBLIQUE, jamais sur la base interne des appels serveur.
  */
 export function pdfProxyUrl(documentId: string, opts: { download?: boolean } = {}): string {
-  const url = new URL(`${API_BASE}/legal-documents/${documentId}/pdf`);
+  const url = new URL(`${API_PUBLIC_BASE}/legal-documents/${documentId}/pdf`);
   if (opts.download) url.searchParams.set('download', 'true');
   return url.href;
 }
