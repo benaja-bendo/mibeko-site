@@ -5,6 +5,7 @@
  * le mobile et le pro). Base configurable via la variable d'environnement
  * `MIBEKO_API_URL` ; défaut = production.
  */
+import { requestContext } from './requestContext';
 import { sanitizeLegalText } from './sanitize';
 import type { ApiTable } from './tables';
 // Runtime (process.env, SSR Node — configurable sans rebuild) prioritaire sur
@@ -58,14 +59,25 @@ export class ApiUnavailableError extends Error {
  * ligne dans la sortie du conteneur (Dozzle) — une panne silencieuse n'existe
  * pas. L'abandon détruit la connexion côté undici : la requête n'occupe plus
  * rien une fois le délai passé.
+ *
+ * Relaie l'IP du visiteur en `X-Forwarded-For` (mibeko-dashboard#159) : pour
+ * l'API, tout le site n'est sinon qu'une seule IP, et ses quotas par IP
+ * (lecture, recherche, contact, signalements) plafonnaient le site entier.
+ * L'API n'honore cet en-tête que depuis les réseaux privés du VPS — le
+ * conteneur du site en est ; un client externe ne peut pas le forger.
  */
 async function apiFetch(
   input: URL | string,
   init: RequestInit & { timeout: number; label: string },
 ): Promise<Response> {
   const { timeout, label, ...rest } = init;
+  const headers = new Headers(rest.headers);
+  const visitor = requestContext.getStore()?.clientAddress;
+  if (visitor) {
+    headers.set('X-Forwarded-For', visitor);
+  }
   try {
-    return await fetch(input, { ...rest, signal: AbortSignal.timeout(timeout) });
+    return await fetch(input, { ...rest, headers, signal: AbortSignal.timeout(timeout) });
   } catch (error) {
     const timedOut = error instanceof Error && error.name === 'TimeoutError';
     console.error(
