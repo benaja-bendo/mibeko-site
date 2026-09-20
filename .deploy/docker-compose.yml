@@ -62,6 +62,20 @@ services:
       - "traefik.http.middlewares.mibeko-site-cg-canonical.redirectregex.replacement=https://mibeko.fr/$${1}"
       - "traefik.http.middlewares.mibeko-site-cg-canonical.redirectregex.permanent=true"
 
+      # www.mibeko.fr (vps_infra#1) : l'enregistrement DNS existait, aucun
+      # routeur ne le servait — poignée de main TLS impossible, donc un site
+      # injoignable pour qui tape « www ». Redirigé en 301 vers le domaine
+      # canonique, comme le .cg. Sert aussi de pilote au CDN : premier hôte
+      # à passer derrière le proxy, avant mibeko.fr lui-même.
+      - "traefik.http.routers.mibeko-site-www.rule=Host(`www.${MIBEKO_SITE_HOST:-mibeko.fr}`)"
+      - "traefik.http.routers.mibeko-site-www.entrypoints=websecure"
+      - "traefik.http.routers.mibeko-site-www.tls.certresolver=myresolver"
+      - "traefik.http.routers.mibeko-site-www.service=mibeko-site"
+      - "traefik.http.routers.mibeko-site-www.middlewares=mibeko-site-www-canonical"
+      - "traefik.http.middlewares.mibeko-site-www-canonical.redirectregex.regex=^https?://www[.]([^/:]+)(?::[0-9]+)?/(.*)"
+      - "traefik.http.middlewares.mibeko-site-www-canonical.redirectregex.replacement=https://$${1}/$${2}"
+      - "traefik.http.middlewares.mibeko-site-www-canonical.redirectregex.permanent=true"
+
       # Serveur SSR Astro (adapter @astrojs/node) — écoute sur 4321.
       - "traefik.http.services.mibeko-site.loadbalancer.server.port=4321"
 
