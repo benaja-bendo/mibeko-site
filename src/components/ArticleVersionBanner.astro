@@ -1,0 +1,66 @@
+---
+/**
+ * Bandeau de contexte quand une version datée (`?au=`) est affichée
+ * (mibeko-site#60). Distinct de `LegalStatusBanner` (statut du document
+ * entier) : celui-ci porte sur LA VERSION précise qu'on est en train de lire.
+ *
+ * Deux états seulement — jamais affiché pour la version en vigueur consultée
+ * sans `?au=`, le cas normal et très majoritaire :
+ *  - une version antérieure a été trouvée (`found`) ;
+ *  - `au` précède la toute première version connue (`unknown`) — jamais une
+ *    404 muette (dashboard#167), le lecteur doit comprendre que c'est la
+ *    donnée qui manque, pas l'article qui n'existe pas.
+ */
+import { formatFrenchDate } from '../lib/legalMetadata';
+
+interface Props {
+  state: 'found' | 'unknown';
+  /** Requis si `state === 'found'`. */
+  periodStart?: string | null;
+  periodEnd?: string | null;
+  modifiePar?: string | null;
+  /** Requis si `state === 'unknown'`. */
+  earliestKnownDate?: string | null;
+  currentVersionPath: string;
+}
+
+const { state, periodStart, periodEnd, modifiePar, earliestKnownDate, currentVersionPath } = Astro.props;
+
+const TONES = {
+  found: { rule: 'border-statut-modifie', tint: 'bg-statut-modifie-tint', ink: 'text-statut-modifie' },
+  unknown: { rule: 'border-statut-inconnu', tint: 'bg-statut-inconnu-tint', ink: 'text-statut-inconnu' },
+};
+const tone = TONES[state];
+---
+
+<section
+  aria-label="Contexte de la version affichée"
+  class:list={['border-l-[3px] px-4 py-3 sm:px-5 mb-5', tone.rule, tone.tint]}
+>
+  {state === 'found' ? (
+    <>
+      <p class:list={['text-xs font-semibold uppercase tracking-[0.08em]', tone.ink]}>Version antérieure</p>
+      <p class="mt-1 font-semibold text-on-surface">
+        {periodEnd
+          ? `Version en vigueur du ${formatFrenchDate(periodStart)} au ${formatFrenchDate(periodEnd)}`
+          : `Version en vigueur depuis le ${formatFrenchDate(periodStart)}`}
+        {modifiePar && ` — modifiée par ${modifiePar}`}
+      </p>
+      <p class="mt-1 text-sm leading-relaxed text-on-surface-variant">
+        Ce n'est pas la version actuellement en vigueur.{' '}
+        <a href={currentVersionPath} class="font-semibold underline hover:no-underline">Voir la version en vigueur</a>.
+      </p>
+    </>
+  ) : (
+    <>
+      <p class:list={['text-xs font-semibold uppercase tracking-[0.08em]', tone.ink]}>Date non attestée</p>
+      <p class="mt-1 font-semibold text-on-surface">Aucune version connue de cet article à cette date</p>
+      <p class="mt-1 text-sm leading-relaxed text-on-surface-variant">
+        {earliestKnownDate
+          ? `La plus ancienne version connue de cet article commence le ${formatFrenchDate(earliestKnownDate)}.`
+          : "L'historique de cet article n'est pas encore disponible."}{' '}
+        <a href={currentVersionPath} class="font-semibold underline hover:no-underline">Voir la version en vigueur</a>.
+      </p>
+    </>
+  )}
+</section>
