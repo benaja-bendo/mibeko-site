@@ -7,6 +7,8 @@ import Footer from '../../../components/Footer.astro';
 import DocumentOutline from '../../../components/DocumentOutline.astro';
 import DocumentTools from '../../../components/DocumentTools.astro';
 import LegalStatusBanner from '../../../components/LegalStatusBanner.astro';
+import ArticleVersionBanner from '../../../components/ArticleVersionBanner.astro';
+import ArticleVersionSelector from '../../../components/ArticleVersionSelector.astro';
 import SectionReader from '../../../components/SectionReader.astro';
 import ReportIssue from '../../../components/ReportIssue.astro';
 import OpenInAppBanner from '../../../components/OpenInAppBanner.astro';
@@ -20,7 +22,9 @@ import {
   articlePath,
   pdfProxyUrl,
   ApiUnavailableError,
+  type ArticleVersionRef,
 } from '../../../lib/api';
+import { findVersionAt, isValidDateParam } from '../../../lib/articleVersions';
 import { articleLeafLabel, documentLineLabel } from '../../../lib/sanitize';
 import { articlePlainText } from '../../../lib/tables';
 import { documentTypeLabel, formatFrenchDate, formatSectionPath, isUnclassifiedType } from '../../../lib/legalMetadata';
@@ -28,6 +32,16 @@ import { UMAMI_EVENTS } from '../../../lib/analytics';
 
 const ARTICLE_PREFIX = 'article-';
 const { doc, article: articleParam } = Astro.params;
+
+// `?au=YYYY-MM-DD` (mibeko-dashboard#157/#167) : version de l'article à une
+// date donnée. Validé ici, jamais transmis à l'API sous une forme douteuse —
+// un format libre y renverrait 422 ; on préfère alors ignorer silencieusement
+// le paramètre et servir la version en vigueur plutôt qu'une page d'erreur
+// pour un lecteur qui a mal tapé une date. `auRequested` (brut, non validé)
+// pilote uniquement le `noindex` : une URL qui PORTE `au=`, valide ou non,
+// n'est jamais celle qu'on veut voir indexée.
+const auRequested = Astro.url.searchParams.get('au');
+const au = isValidDateParam(auRequested) ? auRequested : undefined;
 
 let payload = null;
 let invalid = !doc || !articleParam || !articleParam.startsWith(ARTICLE_PREFIX);
@@ -39,8 +53,11 @@ if (!invalid) {
   // `section=auto` : la division qui CONTIENT cet article, pour la lecture
   // continue. Un seul aller-retour, et l'URL de l'article ne bouge pas — elle
   // reste canonique, déclarée en App Link et présente au sitemap.
+  // Désactivée quand une date est demandée : la section entière refléterait
+  // la version EN VIGUEUR des articles voisins, incohérent avec un seul
+  // article épinglé à une date passée.
   try {
-    payload = await fetchPublicDocument(doc!, numero, 'auto');
+    payload = await fetchPublicDocument(doc!, numero, au ? undefined : 'auto', au);
   } catch (error) {
     // API injoignable (mibeko-site#48) : 503 + Retry-After, jamais un 404 —
     // Google réessaie au lieu de désindexer l'article.
@@ -80,9 +97,17 @@ const tree = buildTree(payload?.structure);
 const section = payload?.section ?? null;
 
 // Repli : tant que l'API n'expose pas `section` (déploiements indépendants du
-// site et du dashboard), la page rend l'article seul, comme avant.
-const hasSection = Boolean(section && section.articles.some((a) => a.number === current?.number));
+// site et du dashboard), la page rend l'article seul, comme avant. Jamais en
+// lecture par date (§ ci-dessus).
+const hasSection = !au && Boolean(section && section.articles.some((a) => a.number === current?.number));
 const currentLabel = hasSection ? formatSectionPath(section!.path) || undefined : undefined;
+
+// Historique des versions (mibeko-dashboard#167) : un seul élément tant
+// qu'aucun amendement légal réel n'a été enregistré — le sélecteur (rendu
+// seulement si > 1) et le bandeau de contexte s'appuient dessus.
+const versions: ArticleVersionRef[] = current?.versions ?? [];
+const versionFound = current?.version_found ?? true;
+const selectedVersion = au ? findVersionAt(versions, au) : null;
 
 const idx = current ? articles.findIndex((a) => a.number === current.number) : -1;
 const previous = idx > 0 ? articles[idx - 1] : null;
@@ -181,6 +206,7 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
   image={document ? `/og/${document.slug}/${articleParam}.png` : undefined}
   ogType="article"
   canonical={selfUrl || undefined}
+  noindex={Boolean(auRequested)}
   jsonLd={jsonLd}
   appArgument={selfUrl || undefined}
 >
@@ -262,20 +288,42 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
                 du texte de loi. Une personne arrivée par Google sur un article
                 isolé doit savoir, sans remonter d'un niveau, s'il s'applique. */}
             <LegalStatusBanner document={document!} class="mt-5" />
+
+            <ArticleVersionSelector versions={versions} basePath={selfPath} selectedStart={au ?? versions.find((v) => v.is_current)?.start ?? ''} />
           </header>
 
           <!-- Colonne article -->
           <div class="order-3 lg:order-none min-w-0 lg:col-start-2 lg:row-start-2">
 
+            {au && !versionFound && (
+              <ArticleVersionBanner
+                state="unknown"
+                earliestKnownDate={current!.earliest_known_date}
+                currentVersionPath={selfPath}
+              />
+            )}
+            {/* Rien à signaler si `au` tombe dans la période encore en vigueur —
+                la page affiche alors exactement ce qu'elle aurait affiché sans
+                `?au=`, il n'y a pas de « version antérieure » à distinguer. */}
+            {au && versionFound && selectedVersion && !selectedVersion.is_current && (
+              <ArticleVersionBanner
+                state="found"
+                periodStart={selectedVersion.start}
+                periodEnd={selectedVersion.end}
+                modifiePar={selectedVersion.modifie_par}
+                currentVersionPath={selfPath}
+              />
+            )}
+
             {hasSection ? (
               <SectionReader section={section!} slug={document!.slug} activeNumber={current!.number} pdfUrl={pdfUrl} />
-            ) : (
+            ) : versionFound ? (
               <div class="rounded-lg border border-surface-variant bg-surface-container-lowest p-5 sm:p-7 md:p-8">
                 <div>
                   <LegalArticleBody content={current!.content} tables={current!.tables} />
                 </div>
               </div>
-            )}
+            ) : null}
 
             {isUnclassifiedType(document!.type_code) && (
               <p class="mt-4 text-sm text-on-surface-variant border-l-2 border-secondary/50 pl-4">

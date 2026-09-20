@@ -1,0 +1,71 @@
+---
+/**
+ * Sélecteur de version d'un article par date (mibeko-dashboard#157/#167,
+ * volet site — mibeko-site#60).
+ *
+ * Ne s'affiche que si l'article a réellement été amendé (`versions.length > 1`) :
+ * avec une seule version, il n'y a rien à sélectionner, et la seule date connue
+ * (celle de l'ingestion) n'est pas une date de droit — l'afficher construirait
+ * exactement la fausse précision que dashboard#166 a corrigée.
+ *
+ * `<form method="get">` natif : fonctionne sans JavaScript (le fonds doit
+ * rester lisible sans JS, cf. `NewsletterForm`). Le petit script en bas n'est
+ * qu'une commodité — un changement de sélection soumet aussitôt le formulaire
+ * au lieu d'attendre un clic sur le bouton, qui reste toujours présent et
+ * fonctionnel sans lui.
+ *
+ * Libellés : par construction de l'API (`addVersion()`, dashboard#166), seule
+ * la toute première version d'un article peut avoir `modifie_par` nul — toute
+ * version suivante DOIT désigner le texte qui l'a fait naître. La première
+ * version n'affiche donc jamais sa propre date de début comme une date de
+ * droit, seulement sa date de fin (celle, elle, choisie explicitement par
+ * l'éditeur au moment d'enregistrer l'amendement suivant).
+ */
+import type { ArticleVersionRef } from '../lib/api';
+import { versionSelectorLabel } from '../lib/articleVersions';
+
+interface Props {
+  versions: ArticleVersionRef[];
+  basePath: string;
+  /** Date actuellement affichée (`?au=`), ou la version en vigueur si absente. */
+  selectedStart: string;
+}
+
+const { versions, basePath, selectedStart } = Astro.props;
+---
+
+{versions.length > 1 && (
+  <form method="get" action={basePath} class="version-selector flex flex-wrap items-end gap-3 mb-5 print:hidden" data-version-selector>
+    <div class="flex-1 min-w-[220px]">
+      <label for="au-select" class="block text-xs font-semibold uppercase tracking-wide text-on-surface-variant mb-1.5">
+        Version de l'article
+      </label>
+      <select
+        id="au-select"
+        name="au"
+        class="w-full h-10 rounded-lg border border-outline-variant/60 bg-surface-container-lowest px-3 text-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+      >
+        {versions.map((version, index) => (
+          <option value={version.start} selected={version.start === selectedStart}>
+            {versionSelectorLabel(version, index)}
+          </option>
+        ))}
+      </select>
+    </div>
+    <button
+      type="submit"
+      class="h-10 px-4 rounded-lg text-sm font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-colors shrink-0"
+    >
+      Voir cette version
+    </button>
+  </form>
+)}
+
+<script>
+  // Progressive enhancement uniquement : le bouton ci-dessus soumet déjà le
+  // formulaire sans JS. Ceci évite juste le clic supplémentaire.
+  document.querySelectorAll<HTMLFormElement>('form[data-version-selector]').forEach((form) => {
+    const select = form.querySelector('select[name="au"]');
+    select?.addEventListener('change', () => form.submit());
+  });
+</script>

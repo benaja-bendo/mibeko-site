@@ -209,6 +209,38 @@ export interface CurrentArticle {
    */
   page?: number | null;
   related?: RelatedText[];
+  /**
+   * Date demandée par `?au=` (mibeko-dashboard#167), renvoyée telle quelle par
+   * l'API — absente/`null` quand l'URL ne portait pas de date (version en
+   * vigueur servie par défaut).
+   */
+  au?: string | null;
+  /**
+   * `false` seulement quand `au` a été demandé et qu'aucune version connue ne
+   * couvre cette date (antérieure à la toute première version de l'article) —
+   * jamais une absence d'article, qui reste un 404 en amont. `content` est
+   * alors `null` : ne rien afficher comme si c'était le texte en vigueur.
+   */
+  version_found?: boolean;
+  /** Renseigné seulement quand `version_found` est `false`. */
+  earliest_known_date?: string | null;
+  /**
+   * Historique complet, dans l'ordre chronologique. Un seul élément tant
+   * qu'aucun amendement légal réel n'a été enregistré (dashboard#166/#173) —
+   * ne jamais proposer de sélecteur de version dans ce cas : il n'y aurait
+   * rien à sélectionner, et la seule date connue (l'ingestion) n'est pas une
+   * date de droit.
+   */
+  versions?: ArticleVersionRef[];
+}
+
+/** Une période de validité de l'article, pour le sélecteur de version. */
+export interface ArticleVersionRef {
+  start: string;
+  end: string | null;
+  is_current: boolean;
+  /** Texte qui a fait démarrer cette période — null pour une simple correction. */
+  modifie_par: string | null;
 }
 
 /** Référence légère d'un article dans le sommaire (numéro seul, sans texte). */
@@ -334,7 +366,10 @@ export interface PaginationMeta {
 /**
  * Récupère un document publié par son slug. Optionnellement le texte intégral
  * d'un article (par numéro) et/ou celui d'une division entière (`section` :
- * `first`, `auto` — celle de l'article demandé — ou un identifiant de nœud).
+ * `first`, `auto` — celle de l'article demandé — ou un identifiant de nœud),
+ * et/ou sa version à une date donnée (`au`, mibeko-dashboard#167 — le format
+ * doit déjà être validé par l'appelant : `au` invalide renvoie 422, traité ici
+ * comme n'importe quelle autre défaillance).
  * Renvoie `null` sur 404 (document absent ou non
  * publié) ; lève `ApiUnavailableError` sur toute autre défaillance (délai,
  * réseau, 5xx) pour que la page réponde 503 + `Retry-After` — Google réessaie
@@ -344,6 +379,7 @@ export async function fetchPublicDocument(
   slug: string,
   articleNumber?: string,
   section?: 'first' | 'auto' | (string & {}),
+  au?: string,
 ): Promise<PublicDocument | null> {
   const url = new URL(`${API_BASE}/legal-documents/slug/${encodeURIComponent(slug)}`);
   if (articleNumber) {
@@ -351,6 +387,9 @@ export async function fetchPublicDocument(
   }
   if (section) {
     url.searchParams.set('section', section);
+  }
+  if (au) {
+    url.searchParams.set('au', au);
   }
 
   const label = `document « ${slug} »`;
