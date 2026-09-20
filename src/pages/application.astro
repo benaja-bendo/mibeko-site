@@ -3,6 +3,12 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import PageHeader from '../components/PageHeader.astro';
 import Footer from '../components/Footer.astro';
+import AssistantConversation from '../components/AssistantConversation.astro';
+import { assistantDemos } from '../data/assistant-demos';
+
+// Démonstration « citoyen » distincte de celle de l'accueil (index 0) : cette
+// page vise le grand public, pas les mêmes visiteurs au même moment.
+const appDemo = assistantDemos[1];
 
 // Un dépôt = une audience. La version pro vit sur /professionnels.
 // ID App Store vérifié via https://itunes.apple.com/lookup?bundleId=cg.mibeko.app
@@ -67,6 +73,27 @@ const features = [
 							)}
 						</div>
 					))}
+				</div>
+			</div>
+		</section>
+
+		{/* mibeko-site#30 : la page qui doit déclencher les installations ne
+		    montrait aucune image — quatre paragraphes à croire sur parole. Ce
+		    que la démonstration affiche est un écran RÉEL de l'application
+		    (ChatScreen.kt rejoué, cf. AssistantConversation.astro), jamais une
+		    fonction absente des stores. */}
+		<section class="py-16 md:py-20 border-t border-surface-variant/50">
+			<div class="max-w-[820px] mx-auto px-4 sm:px-6 lg:px-8">
+				<div class="max-w-2xl mb-10">
+					<p class="text-sm font-semibold uppercase tracking-wider text-secondary mb-2">L'application, en marche</p>
+					<h2 class="text-2xl md:text-3xl font-bold text-on-surface tracking-tight mb-3">Ce que vous ouvrez, une fois installée</h2>
+					<p class="text-on-surface-variant font-serif leading-relaxed">
+						L'écran ci-dessous est celui de l'application : une question posée en français courant,
+						et l'Assistant qui répond en citant l'article exact.
+					</p>
+				</div>
+				<div class="flex justify-center">
+					<AssistantConversation demo={appDemo} />
 				</div>
 			</div>
 		</section>
