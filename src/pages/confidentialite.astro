@@ -72,15 +72,30 @@ import Footer from '../components/Footer.astro';
 				    pré-rédigés : dashboard#177. Changer l'un, c'est changer ceci. */}
 				<h3>2.7 Journal des recherches</h3>
 				<p>
-					Quand vous lancez une recherche de textes, sur le site, dans l'application ou dans l'espace professionnel, le Service enregistre les <strong>termes recherchés</strong>, le <strong>nombre de résultats</strong>, l'endroit d'où part la recherche et sa <strong>date</strong>. Si vous êtes connecté, la recherche est rattachée à votre compte ; sinon, elle est enregistrée sans identité. Ce journal ne contient pas votre adresse IP. Il nous sert à repérer les textes que les lecteurs cherchent sans les trouver, pour compléter le fonds.
+					Quand vous lancez une recherche de textes, sur le site, dans l'application ou dans l'espace professionnel, le Service enregistre les <strong>termes recherchés</strong>, le <strong>nombre de résultats</strong>, l'endroit d'où part la recherche et sa <strong>date</strong>. Si vous êtes connecté, la recherche est rattachée à votre compte ; sinon, elle est enregistrée sans identité. Ce journal ne contient pas votre adresse IP (les journaux techniques du serveur, eux, la gardent une dizaine de jours : voir la section 2.8). Il nous sert à repérer les textes que les lecteurs cherchent sans les trouver, pour compléter le fonds.
 				</p>
 				<p>
 					Les recherches faites avec votre compte figurent dans l'export de vos données (voir la section « Vos droits »). Quand vous supprimez votre compte, elles en sont aussitôt détachées.
 				</p>
 
+				{/* Contenu = journal d'accès Traefik (vps_infra, roles/traefik/templates/
+				    docker-compose.yml.j2) : JSON, en-têtes gardés Cf-Connecting-Ip, Cf-Ipcountry
+				    et User-Agent, tous les autres supprimés (defaultmode=drop) ; RequestPath
+				    garde la chaîne de requête, liens de vérification et de réinitialisation
+				    compris (valables 60 min, config/auth.php de mibeko-dashboard). Décision
+				    docs/decisions.md du 23/09/2026, déployée le 24/09. Changer l'un, c'est
+				    changer ceci. */}
+				<h3>2.8 Journaux techniques du serveur</h3>
+				<p>
+					Comme tout service en ligne, nos serveurs enregistrent chaque requête qu'ils reçoivent, qu'elle vienne du site, de l'application ou de l'espace professionnel : sa <strong>date</strong>, l'<strong>adresse demandée</strong>, paramètres compris (par exemple les termes d'une recherche), le résultat et la durée de la réponse, votre <strong>adresse IP</strong> et l'identifiant de votre <strong>navigateur</strong> ou de l'application (User-Agent). Pour le site mibeko.fr, l'adresse IP est celle que nous transmet Cloudflare (voir la section 5), accompagnée du <strong>pays</strong> qu'il en déduit.
+				</p>
+				<p>
+					Ces journaux ne contiennent ni vos mots de passe, ni vos jetons de connexion, ni vos cookies, et ne sont pas rattachés à votre compte. L'adresse demandée peut toutefois être celle d'un lien que nous vous avons envoyé par e-mail (vérification de votre adresse, réinitialisation du mot de passe) : ces liens ne sont valables qu'une heure. Ces journaux servent uniquement à la <strong>sécurité</strong> du Service : repérer une attaque ou un abus, comprendre une panne. Seul l'administrateur technique y a accès.
+				</p>
+
 				<h2>3. Base légale</h2>
 				<p>
-					Les traitements reposent, selon les cas, sur l'exécution du contrat (fourniture du Service : compte, contenu utilisateur, notifications que vous activez) ou sur l'intérêt légitime de Mibeko à améliorer, sécuriser et fiabiliser la plateforme (statistiques d'usage anonymes, journal des recherches, diagnostics, sécurité). Les statistiques d'usage sont actives par défaut et <strong>désactivables à tout moment en un geste</strong> depuis l'application (<em>Profil → « Partage de statistiques anonymes »</em>) ; elles ne sont jamais rattachées à votre identité.
+					Les traitements reposent, selon les cas, sur l'exécution du contrat (fourniture du Service : compte, contenu utilisateur, notifications que vous activez) ou sur l'intérêt légitime de Mibeko à améliorer, sécuriser et fiabiliser la plateforme (statistiques d'usage anonymes, journal des recherches, journaux techniques du serveur, diagnostics, sécurité). Les statistiques d'usage sont actives par défaut et <strong>désactivables à tout moment en un geste</strong> depuis l'application (<em>Profil → « Partage de statistiques anonymes »</em>) ; elles ne sont jamais rattachées à votre identité.
 				</p>
 
 				<h2>4. Durées de conservation</h2>
@@ -95,6 +110,10 @@ import Footer from '../components/Footer.astro';
 					{/* config('search_logging.retention_days') = 90, purge mensuelle le 1er
 					    (routes/console.php, mibeko:purge-search-logs) : 90 j + au plus un mois. */}
 					<li><strong>Journal des recherches</strong> : 90 jours, puis effacé lors de la purge mensuelle qui suit (4 mois au plus).</li>
+					{/* Rotation json-file de Traefik : 50m × 10 (vps_infra), environ dix jours au
+					    volume du 23/09/2026. Borne de volume, pas de date : allonger demande une
+					    nouvelle décision (docs/decisions.md). */}
+					<li><strong>Journaux techniques du serveur</strong> : effacés automatiquement par rotation, en général au bout d'une dizaine de jours. La place qui leur est réservée est fixe : cette durée raccourcit quand le trafic augmente et s'allonge quand il baisse.</li>
 					<li><strong>Statistiques d'usage</strong> (Firebase Analytics) : 14 mois au maximum.</li>
 					<li><strong>Rapports de plantage</strong> (Crashlytics) : 90 jours.</li>
 					<li><strong>Jeton de notification et identifiant d'appareil</strong> : jusqu'à la désactivation des notifications, la déconnexion ou la désinstallation de l'application.</li>
@@ -109,6 +128,7 @@ import Footer from '../components/Footer.astro';
 				</p>
 				<ul>
 					<li><strong>Google Firebase</strong> (Analytics, Crashlytics, Cloud Messaging) : statistiques d'usage anonymisées, rapports de plantage et acheminement des notifications. Ces données sont traitées sur les serveurs de Google, qui peuvent être situés hors de la République du Congo ;</li>
+					<li><strong>Cloudflare, Inc.</strong> (États-Unis), réseau de diffusion et de protection du site mibeko.fr : les requêtes adressées au site, dont votre adresse IP et l'adresse des pages demandées (termes d'une recherche compris), transitent par ses serveurs, répartis dans le monde entier ;</li>
 					<li><strong>Hébergement</strong> : Infomaniak Network SA (Genève, Suisse), qui héberge les serveurs applicatifs et bases de données de la plateforme.</li>
 				</ul>
 				<p>
