@@ -85,7 +85,13 @@ import Footer from '../components/Footer.astro';
 
 				<h2>4. Durées de conservation</h2>
 				<ul>
-					<li><strong>Compte et contenu utilisateur</strong> : conservés tant que votre compte est actif. En cas de suppression du compte, les données sont effacées ; les copies de sauvegarde techniques sont purgées dans un délai maximal de 90 jours.</li>
+					{/* Délais = code de mibeko-dashboard, décision du 24/09/2026 : 30 jours avant
+					    l'effacement (config/account_deletion.php, mibeko:purger-comptes-supprimes),
+					    puis 51 jours au plus dans une sauvegarde (config/backup.php) ; 30 + 51 ≤ 90,
+					    vérifié par PurgerComptesSupprimesCommandTest. Changer l'un, c'est changer ceci. */}
+					<li><strong>Compte et contenu utilisateur</strong> : conservés tant que votre compte est actif. Quand vous supprimez votre compte, il est fermé aussitôt, puis effacé définitivement <strong>30 jours</strong> plus tard avec tout son contenu : conversations avec l'assistant, dossiers, notifications, préférences et profil. Pendant ces 30 jours, vous pouvez nous écrire pour le restaurer, et son adresse e-mail ne peut pas servir à ouvrir un nouveau compte. Les copies de sauvegarde techniques qui le contiennent encore disparaissent au plus tard <strong>90 jours</strong> après votre demande.</li>
+					<li><strong>Ce qui reste après l'effacement, sans lien avec vous</strong> : des mesures d'usage (consommation de l'assistant, repères d'usage de l'application), les recherches déjà détachées de votre compte lors de la suppression, et le journal technique des opérations sur le compte, qui garde leur date mais plus votre nom, votre adresse e-mail ni votre adresse IP (12 mois au plus).</li>
+					<li><strong>Paiements</strong> : si vous avez souscrit une offre payante, la trace du paiement (montant, date, moyen de paiement, référence de la transaction) est conservée <strong>10 ans</strong> pour nos obligations comptables, détachée de votre compte.</li>
 					{/* config('search_logging.retention_days') = 90, purge mensuelle le 1er
 					    (routes/console.php, mibeko:purge-search-logs) : 90 j + au plus un mois. */}
 					<li><strong>Journal des recherches</strong> : 90 jours, puis effacé lors de la purge mensuelle qui suit (4 mois au plus).</li>
