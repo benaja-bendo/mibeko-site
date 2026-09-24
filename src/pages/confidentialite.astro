@@ -16,7 +16,7 @@ import Footer from '../components/Footer.astro';
 <Layout title="Politique de confidentialité — Mibeko" description="Politique de confidentialité et de protection des données personnelles de Mibeko : données collectées, finalités, durées de conservation et droits des utilisateurs.">
 	<Header />
 	<main id="main" class="flex-grow">
-		<PageHeader eyebrow="Légal" title="Politique de confidentialité" subtitle="Dernière mise à jour : juillet 2026" />
+		<PageHeader eyebrow="Légal" title="Politique de confidentialité" subtitle="Dernière mise à jour : septembre 2026" />
 		<section class="py-12 md:py-16 bg-background">
 			<div class="max-w-[760px] mx-auto px-4 sm:px-6 lg:px-8 legal-prose">
 				<p>
@@ -99,7 +99,20 @@ import Footer from '../components/Footer.astro';
 					Vous disposez d'un droit d'accès, de rectification, d'effacement, d'opposition et de portabilité de vos données. Concrètement :
 				</p>
 				<ul>
-					<li><strong>Exporter vos données</strong> : depuis l'application, <em>Profil → « Exporter mes données »</em> vous remet une copie de vos données (compte, dossiers, favoris) ;</li>
+					{/* Contenu de l'export = PrivacyController::export (mibeko-dashboard) :
+					    toute rubrique ajoutée à l'export ou retirée doit l'être ici aussi. */}
+					<li>
+						<strong>Exporter vos données</strong> : depuis l'application, <em>Profil → « Exporter mes données »</em>, ou sur app.mibeko.fr, <em>Paramètres → Compte → « Exporter »</em>. Vous recevez un fichier JSON qui contient :
+						<ul>
+							<li>votre compte, votre profil (centres d'intérêt compris), vos réglages et vos consentements ;</li>
+							<li>vos dossiers et leur contenu : articles et notes personnelles, références, échéances, description des pièces, documents générés ;</li>
+							<li>vos favoris ;</li>
+							<li>vos conversations avec l'assistant : questions, réponses et avis que vous avez donnés sur ces réponses ;</li>
+							<li>les recherches enregistrées avec votre compte ;</li>
+							<li>les notifications reçues dans le Service, votre progression dans la découverte de l'application et des repères d'usage (résultat de recherche ouvert, source ouverte après une réponse de l'assistant).</li>
+						</ul>
+						Les extraits de textes officiels que l'assistant a consultés pour vous répondre n'y figurent pas : ils proviennent du corpus public ;
+					</li>
 					<li><strong>Supprimer votre compte</strong> : depuis l'application, <em>Profil → « Supprimer mon compte »</em>. La suppression est définitive et entraîne l'effacement de vos données dans les conditions décrites à la section 4 ;</li>
 					<li><strong>Désactiver les statistiques d'usage</strong> : <em>Profil → « Partage de statistiques anonymes »</em> ;</li>
 					<li><strong>Toute autre demande</strong> : écrivez à <a href="mailto:contact@mibeko.fr">contact@mibeko.fr</a>. Vous pouvez également saisir l'autorité compétente en matière de protection des données personnelles.</li>
