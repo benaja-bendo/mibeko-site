@@ -5,6 +5,7 @@ import Footer from '../../components/Footer.astro';
 import EditorialEvidence from '../../components/EditorialEvidence.astro';
 import { getCollection, render } from 'astro:content';
 import { UMAMI_EVENTS } from '../../lib/analytics';
+import { presetSearchPath } from '../../lib/presetSearch';
 
 export async function getStaticPaths() {
   const demarches = await getCollection('demarches', ({ data }) => !data.draft);
@@ -18,7 +19,6 @@ const { data } = demarche;
 const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
 const canonical = new URL(`/demarches/${demarche.id}`, siteOrigin).href;
 const audienceLabel: Record<string, string> = { citoyen: 'Citoyen', entreprise: 'Entreprise', professionnel: 'Professionnel' };
-const lawHref = (query: string) => `/textes?q=${encodeURIComponent(query)}`;
 
 const howToLd = {
   '@context': 'https://schema.org',
@@ -138,7 +138,7 @@ const breadcrumbLd = {
 										</div>
 									)}
 									{s.law && (
-										<a href={lawHref(s.law.query)} class="rm-law">
+										<a href={presetSearchPath(s.law.query)} rel="nofollow" class="rm-law">
 											<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
 											Base légale : {s.law.label}
 										</a>
