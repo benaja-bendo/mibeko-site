@@ -66,14 +66,29 @@ import Footer from '../components/Footer.astro';
 					Le site mibeko.fr n'utilise <strong>aucun cookie de traçage publicitaire</strong>. Seuls des cookies ou stockages strictement nécessaires au fonctionnement technique peuvent être déposés (par exemple pour maintenir votre session sur les espaces connectés). Si une mesure d'audience est activée, elle repose sur une solution <strong>respectueuse de la vie privée et sans cookies</strong> (Umami, auto-hébergé) : statistiques agrégées et anonymes, sans possibilité de vous identifier. Si des cookies de mesure d'audience devaient être introduits à l'avenir, ils seraient soumis à votre consentement préalable et cette politique serait mise à jour.
 				</p>
 
+				{/* Contenu = table `search_logs` de mibeko-dashboard (query, results_count,
+				    surface, created_at, user_id nullable, aucune IP), écrite par
+				    SearchQueryLogger ; rattachement à l'usager et exclusion des liens
+				    pré-rédigés : dashboard#177. Changer l'un, c'est changer ceci. */}
+				<h3>2.7 Journal des recherches</h3>
+				<p>
+					Quand vous lancez une recherche de textes, sur le site, dans l'application ou dans l'espace professionnel, le Service enregistre les <strong>termes recherchés</strong>, le <strong>nombre de résultats</strong>, l'endroit d'où part la recherche et sa <strong>date</strong>. Si vous êtes connecté, la recherche est rattachée à votre compte ; sinon, elle est enregistrée sans identité. Ce journal ne contient pas votre adresse IP. Il nous sert à repérer les textes que les lecteurs cherchent sans les trouver, pour compléter le fonds.
+				</p>
+				<p>
+					Les recherches faites avec votre compte figurent dans l'export de vos données (voir la section « Vos droits »). Quand vous supprimez votre compte, elles en sont aussitôt détachées.
+				</p>
+
 				<h2>3. Base légale</h2>
 				<p>
-					Les traitements reposent, selon les cas, sur l'exécution du contrat (fourniture du Service : compte, contenu utilisateur, notifications que vous activez) ou sur l'intérêt légitime de Mibeko à améliorer, sécuriser et fiabiliser la plateforme (statistiques d'usage anonymes, diagnostics, sécurité). Les statistiques d'usage sont actives par défaut et <strong>désactivables à tout moment en un geste</strong> depuis l'application (<em>Profil → « Partage de statistiques anonymes »</em>) ; elles ne sont jamais rattachées à votre identité.
+					Les traitements reposent, selon les cas, sur l'exécution du contrat (fourniture du Service : compte, contenu utilisateur, notifications que vous activez) ou sur l'intérêt légitime de Mibeko à améliorer, sécuriser et fiabiliser la plateforme (statistiques d'usage anonymes, journal des recherches, diagnostics, sécurité). Les statistiques d'usage sont actives par défaut et <strong>désactivables à tout moment en un geste</strong> depuis l'application (<em>Profil → « Partage de statistiques anonymes »</em>) ; elles ne sont jamais rattachées à votre identité.
 				</p>
 
 				<h2>4. Durées de conservation</h2>
 				<ul>
 					<li><strong>Compte et contenu utilisateur</strong> : conservés tant que votre compte est actif. En cas de suppression du compte, les données sont effacées ; les copies de sauvegarde techniques sont purgées dans un délai maximal de 90 jours.</li>
+					{/* config('search_logging.retention_days') = 90, purge mensuelle le 1er
+					    (routes/console.php, mibeko:purge-search-logs) : 90 j + au plus un mois. */}
+					<li><strong>Journal des recherches</strong> : 90 jours, puis effacé lors de la purge mensuelle qui suit (4 mois au plus).</li>
 					<li><strong>Statistiques d'usage</strong> (Firebase Analytics) : 14 mois au maximum.</li>
 					<li><strong>Rapports de plantage</strong> (Crashlytics) : 90 jours.</li>
 					<li><strong>Jeton de notification et identifiant d'appareil</strong> : jusqu'à la désactivation des notifications, la déconnexion ou la désinstallation de l'application.</li>
