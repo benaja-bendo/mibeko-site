@@ -89,15 +89,55 @@ import Footer from '../components/Footer.astro';
 					Le site mibeko.fr n'utilise <strong>aucun cookie de traçage publicitaire</strong>. Seuls des cookies ou stockages strictement nécessaires au fonctionnement technique peuvent être déposés (par exemple pour maintenir votre session sur les espaces connectés). Si une mesure d'audience est activée, elle repose sur une solution <strong>respectueuse de la vie privée et sans cookies</strong> (Umami, auto-hébergé) : statistiques agrégées et anonymes, sans possibilité de vous identifier. Si des cookies de mesure d'audience devaient être introduits à l'avenir, ils seraient soumis à votre consentement préalable et cette politique serait mise à jour.
 				</p>
 
+				{/* Contenu = table `search_logs` de mibeko-dashboard (query, results_count,
+				    surface, created_at, user_id nullable, aucune IP), écrite par
+				    SearchQueryLogger ; rattachement à l'usager et exclusion des liens
+				    pré-rédigés : dashboard#177. Changer l'un, c'est changer ceci. */}
+				<h3>2.8 Journal des recherches</h3>
+				<p>
+					Quand vous lancez une recherche de textes, sur le site, dans l'application ou dans l'espace professionnel, le Service enregistre les <strong>termes recherchés</strong>, le <strong>nombre de résultats</strong>, l'endroit d'où part la recherche et sa <strong>date</strong>. Si vous êtes connecté, la recherche est rattachée à votre compte ; sinon, elle est enregistrée sans identité. Ce journal ne contient pas votre adresse IP (les journaux techniques du serveur, eux, la gardent une dizaine de jours : voir la section 2.9). Il nous sert à repérer les textes que les lecteurs cherchent sans les trouver, pour compléter le fonds.
+				</p>
+				<p>
+					Les recherches faites avec votre compte figurent dans l'export de vos données (voir la section « Vos droits »). Quand vous supprimez votre compte, elles en sont aussitôt détachées.
+				</p>
+
+				{/* Contenu = journal d'accès Traefik (vps_infra, roles/traefik/templates/
+				    docker-compose.yml.j2) : JSON, en-têtes gardés Cf-Connecting-Ip, Cf-Ipcountry
+				    et User-Agent, tous les autres supprimés (defaultmode=drop) ; RequestPath
+				    garde la chaîne de requête, liens de vérification et de réinitialisation
+				    compris (valables 60 min, config/auth.php de mibeko-dashboard). Décision
+				    docs/decisions.md du 23/09/2026, déployée le 24/09. Changer l'un, c'est
+				    changer ceci. */}
+				<h3>2.9 Journaux techniques du serveur</h3>
+				<p>
+					Comme tout service en ligne, nos serveurs enregistrent chaque requête qu'ils reçoivent, qu'elle vienne du site, de l'application ou de l'espace professionnel : sa <strong>date</strong>, l'<strong>adresse demandée</strong>, paramètres compris (par exemple les termes d'une recherche), le résultat et la durée de la réponse, votre <strong>adresse IP</strong> et l'identifiant de votre <strong>navigateur</strong> ou de l'application (User-Agent). Pour le site mibeko.fr, l'adresse IP est celle que nous transmet Cloudflare (voir la section 5), accompagnée du <strong>pays</strong> qu'il en déduit.
+				</p>
+				<p>
+					Ces journaux ne contiennent ni vos mots de passe, ni vos jetons de connexion, ni vos cookies, et ne sont pas rattachés à votre compte. L'adresse demandée peut toutefois être celle d'un lien que nous vous avons envoyé par e-mail (vérification de votre adresse, réinitialisation du mot de passe) : ces liens ne sont valables qu'une heure. Ces journaux servent uniquement à la <strong>sécurité</strong> du Service : repérer une attaque ou un abus, comprendre une panne. Seul l'administrateur technique y a accès.
+				</p>
+
 				<h2>3. Base légale</h2>
 				<p>
-					Les traitements reposent, selon les cas, sur l'exécution du contrat (fourniture du Service : compte, contenu utilisateur, réponses de l'assistant et synthèses que vous demandez, notifications que vous activez) ou sur l'intérêt légitime de Mibeko à améliorer, sécuriser et fiabiliser la plateforme (statistiques d'usage anonymes, diagnostics, sécurité, pertinence de la recherche). Les statistiques d'usage sont actives par défaut et <strong>désactivables à tout moment en un geste</strong> depuis l'application (<em>Profil → « Partage de statistiques anonymes »</em>) ; elles ne sont jamais rattachées à votre identité.
+					Les traitements reposent, selon les cas, sur l'exécution du contrat (fourniture du Service : compte, contenu utilisateur, réponses de l'assistant et synthèses que vous demandez, notifications que vous activez) ou sur l'intérêt légitime de Mibeko à améliorer, sécuriser et fiabiliser la plateforme (statistiques d'usage anonymes, journal des recherches, journaux techniques du serveur, diagnostics, sécurité, pertinence de la recherche). Les statistiques d'usage sont actives par défaut et <strong>désactivables à tout moment en un geste</strong> depuis l'application (<em>Profil → « Partage de statistiques anonymes »</em>) ; elles ne sont jamais rattachées à votre identité.
 				</p>
 
 				<h2>4. Durées de conservation</h2>
 				<ul>
-					<li><strong>Compte et contenu utilisateur</strong> : conservés tant que votre compte est actif. En cas de suppression du compte, les données sont effacées ; les copies de sauvegarde techniques sont purgées dans un délai maximal de 90 jours.</li>
-					<li><strong>Contenus transmis à Mistral AI</strong> (section 2.3) : conservés par Mistral AI le temps de produire le résultat, puis 30 jours glissants pour détecter les abus de son service, avant d'être supprimés. Vos conversations restent conservées par Mibeko dans les conditions du point précédent.</li>
+					{/* Délais = code de mibeko-dashboard, décision du 24/09/2026 : 30 jours avant
+					    l'effacement (config/account_deletion.php, mibeko:purger-comptes-supprimes),
+					    puis 51 jours au plus dans une sauvegarde (config/backup.php) ; 30 + 51 ≤ 90,
+					    vérifié par PurgerComptesSupprimesCommandTest. Changer l'un, c'est changer ceci. */}
+					<li><strong>Compte et contenu utilisateur</strong> : conservés tant que votre compte est actif. Quand vous supprimez votre compte, il est fermé aussitôt, puis effacé définitivement <strong>30 jours</strong> plus tard avec tout son contenu : conversations avec l'assistant, dossiers, notifications, préférences et profil. Pendant ces 30 jours, vous pouvez nous écrire pour le restaurer, et son adresse e-mail ne peut pas servir à ouvrir un nouveau compte. Les copies de sauvegarde techniques qui le contiennent encore disparaissent au plus tard <strong>90 jours</strong> après votre demande.</li>
+					<li><strong>Ce qui reste après l'effacement, sans lien avec vous</strong> : des mesures d'usage (consommation de l'assistant, repères d'usage de l'application), les recherches déjà détachées de votre compte lors de la suppression, et le journal technique des opérations sur le compte, qui garde leur date mais plus votre nom, votre adresse e-mail ni votre adresse IP (12 mois au plus).</li>
+					<li><strong>Paiements</strong> : si vous avez souscrit une offre payante, la trace du paiement (montant, date, moyen de paiement, référence de la transaction) est conservée <strong>10 ans</strong> pour nos obligations comptables, détachée de votre compte.</li>
+					{/* config('search_logging.retention_days') = 90, purge mensuelle le 1er
+					    (routes/console.php, mibeko:purge-search-logs) : 90 j + au plus un mois. */}
+					<li><strong>Journal des recherches</strong> : 90 jours, puis effacé lors de la purge mensuelle qui suit (4 mois au plus).</li>
+					{/* Rotation json-file de Traefik : 50m × 10 (vps_infra), environ dix jours au
+					    volume du 23/09/2026. Borne de volume, pas de date : allonger demande une
+					    nouvelle décision (docs/decisions.md). */}
+					<li><strong>Journaux techniques du serveur</strong> : effacés automatiquement par rotation, en général au bout d'une dizaine de jours. La place qui leur est réservée est fixe : cette durée raccourcit quand le trafic augmente et s'allonge quand il baisse.</li>
+					<li><strong>Contenus transmis à Mistral AI</strong> (section 2.3) : conservés par Mistral AI le temps de produire le résultat, puis 30 jours glissants pour détecter les abus de son service, avant d'être supprimés. Vos conversations restent conservées par Mibeko dans les conditions du point « Compte et contenu utilisateur ».</li>
 					<li><strong>Statistiques d'usage</strong> (Firebase Analytics) : 14 mois au maximum.</li>
 					<li><strong>Rapports de plantage</strong> (Crashlytics) : 90 jours.</li>
 					<li><strong>Jeton de notification et identifiant d'appareil</strong> : jusqu'à la désactivation des notifications, la déconnexion ou la désinstallation de l'application.</li>
@@ -128,7 +168,20 @@ import Footer from '../components/Footer.astro';
 					Vous disposez d'un droit d'accès, de rectification, d'effacement, d'opposition et de portabilité de vos données. Concrètement :
 				</p>
 				<ul>
-					<li><strong>Exporter vos données</strong> : depuis l'application, <em>Profil → « Exporter mes données »</em> vous remet une copie de vos données (compte, dossiers, favoris) ;</li>
+					{/* Contenu de l'export = PrivacyController::export (mibeko-dashboard) :
+					    toute rubrique ajoutée à l'export ou retirée doit l'être ici aussi. */}
+					<li>
+						<strong>Exporter vos données</strong> : depuis l'application, <em>Profil → « Exporter mes données »</em>, ou sur app.mibeko.fr, <em>Paramètres → Compte → « Exporter »</em>. Vous recevez un fichier JSON qui contient :
+						<ul>
+							<li>votre compte, votre profil (centres d'intérêt compris), vos réglages et vos consentements ;</li>
+							<li>vos dossiers et leur contenu : articles et notes personnelles, références, échéances, description des pièces, documents générés ;</li>
+							<li>vos favoris ;</li>
+							<li>vos conversations avec l'assistant : questions, réponses et avis que vous avez donnés sur ces réponses ;</li>
+							<li>les recherches enregistrées avec votre compte ;</li>
+							<li>les notifications reçues dans le Service, votre progression dans la découverte de l'application et des repères d'usage (résultat de recherche ouvert, source ouverte après une réponse de l'assistant).</li>
+						</ul>
+						Les extraits de textes officiels que l'assistant a consultés pour vous répondre n'y figurent pas : ils proviennent du corpus public ;
+					</li>
 					<li><strong>Supprimer votre compte</strong> : depuis l'application, <em>Profil → « Supprimer mon compte »</em>. La suppression est définitive et entraîne l'effacement de vos données dans les conditions décrites à la section 4 ;</li>
 					<li><strong>Désactiver les statistiques d'usage</strong> : <em>Profil → « Partage de statistiques anonymes »</em> ;</li>
 					<li><strong>Toute autre demande</strong> : écrivez à <a href="mailto:contact@mibeko.fr">contact@mibeko.fr</a>. Vous pouvez également saisir l'autorité compétente en matière de protection des données personnelles.</li>

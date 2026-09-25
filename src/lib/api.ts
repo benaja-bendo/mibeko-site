@@ -22,6 +22,7 @@
  */
 import { requestContext } from './requestContext';
 import { sanitizeLegalText } from './sanitize';
+import { PRESET_SEARCH_ORIGIN, SEARCH_ORIGIN_HEADER } from './presetSearch';
 import type { ApiTable } from './tables';
 // Runtime (process.env, SSR Node — configurable sans rebuild) prioritaire sur
 // le build-time (import.meta.env), puis défaut production.
@@ -668,6 +669,12 @@ export interface LibrarySearchFilters {
   sort?: 'relevance' | 'date_desc' | 'date_asc';
   page?: number;
   perPage?: number;
+  /**
+   * La recherche suit un lien pré-rédigé du site (`presetSearchPath`),
+   * pas une saisie : l'API l'exécute sans la compter dans son journal
+   * (mibeko-dashboard#177).
+   */
+  fromPresetLink?: boolean;
 }
 
 export interface LibrarySearchPageResult {
@@ -684,7 +691,7 @@ export async function fetchLibrarySearchPage(
   query: string,
   filters: LibrarySearchFilters = {},
 ): Promise<LibrarySearchPageResult> {
-  const { type, scope, yearFrom, yearTo, sort = 'relevance', page = 1, perPage = 12 } = filters;
+  const { type, scope, yearFrom, yearTo, sort = 'relevance', page = 1, perPage = 12, fromPresetLink = false } = filters;
 
   const url = new URL(`${API_BASE}/library/search`);
   url.searchParams.set('q', query);
@@ -696,7 +703,12 @@ export async function fetchLibrarySearchPage(
   url.searchParams.set('per_page', String(perPage));
   url.searchParams.set('page', String(page));
 
-  const res = await apiFetch(url, { headers: { Accept: 'application/json' }, timeout: API_TIMEOUTS.search, label: 'recherche dans le fonds' });
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (fromPresetLink) {
+    headers[SEARCH_ORIGIN_HEADER] = PRESET_SEARCH_ORIGIN;
+  }
+
+  const res = await apiFetch(url, { headers, timeout: API_TIMEOUTS.search, label: 'recherche dans le fonds' });
   if (!res.ok) {
     throw new Error(`API ${res.status} sur la recherche`);
   }

@@ -6,6 +6,7 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ThemeIcon from '../../components/ThemeIcon.astro';
 import { fetchThemeDocuments, documentPath, type ThemeDetail } from '../../lib/api';
+import { presetSearchPath } from '../../lib/presetSearch';
 import { publicTypeLabel } from '../../lib/legalMetadata';
 
 const { slug } = Astro.params;
@@ -126,7 +127,7 @@ const jsonLd = breadcrumbLd ? [breadcrumbLd as Record<string, unknown>] : [];
         <div class="rounded-lg border border-surface-variant bg-surface-container-low p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <p class="text-sm text-on-surface-variant">Approfondir « {theme!.name} » :</p>
           <div class="flex flex-wrap gap-3">
-            <a href={`/textes?q=${encodeURIComponent(theme!.name)}`} class="inline-flex items-center h-10 px-5 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors text-sm">Rechercher</a>
+            <a href={presetSearchPath(theme!.name)} rel="nofollow" class="inline-flex items-center h-10 px-5 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors text-sm">Rechercher</a>
             <a href="/guides" class="inline-flex items-center h-10 px-5 bg-surface-container text-on-surface font-semibold rounded hover:bg-surface-container-high transition-colors text-sm">Guides</a>
           </div>
         </div>
