@@ -7,6 +7,16 @@
 // in-app —, Crashlytics, token push FCM/APNs, export GET /v1/profile/export,
 // suppression DELETE /v1/profile). Toute évolution de la collecte doit être
 // répercutée ici AVANT la release correspondante.
+//
+// Fournisseur d'IA (sections 2.3, 4 et 5) : l'API envoie les questions et
+// certaines recherches au fournisseur que désignent AI_PROVIDER (texte),
+// AI_PROVIDER_EMBEDDINGS (vectorisation) et AI_ASSISTANT_FAILOVER (secours)
+// dans mibeko-dashboard/config/ai.php. Activer un autre fournisseur, même en
+// secours, sans le nommer ici d'abord rend cette page fausse. La phrase sur
+// l'entraînement suppose le réglage « Anonymous improvement data » désactivé
+// dans la console Mistral (Admin → Privacy) ; les 30 jours tombent si le
+// « zero data retention » est activé. Les deux se revérifient à chaque
+// changement de compte ou d'offre Mistral (docs/decisions.md, 24/09/2026).
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import PageHeader from '../components/PageHeader.astro';
@@ -43,7 +53,20 @@ import Footer from '../components/Footer.astro';
 					Les <strong>dossiers</strong>, <strong>favoris</strong>, <strong>conversations avec l'assistant</strong> et préférences que vous créez dans le Service sont enregistrés sur nos serveurs afin d'être synchronisés entre vos appareils. Ce contenu vous appartient : vous pouvez l'exporter et le supprimer à tout moment (voir la section « Vos droits »).
 				</p>
 
-				<h3>2.3 Statistiques d'usage (application mobile)</h3>
+				<h3>2.3 Assistant IA et recherche : ce qui est transmis à notre fournisseur d'intelligence artificielle</h3>
+				<p>
+					L'assistant et certaines fonctions de recherche reposent sur les modèles de <strong>Mistral AI</strong>, notre fournisseur d'intelligence artificielle (voir la section 5). Pour produire un résultat, le Service lui transmet :
+				</p>
+				<ul>
+					<li><strong>quand vous interrogez l'assistant</strong> : votre question, les échanges précédents de la même conversation (vingt messages au plus) et les extraits de textes officiels retrouvés pour y répondre. Le début de votre première question (500 caractères au plus) sert aussi à donner un titre à la conversation ;</li>
+					<li><strong>quand vous demandez la synthèse d'une recherche</strong> (espace professionnel) : les termes de votre recherche et les extraits de textes retenus. L'explication d'un article ne transmet que le texte de cet article ;</li>
+					<li><strong>pour retrouver les articles proches par le sens</strong> : les mots-clés que l'assistant tire de votre question, les termes d'une synthèse et, lorsqu'une recherche de textes par mots-clés trouve peu de résultats, les termes de cette recherche. Ils sont convertis en une suite de nombres («&nbsp;vectorisation&nbsp;») qui permet de comparer leur sens à celui des articles.</li>
+				</ul>
+				<p>
+					Aucune donnée d'identification (nom, adresse e-mail, identifiant de compte) n'accompagne ces envois. En revanche, <strong>le texte que vous saisissez est transmis tel quel</strong> : n'y indiquez pas de nom, de numéro ou d'adresse qui ne soient pas nécessaires à votre question.
+				</p>
+
+				<h3>2.4 Statistiques d'usage (application mobile)</h3>
 				<p>
 					L'application mobile utilise <strong>Google Firebase Analytics</strong> pour mesurer l'usage des fonctionnalités : écrans consultés, fonctionnalités utilisées, événements techniques. Ces événements sont <strong>anonymisés</strong> et ne contiennent <strong>jamais le contenu de vos recherches juridiques</strong> ni celui de vos échanges avec l'assistant. Ils nous servent uniquement à comprendre ce qui est utile et à améliorer l'application.
 				</p>
@@ -51,17 +74,17 @@ import Footer from '../components/Footer.astro';
 					Ce partage est <strong>désactivable à tout moment</strong> dans l'application : <em>Profil → « Partage de statistiques anonymes »</em>. La désactivation prend effet immédiatement.
 				</p>
 
-				<h3>2.4 Diagnostics et rapports de plantage</h3>
+				<h3>2.5 Diagnostics et rapports de plantage</h3>
 				<p>
 					L'application mobile utilise <strong>Google Firebase Crashlytics</strong> pour recueillir des rapports de plantage : modèle d'appareil, version du système et de l'application, trace technique de l'erreur. Ces rapports servent exclusivement à identifier et corriger les pannes.
 				</p>
 
-				<h3>2.5 Notifications</h3>
+				<h3>2.6 Notifications</h3>
 				<p>
 					Si vous activez les notifications, l'application enregistre un <strong>jeton de notification</strong> (token push) et un <strong>identifiant d'appareil</strong>, nécessaires à l'acheminement technique des notifications (Firebase Cloud Messaging sur Android, service de notifications Apple sur iOS). Ils ne servent à aucune autre finalité.
 				</p>
 
-				<h3>2.6 Mesure d'audience du site web</h3>
+				<h3>2.7 Mesure d'audience du site web</h3>
 				<p>
 					Le site mibeko.fr n'utilise <strong>aucun cookie de traçage publicitaire</strong>. Seuls des cookies ou stockages strictement nécessaires au fonctionnement technique peuvent être déposés (par exemple pour maintenir votre session sur les espaces connectés). Si une mesure d'audience est activée, elle repose sur une solution <strong>respectueuse de la vie privée et sans cookies</strong> (Umami, auto-hébergé) : statistiques agrégées et anonymes, sans possibilité de vous identifier. Si des cookies de mesure d'audience devaient être introduits à l'avenir, ils seraient soumis à votre consentement préalable et cette politique serait mise à jour.
 				</p>
@@ -70,9 +93,9 @@ import Footer from '../components/Footer.astro';
 				    surface, created_at, user_id nullable, aucune IP), écrite par
 				    SearchQueryLogger ; rattachement à l'usager et exclusion des liens
 				    pré-rédigés : dashboard#177. Changer l'un, c'est changer ceci. */}
-				<h3>2.7 Journal des recherches</h3>
+				<h3>2.8 Journal des recherches</h3>
 				<p>
-					Quand vous lancez une recherche de textes, sur le site, dans l'application ou dans l'espace professionnel, le Service enregistre les <strong>termes recherchés</strong>, le <strong>nombre de résultats</strong>, l'endroit d'où part la recherche et sa <strong>date</strong>. Si vous êtes connecté, la recherche est rattachée à votre compte ; sinon, elle est enregistrée sans identité. Ce journal ne contient pas votre adresse IP (les journaux techniques du serveur, eux, la gardent une dizaine de jours : voir la section 2.8). Il nous sert à repérer les textes que les lecteurs cherchent sans les trouver, pour compléter le fonds.
+					Quand vous lancez une recherche de textes, sur le site, dans l'application ou dans l'espace professionnel, le Service enregistre les <strong>termes recherchés</strong>, le <strong>nombre de résultats</strong>, l'endroit d'où part la recherche et sa <strong>date</strong>. Si vous êtes connecté, la recherche est rattachée à votre compte ; sinon, elle est enregistrée sans identité. Ce journal ne contient pas votre adresse IP (les journaux techniques du serveur, eux, la gardent une dizaine de jours : voir la section 2.9). Il nous sert à repérer les textes que les lecteurs cherchent sans les trouver, pour compléter le fonds.
 				</p>
 				<p>
 					Les recherches faites avec votre compte figurent dans l'export de vos données (voir la section « Vos droits »). Quand vous supprimez votre compte, elles en sont aussitôt détachées.
@@ -85,7 +108,7 @@ import Footer from '../components/Footer.astro';
 				    compris (valables 60 min, config/auth.php de mibeko-dashboard). Décision
 				    docs/decisions.md du 23/09/2026, déployée le 24/09. Changer l'un, c'est
 				    changer ceci. */}
-				<h3>2.8 Journaux techniques du serveur</h3>
+				<h3>2.9 Journaux techniques du serveur</h3>
 				<p>
 					Comme tout service en ligne, nos serveurs enregistrent chaque requête qu'ils reçoivent, qu'elle vienne du site, de l'application ou de l'espace professionnel : sa <strong>date</strong>, l'<strong>adresse demandée</strong>, paramètres compris (par exemple les termes d'une recherche), le résultat et la durée de la réponse, votre <strong>adresse IP</strong> et l'identifiant de votre <strong>navigateur</strong> ou de l'application (User-Agent). Pour le site mibeko.fr, l'adresse IP est celle que nous transmet Cloudflare (voir la section 5), accompagnée du <strong>pays</strong> qu'il en déduit.
 				</p>
@@ -95,7 +118,7 @@ import Footer from '../components/Footer.astro';
 
 				<h2>3. Base légale</h2>
 				<p>
-					Les traitements reposent, selon les cas, sur l'exécution du contrat (fourniture du Service : compte, contenu utilisateur, notifications que vous activez) ou sur l'intérêt légitime de Mibeko à améliorer, sécuriser et fiabiliser la plateforme (statistiques d'usage anonymes, journal des recherches, journaux techniques du serveur, diagnostics, sécurité). Les statistiques d'usage sont actives par défaut et <strong>désactivables à tout moment en un geste</strong> depuis l'application (<em>Profil → « Partage de statistiques anonymes »</em>) ; elles ne sont jamais rattachées à votre identité.
+					Les traitements reposent, selon les cas, sur l'exécution du contrat (fourniture du Service : compte, contenu utilisateur, réponses de l'assistant et synthèses que vous demandez, notifications que vous activez) ou sur l'intérêt légitime de Mibeko à améliorer, sécuriser et fiabiliser la plateforme (statistiques d'usage anonymes, journal des recherches, journaux techniques du serveur, diagnostics, sécurité, pertinence de la recherche). Les statistiques d'usage sont actives par défaut et <strong>désactivables à tout moment en un geste</strong> depuis l'application (<em>Profil → « Partage de statistiques anonymes »</em>) ; elles ne sont jamais rattachées à votre identité.
 				</p>
 
 				<h2>4. Durées de conservation</h2>
@@ -114,6 +137,7 @@ import Footer from '../components/Footer.astro';
 					    volume du 23/09/2026. Borne de volume, pas de date : allonger demande une
 					    nouvelle décision (docs/decisions.md). */}
 					<li><strong>Journaux techniques du serveur</strong> : effacés automatiquement par rotation, en général au bout d'une dizaine de jours. La place qui leur est réservée est fixe : cette durée raccourcit quand le trafic augmente et s'allonge quand il baisse.</li>
+					<li><strong>Contenus transmis à Mistral AI</strong> (section 2.3) : conservés par Mistral AI le temps de produire le résultat, puis 30 jours glissants pour détecter les abus de son service, avant d'être supprimés. Vos conversations restent conservées par Mibeko dans les conditions du point « Compte et contenu utilisateur ».</li>
 					<li><strong>Statistiques d'usage</strong> (Firebase Analytics) : 14 mois au maximum.</li>
 					<li><strong>Rapports de plantage</strong> (Crashlytics) : 90 jours.</li>
 					<li><strong>Jeton de notification et identifiant d'appareil</strong> : jusqu'à la désactivation des notifications, la déconnexion ou la désinstallation de l'application.</li>
@@ -128,9 +152,13 @@ import Footer from '../components/Footer.astro';
 				</p>
 				<ul>
 					<li><strong>Google Firebase</strong> (Analytics, Crashlytics, Cloud Messaging) : statistiques d'usage anonymisées, rapports de plantage et acheminement des notifications. Ces données sont traitées sur les serveurs de Google, qui peuvent être situés hors de la République du Congo ;</li>
+					<li><strong>Mistral AI</strong> (15 rue des Halles, 75001 Paris, France), fournisseur d'intelligence artificielle : reçoit les contenus décrits à la section 2.3 pour générer les réponses de l'assistant, les titres de conversation et les synthèses, et pour vectoriser les recherches (durée de conservation : section 4). Selon Mistral AI, ces données sont hébergées par défaut dans l'Union européenne ; certains de ses propres sous-traitants, dont il <a href="https://trust.mistral.ai/" target="_blank" rel="noopener noreferrer">publie la liste et la localisation</a>, peuvent les traiter hors de l'Union, dans le cadre des clauses contractuelles types de la Commission européenne. Nous avons désactivé, dans notre compte Mistral AI, l'utilisation de nos données pour l'entraînement de ses modèles : vos questions ne servent pas à les entraîner. Conditions de Mistral AI : <a href="https://legal.mistral.ai/terms/privacy-policy" target="_blank" rel="noopener noreferrer">politique de confidentialité</a>, <a href="https://legal.mistral.ai/terms/data-processing-addendum" target="_blank" rel="noopener noreferrer">accord de traitement des données</a>, <a href="https://help.mistral.ai/fr/articles/347617-do-you-use-my-user-data-to-train-your-artificial-intelligence-models" target="_blank" rel="noopener noreferrer">usage des données pour l'entraînement</a> ;</li>
 					<li><strong>Cloudflare, Inc.</strong> (États-Unis), réseau de diffusion et de protection du site mibeko.fr : les requêtes adressées au site, dont votre adresse IP et l'adresse des pages demandées (termes d'une recherche compris), transitent par ses serveurs, répartis dans le monde entier ;</li>
 					<li><strong>Hébergement</strong> : Infomaniak Network SA (Genève, Suisse), qui héberge les serveurs applicatifs et bases de données de la plateforme.</li>
 				</ul>
+				<p>
+					Ces prestataires sont tous établis hors de la République du Congo : vos données leur sont transférées pour les seules finalités décrites ci-dessus.
+				</p>
 				<p>
 					Vos données peuvent enfin être communiquées si la loi l'exige, sur demande d'une autorité compétente.
 				</p>
