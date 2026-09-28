@@ -42,5 +42,5 @@ Congo-**Brazzaville** (jamais la RDC, jamais Kinshasa), droit national + **OHADA
 
 ## Conventions de travail
 - Docs du dépôt : `README.md`, `docs/architecture-site.md`, `docs/design-system.md` (chaque fichier commence par `# Titre` + `> Statut : à jour au <date>`). En cas de divergence, le code fait foi — mettre la doc à jour dans le même commit.
-- Toute décision structurante = une ligne datée dans `docs/decisions.md` (dépôt `docs/`, transverse).
+- Toute décision structurante s'écrit au format du registre (D-001) : dans `docs/decisions.md` de ce dépôt (préfixe `SITE-`) si elle ne change que ce dépôt ; sinon dans le registre transverse, `docs/decisions.md` du monorepo (dépôt `mibeko-docs`, préfixe `D-`).
 - Commits en français, `type(scope): titre court` à l'impératif, corps expliquant le **POURQUOI**. Un sujet cohérent par commit. **Jamais de commit sans l'accord explicite de l'utilisateur.**

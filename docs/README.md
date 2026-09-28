@@ -4,6 +4,8 @@
 
 Ce dossier regroupe la documentation de référence du site public Mibeko (`mibeko.fr`), le portail citoyen et diaspora du droit congolais.
 
+**Décisions propres à ce dépôt** : [`decisions.md`](./decisions.md) (identifiants `SITE-`). Les décisions transverses sont dans le registre `docs/decisions.md` du monorepo (dépôt `mibeko-docs`).
+
 ## Documents
 
 | Document | Description |
