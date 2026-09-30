@@ -11,6 +11,9 @@ export const UMAMI_EVENTS = {
   agirPilote: 'agir_pilote',
   travaillerOffre: 'travailler_offre',
   travaillerDemo: 'travailler_demo',
+  // Clic vers WhatsApp (avocats, juristes) : une conversation plutôt qu'un
+  // formulaire (mibeko-site#90).
+  travaillerWhatsapp: 'travailler_whatsapp',
   compteCreer: 'compte_creer',
   // Clic vers l'Assistant depuis une page de texte lue (article ou document) :
   // le point d'intention maximale du site, jusqu'ici sans mesure (mibeko-site#24).
