@@ -7,9 +7,9 @@ import Footer from '../components/Footer.astro';
 import { assistantDemos } from '../data/assistant-demos';
 import { UMAMI_EVENTS } from '../lib/analytics';
 import { registerUrl } from '../lib/appLinks';
+import { SITE_PLACEMENTS, appStoreUrl, playStoreUrl } from '../lib/storeLinks';
 
-const playStoreUrl = 'https://play.google.com/store/apps/details?id=cg.mibeko.app';
-const appStoreUrl = 'https://apps.apple.com/app/id6768865781';
+const placement = SITE_PLACEMENTS.pageAssistant;
 
 // Ce que l'assistant fait réellement — chaque ligne est adossée à une règle
 // effectivement appliquée côté serveur, pas à une intention commerciale.
@@ -131,8 +131,26 @@ const guarantees = [
 					— le poste de travail du juriste.
 				</p>
 				<p class="mt-3 text-sm text-on-surface-muted">
-					Disponible sur <a href={playStoreUrl} class="text-secondary font-semibold hover:underline" rel="noopener noreferrer" target="_blank">Google Play</a>{' '}
-					et l'<a href={appStoreUrl} class="text-secondary font-semibold hover:underline" rel="noopener noreferrer" target="_blank">App Store</a>.
+					Disponible sur <a
+						href={playStoreUrl(placement)}
+						class="text-secondary font-semibold hover:underline"
+						rel="noopener noreferrer"
+						target="_blank"
+						data-umami-event={UMAMI_EVENTS.installerApp}
+						data-umami-event-store="android"
+						data-umami-event-emplacement={placement.campaign}
+						data-umami-event-source={placement.source}
+					>Google Play</a>{' '}
+					et l'<a
+						href={appStoreUrl(placement)}
+						class="text-secondary font-semibold hover:underline"
+						rel="noopener noreferrer"
+						target="_blank"
+						data-umami-event={UMAMI_EVENTS.installerApp}
+						data-umami-event-store="ios"
+						data-umami-event-emplacement={placement.campaign}
+						data-umami-event-source={placement.source}
+					>App Store</a>.
 				</p>
 			</div>
 		</section>

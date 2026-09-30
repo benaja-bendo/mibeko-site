@@ -17,6 +17,9 @@
  * Il ne promet rien : le libellé est « Ouvrir dans l'app », et si l'app est
  * absente le bouton mène au store — jamais un cul-de-sac.
  */
+import { UMAMI_EVENTS } from '../lib/analytics';
+import { SITE_PLACEMENTS, appStoreUrl, playStoreUrl } from '../lib/storeLinks';
+
 interface Props {
   /** Chemin public du texte, tel qu'affiché (`/textes/{slug}[/article-{n}]`). */
   path: string;
@@ -33,8 +36,10 @@ const { path, label } = Astro.props;
 const appPath = path.replace(/^\//, '');
 const appUri = `mibeko://${appPath}`;
 
-const PLAY_STORE = 'https://play.google.com/store/apps/details?id=cg.mibeko.app';
-const APP_STORE = 'https://apps.apple.com/app/id6768865781';
+// Si l'app est absente, le repli vers le store est marqué « bandeau » : une
+// installation venue d'ici se distingue de celles de la page /application.
+const PLAY_STORE = playStoreUrl(SITE_PLACEMENTS.bandeauOuvrirApp);
+const APP_STORE = appStoreUrl(SITE_PLACEMENTS.bandeauOuvrirApp);
 
 // Sur Android, l'URI `intent://` est le seul mécanisme fiable : le système
 // ouvre l'app si elle est installée, et bascule seul sur `browser_fallback_url`
@@ -64,6 +69,8 @@ const androidIntent =
       type="button"
       class="inline-flex items-center h-9 px-4 rounded-lg bg-primary text-on-primary font-semibold text-sm shrink-0"
       data-open-in-app-go
+      data-umami-event={UMAMI_EVENTS.ouvrirApp}
+      data-umami-event-emplacement={SITE_PLACEMENTS.bandeauOuvrirApp.campaign}
     >
       Ouvrir
     </button>
