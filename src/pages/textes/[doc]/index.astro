@@ -210,7 +210,7 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
           <span class="text-on-surface-muted">/</span>
           <a href="/textes" class="hover:text-primary transition-colors">Textes officiels</a>
           <span class="text-on-surface-muted">/</span>
-          <span class="text-on-surface font-medium line-clamp-1">{intituleUneLigne}</span>
+          <span class="casse-phrase text-on-surface font-medium line-clamp-1">{intituleUneLigne}</span>
         </nav>
 
         <!-- Trois colonnes en très grand écran, deux en desktop, une en mobile.
@@ -243,7 +243,7 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
                 {document!.reference_nor && <span class="text-xs sm:text-sm text-on-surface-muted">Réf. {document!.reference_nor}</span>}
               </div>
 
-              <h1 class="font-serif text-[1.75rem] leading-[1.15] sm:text-4xl md:text-[2.4rem] md:leading-[1.12] font-semibold text-on-surface tracking-tight mb-3 max-w-[24ch]">{document!.titre_officiel}</h1>
+              <h1 class="casse-phrase font-serif text-[1.75rem] leading-[1.15] sm:text-4xl md:text-[2.4rem] md:leading-[1.12] font-semibold text-on-surface tracking-tight mb-3 max-w-[24ch]">{document!.titre_officiel}</h1>
 
               {/* Le H1 reste l'intitulé officiel — c'est lui qui fait foi. L'objet
                   dérivé du corps de l'acte s'affiche EN DESSOUS, nommé comme tel,
