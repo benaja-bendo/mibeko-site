@@ -12,17 +12,54 @@
 //
 // « Professionnels » a quitté la barre : il y était la SEULE porte vers un
 // compte, si bien qu'un étudiant ou un citoyen — le public réellement mesuré —
-// devait se déclarer professionnel pour créer le sien. La page reste un
-// second contact légitime (pied de page, page Application, pages d'article) ;
-// la porte d'entrée, elle, est désormais le compte, ouvert à tous et gratuit.
+// devait se déclarer professionnel pour créer le sien. La porte d'entrée est
+// désormais le compte, ouvert à tous et gratuit.
+//
+// Le menu « Outils » (SITE-011) regroupe ce qu'on fait avec Mibeko au-delà de
+// la lecture : l'application, l'Assistant, et le travail sur ses dossiers,
+// qui n'avait aucune entrée sur ordinateur. Pas de sous-marque (D-054) :
+// chaque entrée se nomme par ce qu'on y fait, dit à qui elle sert et ce
+// qu'elle coûte pour commencer. C'est un `<details>` : sans JavaScript, il
+// s'ouvre et se ferme quand même.
 import { UMAMI_EVENTS } from '../lib/analytics';
 import { registerUrl, loginUrl } from '../lib/appLinks';
 
 const navLinks = [
   { href: '/textes', label: 'Le fonds' },
   { href: '/guides', label: 'Guides' },
-  { href: '/assistant', label: 'Assistant' },
-  { href: '/application', label: "L'application" },
+];
+
+const ICONS = {
+  application: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2"></rect><path d="M11 18.5h2"></path></svg>',
+  assistant: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12Z"></path><path d="M9.5 9.5a2.5 2.5 0 0 1 4.9.7c0 1.7-2.4 2.1-2.4 3.3"></path><path d="M12 16.5h.01"></path></svg>',
+  dossiers: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H9l2 2h8.5A1.5 1.5 0 0 1 21 9.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5Z"></path><path d="M8 13.5h8"></path></svg>',
+};
+
+const tools = [
+  {
+    href: '/application',
+    label: "L'application",
+    description: 'Lire hors connexion et garder ses articles favoris.',
+    meta: 'Gratuite · Android et iPhone',
+    icon: ICONS.application,
+    event: undefined,
+  },
+  {
+    href: '/assistant',
+    label: 'Assistant Mibeko',
+    description: "Une question en français courant, l'article exact qui y répond.",
+    meta: 'Avec un compte gratuit',
+    icon: ICONS.assistant,
+    event: undefined,
+  },
+  {
+    href: '/professionnels',
+    label: 'Travailler vos dossiers',
+    description: 'Affaires, échéances et export, pour les avocats et les juristes.',
+    meta: 'Gratuit pour commencer',
+    icon: ICONS.dossiers,
+    event: UMAMI_EVENTS.travaillerOffre,
+  },
 ];
 
 const REGISTER_URL = registerUrl();
@@ -32,6 +69,8 @@ const pathname = Astro.url.pathname;
 const isActive = (href: string) =>
   href === '/' ? pathname === '/' : pathname.startsWith(href);
 const query = Astro.url.pathname === '/textes' ? (Astro.url.searchParams.get('q') ?? '') : '';
+const toolsActive = tools.some((tool) => isActive(tool.href));
+const CHEVRON = '<svg class="outils-chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>';
 ---
 
 <header class="sticky top-0 z-50 w-full bg-background border-b border-surface-variant/60" data-sticky-header>
@@ -68,6 +107,42 @@ const query = Astro.url.pathname === '/textes' ? (Astro.url.searchParams.get('q'
           )}
         </a>
       ))}
+      <details class="outils relative" data-outils>
+        <summary
+          class:list={[
+            "list-none cursor-pointer select-none text-sm font-medium transition-colors relative py-2 whitespace-nowrap inline-flex items-center gap-1",
+            toolsActive ? "text-primary" : "text-on-surface-variant hover:text-primary"
+          ]}
+        >
+          Outils
+          <Fragment set:html={CHEVRON} />
+          {toolsActive && (
+            <span class="absolute bottom-0 left-0 w-full h-[2px] bg-secondary rounded-t"></span>
+          )}
+        </summary>
+        <div class="outils-panel absolute right-0 top-[calc(100%+37px)] z-10 w-[620px] max-w-[calc(100vw-2rem)] rounded-lg border border-outline-variant/70 bg-surface-container-lowest">
+          <ul class="grid grid-cols-3">
+            {tools.map((tool, index) => (
+              <li class:list={[index > 0 && 'border-l border-surface-variant']}>
+                <a
+                  href={tool.href}
+                  aria-current={isActive(tool.href) ? 'page' : undefined}
+                  data-umami-event={tool.event}
+                  class="flex h-full flex-col gap-1.5 p-5 transition-colors hover:bg-surface-container-low"
+                >
+                  <span class="mb-1 text-primary" set:html={tool.icon} />
+                  <span class="text-[15px] font-semibold text-on-surface">{tool.label}</span>{' '}
+                  <span class="text-[13px] leading-snug text-on-surface-variant">{tool.description}</span>{' '}
+                  <span class="mt-auto pt-1 text-xs font-semibold text-secondary">{tool.meta}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p class="border-t border-surface-variant px-5 py-2.5 text-xs text-on-surface-muted">
+            La lecture du fonds reste libre, sans compte.
+          </p>
+        </div>
+      </details>
     </nav>
 
     <!-- Séparateur + entrée compte (Desktop) -->
@@ -132,9 +207,35 @@ const query = Astro.url.pathname === '/textes' ? (Astro.url.searchParams.get('q'
             {link.label}
           </a>
         ))}
-        <a href="/professionnels" class="py-3 text-base font-medium border-b border-surface-variant/40 transition-colors text-on-surface-variant hover:text-primary">
-          Cabinets et juristes
-        </a>
+        <details class="outils-mobile border-b border-surface-variant/40" open={toolsActive}>
+          <summary
+            class:list={[
+              "list-none cursor-pointer select-none flex items-center justify-between py-3 text-base font-medium transition-colors",
+              toolsActive ? "text-primary" : "text-on-surface-variant hover:text-primary"
+            ]}
+          >
+            Outils
+            <Fragment set:html={CHEVRON} />
+          </summary>
+          <ul class="flex flex-col pb-2">
+            {tools.map((tool) => (
+              <li>
+                <a
+                  href={tool.href}
+                  aria-current={isActive(tool.href) ? 'page' : undefined}
+                  data-umami-event={tool.event}
+                  class="flex gap-3 py-2.5 pl-1"
+                >
+                  <span class="mt-0.5 shrink-0 text-primary" set:html={tool.icon} />
+                  <span class="min-w-0">
+                    <span class="block text-[15px] font-semibold text-on-surface">{tool.label}</span>{' '}
+                    <span class="block text-[13px] leading-snug text-on-surface-muted">{tool.description}</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </details>
       </nav>
       <div class="flex flex-col gap-2 pt-4">
         <a
@@ -168,11 +269,52 @@ const query = Astro.url.pathname === '/textes' ? (Astro.url.searchParams.get('q'
   }
 </style>
 
+<style is:global>
+  /* Menu « Outils » : mouvement selon SITE-010 (fondu et 6 px, 180 ms, sortie
+     forte). La fermeture est instantanée, plus rapide que l'ouverture. */
+  .outils > summary::-webkit-details-marker,
+  .outils-mobile > summary::-webkit-details-marker { display: none; }
+  .outils-chevron { transition: transform 180ms cubic-bezier(0.23, 1, 0.32, 1); }
+  details[open] > summary .outils-chevron { transform: rotate(180deg); }
+  .outils[open] .outils-panel,
+  .outils-mobile[open] > ul {
+    transition: opacity 180ms cubic-bezier(0.23, 1, 0.32, 1), transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  @starting-style {
+    .outils[open] .outils-panel { opacity: 0; transform: translateY(-6px); }
+    .outils-mobile[open] > ul { opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .outils-chevron,
+    .outils[open] .outils-panel,
+    .outils-mobile[open] > ul { transition: none; }
+  }
+</style>
+
 <script>
   const toggle = document.getElementById('mobile-menu-toggle');
   const menu = document.getElementById('mobile-menu');
   const openIcon = toggle?.querySelector('[data-icon="open"]');
   const closeIcon = toggle?.querySelector('[data-icon="close"]');
+
+  // Menu « Outils » (ordinateur) : Échap le ferme et rend le focus au bouton ;
+  // un clic ou le focus hors du menu le ferme aussi.
+  const outils = document.querySelector<HTMLDetailsElement>('[data-outils]');
+  const fermerOutils = () => { if (outils) outils.open = false; };
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && outils?.open) {
+      fermerOutils();
+      outils.querySelector('summary')?.focus();
+    }
+  });
+  document.addEventListener('click', (event) => {
+    if (outils?.open && event.target instanceof Node && !outils.contains(event.target)) fermerOutils();
+  });
+  // Tabulation hors du menu. Un clic sur du texte du panneau ne donne le focus
+  // à rien (`relatedTarget` nul) : c'est l'écouteur de clic qui tranche.
+  outils?.addEventListener('focusout', (event) => {
+    if (event.relatedTarget instanceof Node && !outils.contains(event.relatedTarget)) fermerOutils();
+  });
 
   toggle?.addEventListener('click', () => {
     const isOpen = menu?.classList.toggle('hidden') === false;

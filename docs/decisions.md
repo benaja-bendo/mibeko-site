@@ -71,10 +71,10 @@ Le statut juridique figure sur toute page qui montre du texte de loi ; par défa
 **On rouvre si** : une mesure montre qu'une transition retarde l'affichage du texte de loi sur un Android d'entrée de gamme.
 
 ### SITE-011 · 2026-09-30 · Un menu « Outils » regroupe l'application, l'Assistant et l'espace pro
-**Statut** : en vigueur, non appliquée (le nom de l'espace pro reste à choisir) · **Réf.** : revue du site du 30/09/2026, SITE-001, D-049
+**Statut** : en vigueur · **Réf.** : revue du site du 30/09/2026, SITE-001, D-049, D-054, mibeko-site#80
 
 **Contexte** : sur ordinateur, aucune entrée de menu ne menait à l'espace pro ; il n'apparaissait que dans le menu mobile et en petit sous le champ de l'accueil. Le regroupement proposé s'intitulait « Produits ».
 **Décision** : un seul menu déroulant, « Outils », de trois entrées : l'application, l'Assistant Mibeko, l'espace pro. Panneau sur ordinateur (ouvert au clic, ou au survol après un court délai, fermé par Échap), accordéon sur téléphone. Chaque entrée dit à qui elle sert et ce qu'il en coûte pour commencer.
 **Écarté** : « Produits » (contredit SITE-001 et sonne comme un catalogue à acheter) ; « Applications » (se confond avec « L'application ») ; « Services » (vague) ; un méga-menu (trois entrées ne le justifient pas).
-**Conséquences** : le menu attend le nom commercial de l'espace pro, que le fondateur n'a pas retenu parmi ceux proposés le 30/09 (Mibeko Cabinet, Pro, Dossiers, Mosala) ; D-049 dit encore « Mibeko Apps ».
+**Conséquences** : l'espace de travail n'a pas de sous-marque (D-054) : la troisième entrée se nomme par ce qu'on y fait, « Travailler vos dossiers ». L'ancien lien « Cabinets et juristes » du menu mobile disparaît dans le menu « Outils ».
 **On rouvre si** : le menu dépasse cinq entrées.
