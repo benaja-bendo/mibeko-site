@@ -25,7 +25,7 @@ import {
   type ArticleVersionRef,
 } from '../../../lib/api';
 import { findVersionAt, isValidDateParam } from '../../../lib/articleVersions';
-import { articleLeafLabel, documentLineLabel } from '../../../lib/sanitize';
+import { articleLeafLabel, casseDePhrase, documentLineLabel } from '../../../lib/sanitize';
 import { articlePlainText } from '../../../lib/tables';
 import { documentTypeLabel, formatFrenchDate, formatSectionPath, isUnclassifiedType } from '../../../lib/legalMetadata';
 import { UMAMI_EVENTS } from '../../../lib/analytics';
@@ -117,6 +117,8 @@ const next = idx >= 0 && idx < articles.length - 1 ? articles[idx + 1] : null;
 // `titre_officiel` seul ne dit que « Décret n° … du … », ce qui rend le
 // titre de page, le partage et le fil d'Ariane muets.
 const intituleParent = documentLineLabel(document?.titre_officiel, document?.libelle_descriptif);
+// Hors de la page (onglet, Google, partage), là où `.casse-phrase` n'agit pas.
+const intituleAffiche = casseDePhrase(intituleParent);
 
 // Texte SEO : un tableau y entre linéarisé (« A | B | C »), jamais en balises —
 // la description et le JSON-LD en dérivent tous les deux.
@@ -132,7 +134,7 @@ const description = plain
 const articleLabel = current ? articleLeafLabel(current.number) : '';
 
 const pageTitle = document && current
-  ? `${articleLabel} — ${intituleParent}`
+  ? `${articleLabel} — ${intituleAffiche}`
   : 'Texte introuvable';
 
 const typeName = documentTypeLabel(document);
@@ -147,7 +149,7 @@ const docUrl = docPath ? new URL(docPath, siteOrigin).href : '';
 // Libellé de partage : ce qu'un destinataire doit lire pour situer le texte
 // sans avoir à ouvrir le lien.
 const shareTitle = document && current
-  ? `${articleLabel} — ${intituleParent}`
+  ? `${articleLabel} — ${intituleAffiche}`
   : '';
 
 // Référence collable : l'intitulé officiel, l'article, l'URL publique.
@@ -435,7 +437,7 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
   {!empty && (
     <OpenInAppBanner
       path={selfPath}
-      label={`${articleLabel} — ${intituleParent}`}
+      label={`${articleLabel} — ${intituleAffiche}`}
     />
   )}
 </Layout>
