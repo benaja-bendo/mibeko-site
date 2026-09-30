@@ -16,6 +16,10 @@
  *
  * Il ne promet rien : le libellé est « Ouvrir dans l'app », et si l'app est
  * absente le bouton mène au store — jamais un cul-de-sac.
+ *
+ * `inline` (pages de lecture, mibeko-site#81) : le bandeau prend place dans le
+ * flux, à la fin de l'article, au lieu de flotter en bas de l'écran où il
+ * couvrait le texte de loi (charte § 9 : l'offre vient après le texte lu).
  */
 import { UMAMI_EVENTS } from '../lib/analytics';
 import { SITE_PLACEMENTS, appStoreUrl, playStoreUrl } from '../lib/storeLinks';
@@ -25,9 +29,11 @@ interface Props {
   path: string;
   /** Ligne de contexte affichée sous le titre (nom du texte, article…). */
   label: string;
+  /** Dans le flux, en fin d'article, plutôt que collé en bas de l'écran. */
+  inline?: boolean;
 }
 
-const { path, label } = Astro.props;
+const { path, label, inline = false } = Astro.props;
 
 // Le scheme applicatif reprend le chemin public à l'identique : `/textes/x/y`
 // devient `mibeko://textes/x/y`, motif déjà déclaré côté app (navDeepLink
@@ -50,8 +56,12 @@ const androidIntent =
 ---
 
 <div
-  class="hidden print:!hidden fixed inset-x-0 bottom-0 z-50 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+  class:list={[
+    'hidden print:!hidden',
+    inline ? 'mt-6' : 'fixed inset-x-0 bottom-0 z-50 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
+  ]}
   data-open-in-app
+  data-inline={inline ? '' : undefined}
   data-app-uri={appUri}
   data-android-intent={androidIntent}
   data-play-store={PLAY_STORE}
@@ -119,9 +129,11 @@ const androidIntent =
 
     if ((isAndroid || isIOS) && !isPlainSafariIOS && !dismissed) {
       banner.classList.remove('hidden');
-      // Le bandeau flotte au-dessus du contenu : on libère la hauteur
-      // correspondante en bas de page pour ne rien masquer.
-      document.body.style.paddingBottom = `${banner.offsetHeight}px`;
+      // Collé en bas de l'écran, le bandeau flotte au-dessus du contenu : on
+      // libère la hauteur correspondante. Dans le flux, rien à libérer.
+      if (!('inline' in banner.dataset)) {
+        document.body.style.paddingBottom = `${banner.offsetHeight}px`;
+      }
     }
 
     banner.querySelector('[data-open-in-app-close]')?.addEventListener('click', () => {

@@ -231,9 +231,12 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
         </a>
       </section>
     ) : (
-      <div class="mx-auto max-w-[1120px] xl:max-w-[1400px] px-4 sm:px-6 lg:px-8 xl:px-10 py-6 md:py-10">
+      <div class="mx-auto max-w-[1120px] xl:max-w-[1400px] px-4 sm:px-6 lg:px-8 xl:px-10 py-4 sm:py-6 md:py-10">
 
-        <nav aria-label="Fil d'Ariane" class="text-sm text-on-surface-variant mb-5 flex flex-wrap items-center gap-1.5 print:hidden">
+        {/* Sur téléphone, le fil d'Ariane cède sa place au texte : le lien vers le
+            texte parent, juste sous « Article N », fait déjà le chemin retour
+            (mibeko-site#81). */}
+        <nav aria-label="Fil d'Ariane" class="text-sm text-on-surface-variant mb-5 hidden sm:flex flex-wrap items-center gap-1.5 print:hidden">
           <a href="/" class="hover:text-primary transition-colors">Accueil</a>
           <span class="text-on-surface-muted">/</span>
           <a href="/textes" class="hover:text-primary transition-colors">Textes officiels</a>
@@ -244,13 +247,16 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
         </nav>
 
         <!-- Même grille que la page document : le rail droit passe sous la
-             colonne de texte en dessous de 1280 px, la mesure ne rétrécit pas. -->
-        <div class="grid gap-6 lg:gap-8 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_272px]">
+             colonne de texte en dessous de 1280 px, la mesure ne rétrécit pas.
+             Sur téléphone, l'ordre est celui de la lecture : l'en-tête, le
+             texte et sa navigation, PUIS le sommaire et le reste — l'article
+             commence dans le premier tiers de l'écran (mibeko-site#81). -->
+        <div class="grid gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_272px]">
 
           <!-- Sommaire : rail sticky (desktop) + accordéon (mobile). Rendu UNE
                seule fois (l'arbre peut être volumineux) ; bascule CSS pure. -->
           <!-- Rail gauche : le sommaire -->
-          <aside class="order-2 lg:order-none min-w-0 lg:col-start-1 lg:row-start-1 lg:row-span-3 lg:self-start lg:sticky lg:top-24 print:hidden">
+          <aside class="order-3 lg:order-none min-w-0 lg:col-start-1 lg:row-start-1 lg:row-span-4 lg:self-start lg:sticky lg:top-24 print:hidden">
             <DocumentOutline
               nodes={tree}
               slug={document!.slug}
@@ -261,10 +267,10 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
             />
           </aside>
 
-          <!-- En-tête : élément de grille à part, pour que le sommaire
-               s'intercale entre le titre et le texte en mobile -->
+          <!-- En-tête : élément de grille à part, pour que l'ordre de lecture
+               puisse différer entre téléphone et ordinateur -->
           <header class="order-1 lg:order-none min-w-0 lg:col-start-2 lg:row-start-1">
-              <div class="flex flex-wrap items-center gap-3 mb-3">
+              <div class="hidden sm:flex flex-wrap items-center gap-3 mb-3">
                 <span class="inline-flex items-center px-3 py-1 rounded bg-secondary-tint text-secondary text-xs font-bold tracking-wide uppercase">
                   {typeName}
                 </span>
@@ -275,7 +281,7 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
                   <span class="text-xs sm:text-sm text-on-surface-muted">Réf. {document!.reference_nor}</span>
                 )}
               </div>
-              <h1 class="titre-article font-bold text-on-surface tracking-tight mb-3">
+              <h1 class="titre-article font-bold text-on-surface tracking-tight mb-1 sm:mb-3">
                 {articleLabel}
               </h1>
               <a href={docPath} class="casse-phrase inline-block text-base sm:text-lg text-on-surface-variant font-serif hover:text-primary transition-colors">
@@ -290,13 +296,13 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
             {/* Charte § 4, règle 1 : le statut s'affiche sur TOUTE page qui montre
                 du texte de loi. Une personne arrivée par Google sur un article
                 isolé doit savoir, sans remonter d'un niveau, s'il s'applique. */}
-            <LegalStatusBanner document={document!} class="mt-5" />
+            <LegalStatusBanner document={document!} class="mt-3 sm:mt-5" compact />
 
             <ArticleVersionSelector versions={versions} basePath={selfPath} selectedStart={au ?? versions.find((v) => v.is_current)?.start ?? ''} />
           </header>
 
-          <!-- Colonne article -->
-          <div class="order-3 lg:order-none min-w-0 lg:col-start-2 lg:row-start-2">
+          <!-- Colonne article : la lecture (texte et navigation) -->
+          <div class="order-2 lg:order-none min-w-0 lg:col-start-2 lg:row-start-2">
 
             {au && !versionFound && (
               <ArticleVersionBanner
@@ -321,7 +327,7 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
             {hasSection ? (
               <SectionReader section={section!} slug={document!.slug} activeNumber={current!.number} pdfUrl={pdfUrl} />
             ) : versionFound ? (
-              <div class="rounded-lg border border-surface-variant bg-surface-container-lowest p-5 sm:p-7 md:p-8">
+              <div class="sm:rounded-lg sm:border sm:border-surface-variant sm:bg-surface-container-lowest sm:p-7 md:p-8">
                 <div>
                   <LegalArticleBody content={current!.content} tables={current!.tables} />
                 </div>
@@ -350,6 +356,21 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
                 </a>
               ) : <span></span>}
             </nav>
+
+            {/* Le bandeau « Ouvrir dans l'app » vient APRÈS l'article lu, dans
+                le flux : collé en bas de l'écran, il couvrait le texte de loi
+                (charte § 9, mibeko-site#81). */}
+            <OpenInAppBanner
+              path={selfPath}
+              label={`${articleLabel} — ${intituleAffiche}`}
+              inline
+            />
+          </div>
+
+          <!-- Colonne article : la suite (situations, signalement, liens).
+               La marge négative annule l'écart de grille : l'espacement reste
+               celui d'avant la séparation en deux éléments. -->
+          <div class="order-4 lg:order-none min-w-0 -mt-4 sm:-mt-6 lg:-mt-8 lg:col-start-2 lg:row-start-3">
 
             {(document!.themes && document!.themes.length > 0) && (
               <div class="mt-6 flex flex-wrap items-center gap-2">
@@ -420,7 +441,7 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
           </div>
 
           <!-- Rail droit : outils + provenance -->
-          <aside class="order-4 lg:order-none flex flex-col gap-4 sm:flex-row sm:gap-4 xl:flex-col lg:col-start-2 lg:row-start-3 xl:col-start-3 xl:row-start-1 xl:row-span-3 xl:self-start xl:sticky xl:top-24 print:hidden">
+          <aside class="order-5 lg:order-none flex flex-col gap-4 sm:flex-row sm:gap-4 xl:flex-col lg:col-start-2 lg:row-start-4 xl:col-start-3 xl:row-start-1 xl:row-span-4 xl:self-start xl:sticky xl:top-24 print:hidden">
             <div class="flex-1 min-w-0">
               <DocumentTools reference={reference} url={selfUrl} title={shareTitle} pdfUrl={pdfUrl} pdfDownloadUrl={pdfDownloadUrl} />
             </div>
@@ -434,10 +455,4 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
     )}
   </main>
   <Footer />
-  {!empty && (
-    <OpenInAppBanner
-      path={selfPath}
-      label={`${articleLabel} — ${intituleAffiche}`}
-    />
-  )}
 </Layout>

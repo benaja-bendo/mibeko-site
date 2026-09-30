@@ -59,12 +59,19 @@ const beforeLabel = before.length === 0
       : `${articleLeafLabel(before[0].number)} à ${articleLeafLabel(before[before.length - 1].number)}`;
 ---
 
+<!-- Sur téléphone, pas de boîte autour du texte : il se lit comme une page de
+     livre, aligné sur les marges de l'écran. Sur la page article, l'intitulé de
+     la division y cède aussi sa place : le sommaire, sous le texte, le porte
+     (mibeko-site#81). -->
 <section
   aria-label={heading || 'Texte du document'}
-  class="rounded-lg border border-surface-variant bg-surface-container-lowest p-5 sm:p-7 md:p-8"
+  class="sm:rounded-lg sm:border sm:border-surface-variant sm:bg-surface-container-lowest sm:p-7 md:p-8"
 >
   {heading && (
-    <h2 class="mb-6 border-b border-surface-variant pb-3 text-xs font-bold uppercase tracking-[0.08em] text-secondary">
+    <h2 class:list={[
+      'mb-6 border-b border-surface-variant pb-3 text-xs font-bold uppercase tracking-[0.08em] text-secondary',
+      activeNumber !== undefined && 'hidden sm:block',
+    ]}>
       {heading}
     </h2>
   )}

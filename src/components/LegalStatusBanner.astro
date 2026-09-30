@@ -16,6 +16,11 @@
  *
  * Les couples couleur/teinte sont les jetons `statut-*` de `global.css`, tous
  * vérifiés ≥ 4,5:1. Ils ne servent à rien d'autre sur le site.
+ *
+ * `compact` (page article, mibeko-site#81) : sur téléphone, le bandeau tient
+ * sur une ligne — même filet, même teinte, statut écrit en toutes lettres —
+ * et la phrase se déplie. Le statut reste lisible sans aucune interaction ;
+ * seul son détail demande un geste. Dès 640 px, le bandeau complet revient.
  */
 import type { DocumentMeta } from '../lib/api';
 import { legalStatusPresentation, type LegalStatusTone } from '../lib/legalMetadata';
@@ -24,9 +29,11 @@ interface Props {
   document: DocumentMeta;
   /** Marge basse, désactivable quand le bandeau est déjà dans une pile espacée. */
   class?: string;
+  /** Une ligne dépliable sur téléphone (page article). */
+  compact?: boolean;
 }
 
-const { document, class: className = 'mb-6' } = Astro.props;
+const { document, class: className = 'mb-6', compact = false } = Astro.props;
 const status = legalStatusPresentation(document);
 
 // Classes littérales par état : Tailwind ne peut pas générer une classe
@@ -42,11 +49,32 @@ const TONES: Record<LegalStatusTone, { rule: string; tint: string; ink: string }
 const tone = TONES[status.tone];
 ---
 
+{compact && (
+  <details class:list={['statut-compact border-l-[3px] sm:hidden', tone.rule, tone.tint, className]}>
+    <summary class="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-sm">
+      <span class="sr-only">Statut juridique&nbsp;:</span>
+      <span class:list={['font-semibold', tone.ink]}>{status.headline}</span>
+      <span class="ml-auto text-xs text-on-surface-muted">Détail</span>
+      <svg class="statut-chevron shrink-0 text-on-surface-muted" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+    </summary>
+    <p class="px-3 pb-3 text-sm leading-relaxed text-on-surface-variant">{status.sentence}</p>
+  </details>
+)}
+
 <section
   aria-label="Statut juridique du texte"
-  class:list={['border-l-[3px] px-4 py-3 sm:px-5', tone.rule, tone.tint, className]}
+  class:list={['border-l-[3px] px-4 py-3 sm:px-5', tone.rule, tone.tint, className, compact && 'hidden sm:block']}
 >
   <p class:list={['text-xs font-semibold uppercase tracking-[0.08em]', tone.ink]}>Statut juridique</p>
   <p class="mt-1 font-semibold text-on-surface">{status.headline}</p>
   <p class="mt-1 max-w-[68ch] text-sm leading-relaxed text-on-surface-variant">{status.sentence}</p>
 </section>
+
+<style>
+  .statut-compact > summary::-webkit-details-marker { display: none; }
+  .statut-chevron { transition: transform 180ms cubic-bezier(0.23, 1, 0.32, 1); }
+  .statut-compact[open] .statut-chevron { transform: rotate(180deg); }
+  @media (prefers-reduced-motion: reduce) {
+    .statut-chevron { transition: none; }
+  }
+</style>

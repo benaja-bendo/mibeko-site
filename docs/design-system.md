@@ -201,7 +201,7 @@ C'est le composant qui distingue Mibeko d'un dépôt de PDF, et il n'existe pas 
 
 1. **Le statut est affiché sur toute page qui montre du texte de loi** — page document *et* page article. Une personne arrivée par Google sur un article isolé doit savoir, sans remonter d'un niveau, si le texte s'applique.
 2. **Ce n'est pas une puce, c'est un bandeau.** Un filet vertical de 3 px dans la couleur du statut, un fond en teinte, un libellé en `label`, une phrase en clair. La forme diffère des puces de catégorie pour que l'œil ne les confonde jamais (loi 4).
-3. **Le statut ne se lit jamais par la couleur seule** (WCAG 1.4.1) : le mot est toujours écrit.
+3. **Le statut ne se lit jamais par la couleur seule** (WCAG 1.4.1) : le mot est toujours écrit. Sur téléphone, la page article le réduit à une ligne dépliable (`compact`) : même filet, même teinte, statut écrit en toutes lettres ; seule la phrase se déplie. Il reste lisible sans aucun geste (mibeko-site#81).
 4. **Quatre états, et le quatrième est obligatoire.**
 
 | État | Couleur | Formulation | Quand |

@@ -26,10 +26,11 @@
     navigation: auto;
   }
 
-  /* L'en-tête du site et le bandeau de l'app sont les mêmes des deux côtés :
-     ils restent immobiles pendant que la lecture glisse. */
+  /* L'en-tête du site et, quand il est collé en bas de l'écran, le bandeau de
+     l'app sont les mêmes des deux côtés : ils restent immobiles pendant que
+     la lecture glisse. Dans le flux, le bandeau glisse avec le texte. */
   [data-sticky-header] { view-transition-name: entete-site; }
-  [data-open-in-app] { view-transition-name: bandeau-app; }
+  [data-open-in-app]:not([data-inline]) { view-transition-name: bandeau-app; }
   ::view-transition-group(entete-site),
   ::view-transition-old(entete-site),
   ::view-transition-new(entete-site),
