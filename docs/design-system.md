@@ -96,7 +96,7 @@ spacing:
 
 # Charte visuelle du site public Mibeko
 
-> Statut : à jour au 27 août 2026 · **Fait autorité sur** : direction artistique, tokens de couleur, typographie, densité, composants et emplacements de conversion de `mibeko-site`. En cas de contradiction avec le code, **le code gagne** — corriger la charte dans le même commit.
+> Statut : à jour au 30 septembre 2026 · **Fait autorité sur** : direction artistique, tokens de couleur, typographie, densité, composants et emplacements de conversion de `mibeko-site`. En cas de contradiction avec le code, **le code gagne** — corriger la charte dans le même commit.
 
 ## 0. Ce que cette version remplace
 
@@ -251,6 +251,25 @@ C'est ici que se joue concrètement « institution, pas produit ».
 - **Élévation plate.** Aucune ombre. La hiérarchie se lit par le fond (`surface-container-*`) et par un filet de 1 px.
 - **États** : le focus est un filet de 2 px en `primary`, visible et non supprimé. Le survol change une couleur, jamais une position. L'état actif est un aplat, jamais un relief.
 
+### Mouvement
+
+Décision SITE-010 (30/09/2026). Le mouvement dit d'où vient ce qui arrive, confirme une action ou évite un saut brusque. **Il ne décore jamais** : ce qui ne remplit aucune de ces trois fonctions ne bouge pas. Le survol reste régi par la règle ci-dessus.
+
+| Élément | Mouvement | Durée | Courbe |
+| --- | --- | --- | --- |
+| Passage d'un article à l'autre | glisse de 24 px dans le sens de la lecture, avec un fondu | 260 ms | sortie forte |
+| Ouverture du menu « Outils » | fondu, descente de 6 px depuis le bouton ; fermeture plus rapide | 180 / 120 ms | sortie forte |
+| Aperçu d'un renvoi (« l'article 136 ») | se déplie sous le paragraphe | 220 ms | sortie forte |
+| Sommaire, accordéon mobile, statut | la hauteur se déplie | 220 ms | sortie forte |
+| Bouton pressé | s'enfonce à 97 % | 120 ms | sortie |
+| Sections de l'accueil (facultatif) | fondu et 12 px, une seule fois | 400 ms | sortie forte |
+| Saisie dans la recherche, flèches du clavier | aucun : répété des dizaines de fois, il ralentirait | 0 | — |
+
+- **Sortie forte** = `cubic-bezier(0.23, 1, 0.32, 1)` : démarre vite, se pose doucement.
+- **Sans JavaScript d'abord.** Transitions entre pages par `@view-transition` (CSS), préchargement de l'article suivant par les speculation rules. Pas d'application monopage : l'URL d'un article reste sa citation (D-046). Un navigateur qui ne gère ni l'un ni l'autre charge la page comme avant.
+- **`prefers-reduced-motion`** rend tout instantané, sans exception.
+- **Jamais sur le texte de loi en cours de lecture** : aucun mouvement ne décale une ligne que le lecteur a sous les yeux.
+
 ---
 
 ## 8. Composants
@@ -400,6 +419,7 @@ Le plan du portail a fait trancher les six points que la charte laissait ouverts
 - **Thèmes de vie** : pages et navigation conservées, entrée retirée de la première hiérarchie de l’accueil tant que la couverture n’est pas gouvernée ; aucun thème vide n’est rendu.
 - **Prochain pas commercial** : comprendre par l’accès libre, agir par un pilote accompagné aux conditions confirmées avant engagement, travailler par une démonstration Pro ; aucun tarif fictif ni checkout simulé.
 - **Emblème** : livre ouvert monolinéaire, monochrome, lisible à 16–24 px, sans écu, flambeau, balance, devise ni couleurs nationales disposées en drapeau.
+  *Remis en cause le 30/09/2026 : le fondateur garde l'écu, à simplifier plutôt qu'à remplacer (mibeko-site#5). D-024 est à réécrire ; d'ici là, ni cette ligne ni le § 12 ne décrivent la décision courante.*
 - **Signature** : une seule — « Le droit congolais, clair et à portée de main ».
 
 ---
