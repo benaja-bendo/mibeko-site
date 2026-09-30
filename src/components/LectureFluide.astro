@@ -1,0 +1,105 @@
+---
+/**
+ * Lecture fluide (mibeko-site#76, charte § 7 « Mouvement », SITE-010) : à
+ * placer dans le `<head>` des pages de lecture (texte et article), et
+ * seulement là.
+ *
+ * - **Transition entre pages** en CSS (`@view-transition`) : l'URL de chaque
+ *   article reste sa citation (D-046), sans application monopage. Les deux
+ *   pages doivent l'avoir déclarée : une navigation depuis ou vers le reste du
+ *   site se charge comme avant.
+ * - **Sens de la lecture** : aller à l'article suivant fait glisser le contenu
+ *   vers la gauche, revenir au précédent (lien ou bouton retour) vers la
+ *   droite. Tout autre passage d'une page de lecture à l'autre est un fondu.
+ * - **Préchargement** des liens `data-sens` (précédent, suivant) sur signe
+ *   d'intention seulement (`moderate` : survol, approche), jamais d'office : le
+ *   public paie la donnée au mégaoctet (charte § 11).
+ *
+ * Sans JavaScript ou sur un navigateur qui ignore ces API, rien ne change : la
+ * page se charge comme aujourd'hui. Avec `prefers-reduced-motion`, aucune
+ * transition.
+ */
+---
+
+<style is:inline>
+  @media (prefers-reduced-motion: no-preference) {
+    @view-transition {
+      navigation: auto;
+    }
+  }
+
+  /* L'en-tête du site et le bandeau de l'app sont les mêmes des deux côtés :
+     ils restent immobiles pendant que la lecture glisse. */
+  [data-sticky-header] { view-transition-name: entete-site; }
+  [data-open-in-app] { view-transition-name: bandeau-app; }
+  ::view-transition-group(entete-site),
+  ::view-transition-old(entete-site),
+  ::view-transition-new(entete-site),
+  ::view-transition-group(bandeau-app),
+  ::view-transition-old(bandeau-app),
+  ::view-transition-new(bandeau-app) {
+    animation: none;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 260ms;
+    animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  html:active-view-transition-type(suivant)::view-transition-old(root) { animation-name: lecture-vers-gauche; }
+  html:active-view-transition-type(suivant)::view-transition-new(root) { animation-name: lecture-depuis-droite; }
+  html:active-view-transition-type(precedent)::view-transition-old(root) { animation-name: lecture-vers-droite; }
+  html:active-view-transition-type(precedent)::view-transition-new(root) { animation-name: lecture-depuis-gauche; }
+
+  @keyframes lecture-vers-gauche { to { opacity: 0; transform: translateX(-24px); } }
+  @keyframes lecture-vers-droite { to { opacity: 0; transform: translateX(24px); } }
+  @keyframes lecture-depuis-droite { from { opacity: 0; transform: translateX(24px); } }
+  @keyframes lecture-depuis-gauche { from { opacity: 0; transform: translateX(-24px); } }
+</style>
+
+<script is:inline type="speculationrules">
+  {"prefetch": [{"where": {"selector_matches": "a[data-sens]"}, "eagerness": "moderate"}]}
+</script>
+
+<script is:inline>
+  (() => {
+    // Le sens se décide sur la page qu'on quitte, qui connaît ses liens
+    // précédent et suivant, et voyage jusqu'à la suivante par sessionStorage :
+    // au moment de `pagereveal`, la nouvelle page n'a peut-être pas encore lu
+    // les siens.
+    const CLE = 'mibeko:sens-lecture';
+    const noter = (sens) => {
+      try {
+        if (sens) sessionStorage.setItem(CLE, sens);
+        else sessionStorage.removeItem(CLE);
+      } catch {}
+    };
+    const sensVers = (url) => {
+      for (const lien of document.querySelectorAll('a[data-sens]')) {
+        if (lien.href === url) return lien.dataset.sens;
+      }
+      return '';
+    };
+
+    // Navigateurs sans API Navigation (Safari avant la 26) : le clic suffit.
+    document.addEventListener('click', (event) => {
+      const lien = event.target instanceof Element ? event.target.closest('a[data-sens]') : null;
+      if (lien) noter(lien.dataset.sens);
+    });
+
+    // Chrome : la destination réelle, bouton retour compris.
+    addEventListener('pageswap', (event) => {
+      const destination = event.activation?.entry?.url;
+      if (event.viewTransition && destination) noter(sensVers(destination));
+    });
+
+    addEventListener('pagereveal', (event) => {
+      let sens = null;
+      try {
+        sens = sessionStorage.getItem(CLE);
+        sessionStorage.removeItem(CLE);
+      } catch {}
+      if (sens && event.viewTransition?.types) event.viewTransition.types.add(sens);
+    });
+  })();
+</script>

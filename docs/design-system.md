@@ -49,6 +49,17 @@ typography:
     size: 28px / 24px mobile
     weight: '600'
     tracking: -0.01em
+  document-title:
+    role: titre d'un texte juridique, en tête de sa page
+    font: Source Serif 4
+    size: 24px mobile → 32px ordinateur (fluide) ; au-delà de 90 caractères, 20px → 26px
+    weight: '600'
+    measure: toute la colonne
+  article-heading:
+    role: « Article N », en tête d'une page article
+    font: Inter
+    size: 24px mobile → 28px ordinateur (fluide)
+    weight: '700'
   title:
     role: titre de carte, nom de texte juridique
     font: Inter
@@ -229,6 +240,14 @@ Le site vend de la rigueur juridique ; la typographie est un signal de sérieux 
 ### Mesure
 
 Le corps d'un article est plafonné à **68 caractères** de large. La prose éditoriale aussi. Aucune ligne de texte long ne dépasse cette mesure, quelle que soit la largeur de l'écran.
+
+Le titre d'un texte juridique n'est pas un titre de page : il a son propre rôle (`document-title`, classes `.titre-texte` et `.titre-long` de `global.css`). La moitié des titres officiels dépasse 129 caractères (100 derniers textes publiés, mesure du 30/09/2026) : au rôle `display`, bridé à 24 caractères, la loi n° 34-2022 prenait 12 lignes de titre, collées à gauche d'une colonne vide. Trois règles :
+
+- **Toute la largeur de la colonne**, comme le bandeau de statut juste dessous. Un titre ne se bride pas plus étroit que ce qui le suit.
+- **Une taille fluide** (`clamp()`), 24 px sur téléphone et 32 px sur ordinateur, sans palier brusque entre les deux.
+- **Un cran de moins au-delà de 90 caractères** : 20 px, puis 26 px. Repère mesuré le 30/09/2026 : Légifrance affiche le titre d'une loi en 24 px sur téléphone et 26 px sur ordinateur, pleine largeur.
+
+« Article N » est une étiquette de quelques caractères, de 24 à 28 px (`article-heading`, classe `.titre-article`).
 
 ---
 
