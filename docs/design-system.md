@@ -49,6 +49,17 @@ typography:
     size: 28px / 24px mobile
     weight: '600'
     tracking: -0.01em
+  document-title:
+    role: titre d'un texte juridique, en tête de sa page
+    font: Source Serif 4
+    size: 30px / 24px mobile
+    weight: '600'
+    measure: 40ch
+  article-heading:
+    role: « Article N », en tête d'une page article
+    font: Inter
+    size: 26px
+    weight: '700'
   title:
     role: titre de carte, nom de texte juridique
     font: Inter
@@ -229,6 +240,8 @@ Le site vend de la rigueur juridique ; la typographie est un signal de sérieux 
 ### Mesure
 
 Le corps d'un article est plafonné à **68 caractères** de large. La prose éditoriale aussi. Aucune ligne de texte long ne dépasse cette mesure, quelle que soit la largeur de l'écran.
+
+Le titre d'un texte juridique n'est pas un titre de page : il a son propre rôle (`document-title`, 30 px et 24 px sur téléphone, sur **40 caractères**). La moitié des titres officiels dépasse 129 caractères (100 derniers textes publiés, mesure du 30/09/2026) ; au rôle `display`, sur 24 caractères, cela faisait cinq à six lignes de titre avant le statut. « Article N » est une étiquette de quelques caractères, à 26 px (`article-heading`).
 
 ---
 
