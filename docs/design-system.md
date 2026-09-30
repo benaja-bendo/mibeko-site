@@ -414,7 +414,7 @@ Le public visé utilise des Android d'entrée de gamme et paie la donnée au mé
 Mibeko est un service **privé et indépendant, sans adossement institutionnel** (confirmé le 17 août 2026). L'emblème doit donc être cohérent avec cette déclaration.
 
 - **Ne pas emprunter la grammaire visuelle de l'État.** Écu armorié, couleurs nationales disposées en drapeau, flambeau, banderole à devise : c'est le vocabulaire d'une institution publique. Un visiteur lit l'image avant de lire le pied de page — un emblème d'apparence officielle annule la mention d'indépendance du § 9, et pose une question juridique réelle, les emblèmes et drapeaux nationaux étant en général protégés. **Point à faire trancher par un juriste, pas par un designer.**
-- **L'emblème actuel est dans ce cas** : bouclier armorié, vert/jaune/rouge en diagonale du drapeau congolais, flambeau, balance et banderole « LE BOUCLIER DU SAVOIR ». Il est à reprendre.
+- **L'emblème actuel est dans ce cas** : bouclier armorié, vert/jaune/rouge en diagonale du drapeau congolais, flambeau, balance et banderole « LE BOUCLIER DU SAVOIR ». **Le fondateur le garde** (D-055, 30/09/2026) : il est redessiné à la main, sans devise ni halo (mibeko-site#5). La question juridique ci-dessus reste à lever avant la mise en ligne du nouveau dessin.
 - **Lisible à 24 px.** L'emblème est affiché à 24, 32 et 40 px selon les surfaces, et sert de favicon. Tout détail invisible à cette taille n'a pas à exister.
 - **Poids maximal : 20 ko.** L'actuel pèse **610 473 octets** transférés à chaque page — quatre fois le budget d'une page entière (§ 11) — parce qu'il s'agit d'une image matricielle vectorisée automatiquement en 1 715 tracés. Une marque se dessine, elle ne se décalque pas.
 
@@ -439,8 +439,7 @@ Le plan du portail a fait trancher les six points que la charte laissait ouverts
 - **Catalogue** : chronologie juridique décroissante, dates inconnues en dernier, puis titre officiel et UUID pour la stabilité.
 - **Thèmes de vie** : pages et navigation conservées, entrée retirée de la première hiérarchie de l’accueil tant que la couverture n’est pas gouvernée ; aucun thème vide n’est rendu.
 - **Prochain pas commercial** : comprendre par l’accès libre, agir par un pilote accompagné aux conditions confirmées avant engagement, travailler par une démonstration Pro ; aucun tarif fictif ni checkout simulé.
-- **Emblème** : livre ouvert monolinéaire, monochrome, lisible à 16–24 px, sans écu, flambeau, balance, devise ni couleurs nationales disposées en drapeau.
-  *Remis en cause le 30/09/2026 : le fondateur garde l'écu, à simplifier plutôt qu'à remplacer (mibeko-site#5). D-024 est à réécrire ; d'ici là, ni cette ligne ni le § 12 ne décrivent la décision courante.*
+- **Emblème** : ~~livre ouvert monolinéaire~~ — remplacé le 30/09/2026 par D-055 : l'écu, redessiné pour rester lisible à 24 px (silhouette, trois bandes, balance, flamme ; environ 1,3 Ko en couleur, 0,6 Ko en une couleur).
 - **Signature** : une seule — « Le droit congolais, clair et à portée de main ».
 
 ---
