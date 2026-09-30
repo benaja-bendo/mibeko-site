@@ -226,3 +226,14 @@ export function documentLineLabel(
   // le tiret : retiré de l'AFFICHAGE seulement, jamais de la donnée.
   return `${titre.replace(/\s*[.,;]\s*$/, '')} — ${libelle}`;
 }
+
+/**
+ * Capitale initiale d'un intitulé, pour les textes que le CSS n'atteint pas :
+ * titre de l'onglet (et donc de Google), `og:title`, libellé de partage.
+ * À l'écran, la même règle passe par `.casse-phrase` (`global.css`). Affichage
+ * seulement : `titre_officiel` n'est jamais réécrit (D-039), et la référence
+ * collable garde l'intitulé exact.
+ */
+export function casseDePhrase(intitule: string): string {
+  return intitule.charAt(0).toLocaleUpperCase('fr') + intitule.slice(1);
+}
