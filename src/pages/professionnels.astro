@@ -3,7 +3,27 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import PageHeader from '../components/PageHeader.astro';
 import Footer from '../components/Footer.astro';
+import { Image } from 'astro:assets';
 import { UMAMI_EVENTS } from '../lib/analytics';
+import captureTableau from '../assets/images/professionnels/tableau-de-bord.webp';
+import captureLecteur from '../assets/images/professionnels/lecteur-code-du-travail.webp';
+
+// L'espace tel qu'il est (mibeko-site#34) : un avocat voit l'outil avant de
+// parler à qui que ce soit — la preuve avant la promesse (charte, loi 1).
+// Captures réelles d'app.mibeko.fr, prises le 30/09/2026 ; le nom du compte
+// est masqué, rien d'autre n'est retouché. À refaire quand l'interface change.
+const captures = [
+  {
+    image: captureLecteur,
+    alt: "Capture de l'espace Mibeko : le Code du travail ouvert dans le lecteur, avec son sommaire à gauche, les articles 1 à 3 à droite et les boutons PDF source, PDF Mibeko, Assistant et Suivre.",
+    legende: 'Le lecteur : chaque texte avec son sommaire, son PDF d’origine et l’Assistant à portée de main. Ici, le Code du travail.',
+  },
+  {
+    image: captureTableau,
+    alt: "Capture de l'espace Mibeko : le tableau de bord, avec les compteurs du fonds, les accès à l'Assistant, à la bibliothèque et aux dossiers, et la veille des derniers textes publiés.",
+    legende: 'Le tableau de bord : le fonds, l’Assistant, vos dossiers et la veille des derniers textes publiés, dès la connexion.',
+  },
+];
 
 const features = [
   {
@@ -49,6 +69,30 @@ const faqs = [
 			title="Travaillez vos dossiers sur Mibeko"
 			subtitle="Sur ordinateur, pour les avocats et les juristes d'entreprise : rechercher, analyser, organiser ses dossiers et suivre ses délais, au même endroit."
 		/>
+
+		<section aria-labelledby="captures-titre" class="pt-4 pb-4 md:pt-6">
+			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
+				<h2 id="captures-titre" class="text-xl md:text-2xl font-bold text-on-surface tracking-tight mb-2">L'espace, tel qu'il est</h2>
+				<p class="text-sm text-on-surface-muted mb-6">Captures d'écran d'app.mibeko.fr, prises le 30 septembre 2026.</p>
+				<div class="grid gap-8">
+					{captures.map((capture) => (
+						<figure class="grid gap-3">
+							<div class="overflow-hidden rounded-lg border border-outline-variant/70 bg-surface-container-lowest">
+								<Image
+									src={capture.image}
+									alt={capture.alt}
+									widths={[480, 800, 1232]}
+									sizes="(min-width: 1120px) 1056px, calc(100vw - 2rem)"
+									loading="lazy"
+									class="block w-full h-auto"
+								/>
+							</div>
+							<figcaption class="text-sm text-on-surface-variant font-serif leading-relaxed max-w-[68ch]">{capture.legende}</figcaption>
+						</figure>
+					))}
+				</div>
+			</div>
+		</section>
 
 		<section class="py-12 md:py-16">
 			<div class="max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
