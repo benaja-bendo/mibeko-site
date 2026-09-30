@@ -17,6 +17,7 @@
  */
 import type { SectionArticle } from '../lib/api';
 import { articlePath } from '../lib/api';
+import type { IndexNumeros } from '../lib/renvois';
 import { articleLeafLabel } from '../lib/sanitize';
 import LegalArticleBody from './LegalArticleBody.astro';
 
@@ -29,9 +30,11 @@ interface Props {
   active?: boolean;
   /** Filet de séparation au-dessus (tous sauf le premier d'une pile). */
   separated?: boolean;
+  /** Numéros publiés du texte, pour les renvois internes (mibeko-site#82). */
+  numeros?: IndexNumeros;
 }
 
-const { article, slug, pdfUrl = null, active = false, separated = false } = Astro.props;
+const { article, slug, pdfUrl = null, active = false, separated = false, numeros } = Astro.props;
 
 // `#page=N` est le fragment standard des visionneuses PDF : le document
 // s'ouvre directement à la bonne page. Sans PDF joint, le numéro reste affiché
@@ -80,6 +83,10 @@ const sourceHref = pdfUrl && article.page ? `${pdfUrl}#page=${article.page}` : n
     )}
   </div>
   <div>
-    <LegalArticleBody content={article.content} tables={article.tables} />
+    <LegalArticleBody
+      content={article.content}
+      tables={article.tables}
+      renvois={numeros ? { slug, numeros, courant: article.number } : undefined}
+    />
   </div>
 </article>

@@ -26,6 +26,7 @@ import {
 import { articleLeafLabel, casseDePhrase, documentLineLabel } from '../../../lib/sanitize';
 import { documentTypeLabel, formatFrenchDate, formatSectionPath, isUnclassifiedType } from '../../../lib/legalMetadata';
 import { UMAMI_EVENTS } from '../../../lib/analytics';
+import { indexNumeros, renvoisPermis } from '../../../lib/renvois';
 
 const { doc } = Astro.params;
 
@@ -71,6 +72,8 @@ if (payload && canonicalSlug(payload) !== doc) {
 const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
 const document = payload?.document;
 const articles = payload?.articles ?? [];
+// Renvois internes (mibeko-site#82) : codes, Constitution, Actes uniformes.
+const numeros = payload?.document && renvoisPermis(payload.document) ? indexNumeros(articles.map((a) => a.number)) : undefined;
 const tree = buildTree(payload?.structure);
 const sectionCount = countStructureDivisions(tree);
 const section = payload?.section ?? null;
@@ -299,7 +302,7 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
               />
             ) : section && section.articles.length > 0 ? (
               <>
-                <SectionReader section={section} slug={document!.slug} pdfUrl={pdfUrl} />
+                <SectionReader section={section} slug={document!.slug} pdfUrl={pdfUrl} numeros={numeros} />
 
                 {section.next && (
                   <nav aria-label="Suite du texte" class="mt-5 flex justify-end print:hidden">
