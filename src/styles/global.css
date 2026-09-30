@@ -60,6 +60,28 @@
   text-transform: uppercase;
 }
 
+/* Retour à l'appui (SITE-010 : le bouton s'enfonce à 97 %, 120 ms, sortie
+   forte). Sur un téléphone lent, c'est le seul signe que l'appui a été pris
+   avant que la page suivante n'arrive. La transition de couleur des classes
+   `transition-colors` est reprise ici, puisque cette règle la remplace. */
+.appui {
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease, transform 120ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.appui:active:not(:disabled) { transform: scale(0.97); }
+
+/* Sommaire replié sur téléphone : son contenu apparaît en fondu (SITE-010). */
+[data-outline] > input:checked ~ .outline-depli {
+  transition: opacity 180ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@starting-style {
+  [data-outline] > input:checked ~ .outline-depli { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .appui { transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease; }
+  .appui:active:not(:disabled) { transform: none; }
+}
+
 /* Renvoi interne (« l'article 136 », mibeko-site#82). Pointillé pour le
    distinguer d'un lien ordinaire : il ouvre d'abord un aperçu. Le survol ne
    change que le trait, jamais une position (charte § 7). */
