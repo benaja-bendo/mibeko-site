@@ -119,6 +119,9 @@ const typeName = documentTypeLabel(document);
 const intituleUneLigne = documentLineLabel(document?.titre_officiel, document?.libelle_descriptif);
 // Hors de la page (onglet, Google, partage), là où `.casse-phrase` n'agit pas.
 const intituleAffiche = casseDePhrase(intituleUneLigne);
+// Au-delà, le titre descend d'un cran (`.titre-long`, global.css) : sinon une
+// loi de ratification occupe tout le premier écran d'un téléphone.
+const titreLong = (document?.titre_officiel ?? '').length > 90;
 
 const selfPath = document ? documentPath(document.slug) : '';
 const selfUrl = selfPath ? new URL(selfPath, siteOrigin).href : '';
@@ -186,6 +189,7 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
   jsonLd={jsonLd}
   appArgument={selfUrl || undefined}
   noindex={Boolean(query)}
+  lecture={!empty}
 >
   <Header />
   <main id="main" class="flex-grow bg-background">
@@ -245,7 +249,7 @@ const btnGhost = 'inline-flex items-center justify-center gap-2 h-11 px-5 rounde
                 {document!.reference_nor && <span class="text-xs sm:text-sm text-on-surface-muted">Réf. {document!.reference_nor}</span>}
               </div>
 
-              <h1 class="casse-phrase font-serif text-[1.75rem] leading-[1.15] sm:text-4xl md:text-[2.4rem] md:leading-[1.12] font-semibold text-on-surface tracking-tight mb-3 max-w-[24ch]">{document!.titre_officiel}</h1>
+              <h1 class:list={['casse-phrase titre-texte font-serif font-semibold text-on-surface tracking-tight mb-3', { 'titre-long': titreLong }]}>{document!.titre_officiel}</h1>
 
               {/* Le H1 reste l'intitulé officiel — c'est lui qui fait foi. L'objet
                   dérivé du corps de l'acte s'affiche EN DESSOUS, nommé comme tel,

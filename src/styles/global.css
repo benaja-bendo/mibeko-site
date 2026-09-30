@@ -60,6 +60,28 @@
   text-transform: uppercase;
 }
 
+/* Titres de lecture (charte § 5, rôles `document-title` et `article-heading`).
+   Taille fluide entre le téléphone et l'ordinateur, sur toute la largeur de
+   la colonne : bridé à quelques dizaines de caractères, un titre long restait
+   collé à gauche, sous un bandeau de statut qui, lui, occupe la colonne.
+   Un titre long descend d'un cran : la moitié des titres officiels dépasse
+   129 caractères. Repère : Légifrance, 24 px sur téléphone, 26 px sur
+   ordinateur, pleine largeur. */
+.titre-texte {
+  font-size: clamp(1.5rem, 1.2rem + 0.9vw, 2rem);
+  line-height: 1.2;
+  text-wrap: balance;
+}
+.titre-texte.titre-long {
+  font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.625rem);
+  line-height: 1.3;
+  text-wrap: pretty;
+}
+.titre-article {
+  font-size: clamp(1.5rem, 1.35rem + 0.4vw, 1.75rem);
+  line-height: 1.2;
+}
+
 /* Animations UX/UI */
 @keyframes fadeInUp {
   from {
