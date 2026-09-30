@@ -278,7 +278,7 @@ Décision SITE-010 (30/09/2026). Le mouvement dit d'où vient ce qui arrive, con
 | --- | --- | --- | --- |
 | Passage d'un article à l'autre | glisse de 24 px dans le sens de la lecture, avec un fondu | 260 ms | sortie forte |
 | Ouverture du menu « Outils » | fondu, descente de 6 px depuis le bouton ; fermeture plus rapide | 180 / 120 ms | sortie forte |
-| Aperçu d'un renvoi (« l'article 136 ») | se déplie sous le paragraphe (`.renvoi-apercu`, `global.css`) | 220 ms | sortie forte |
+| Aperçu d'un renvoi (« l'article 136 ») | se déplie sous le paragraphe | 220 ms | sortie forte |
 | Sommaire, accordéon mobile, statut | la hauteur se déplie | 220 ms | sortie forte |
 | Bouton pressé | s'enfonce à 97 % | 120 ms | sortie |
 | Sections de l'accueil (facultatif) | fondu et 12 px, une seule fois | 400 ms | sortie forte |
