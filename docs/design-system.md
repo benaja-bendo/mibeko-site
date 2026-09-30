@@ -276,8 +276,8 @@ Décision SITE-010 (30/09/2026). Le mouvement dit d'où vient ce qui arrive, con
 
 | Élément | Mouvement | Durée | Courbe |
 | --- | --- | --- | --- |
-| Passage d'un article à l'autre | glisse de 24 px dans le sens de la lecture, avec un fondu | 260 ms | sortie forte |
-| Ouverture du menu « Outils » | fondu, descente de 6 px depuis le bouton ; fermeture plus rapide | 180 / 120 ms | sortie forte |
+| Passage d'un article à l'autre | glisse de 24 px dans le sens de la lecture, avec un fondu ; l'ancienne page s'efface plus vite | 150 / 260 ms | sortie forte |
+| Ouverture du menu « Outils » | fondu, légère descente et agrandissement depuis le bouton (`scale(0.98)`, origine en haut à droite) ; fermeture instantanée | 180 ms / 0 | sortie forte |
 | Aperçu d'un renvoi (« l'article 136 ») | se déplie sous le paragraphe | 220 ms | sortie forte |
 | Sommaire, accordéon mobile, statut | la hauteur se déplie | 220 ms | sortie forte |
 | Bouton pressé | s'enfonce à 97 % | 120 ms | sortie |
@@ -285,8 +285,10 @@ Décision SITE-010 (30/09/2026). Le mouvement dit d'où vient ce qui arrive, con
 | Saisie dans la recherche, flèches du clavier | aucun : répété des dizaines de fois, il ralentirait | 0 | — |
 
 - **Sortie forte** = `cubic-bezier(0.23, 1, 0.32, 1)` : démarre vite, se pose doucement.
+- **La sortie est plus rapide que l'entrée** : ce qui s'en va ne doit pas rester à l'écran pendant que la suite arrive.
+- Grille de relecture : le skill `emil-design-eng` du dépôt (`.claude/skills/`).
 - **Sans JavaScript d'abord.** Transitions entre pages par `@view-transition` (CSS), préchargement de l'article suivant par les speculation rules. Pas d'application monopage : l'URL d'un article reste sa citation (D-046). Un navigateur qui ne gère ni l'un ni l'autre charge la page comme avant.
-- **`prefers-reduced-motion`** rend tout instantané, sans exception.
+- **`prefers-reduced-motion`** retire tout déplacement ; seul un fondu court reste (120 à 150 ms), pour éviter une coupure brutale. Moins de mouvement ne veut pas dire aucun.
 - **Jamais sur le texte de loi en cours de lecture** : aucun mouvement ne décale une ligne que le lecteur a sous les yeux.
 
 ---

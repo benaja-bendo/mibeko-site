@@ -16,16 +16,14 @@
  *   public paie la donnée au mégaoctet (charte § 11).
  *
  * Sans JavaScript ou sur un navigateur qui ignore ces API, rien ne change : la
- * page se charge comme aujourd'hui. Avec `prefers-reduced-motion`, aucune
- * transition.
+ * page se charge comme aujourd'hui. Avec `prefers-reduced-motion`, plus aucun
+ * glissement : il reste un fondu court, qui évite une coupure brutale.
  */
 ---
 
 <style is:inline>
-  @media (prefers-reduced-motion: no-preference) {
-    @view-transition {
-      navigation: auto;
-    }
+  @view-transition {
+    navigation: auto;
   }
 
   /* L'en-tête du site et le bandeau de l'app sont les mêmes des deux côtés :
@@ -41,15 +39,22 @@
     animation: none;
   }
 
+  /* L'ancienne page s'efface plus vite que la nouvelle n'arrive : moins de
+     temps où l'on voit deux pages superposées. */
   ::view-transition-old(root),
   ::view-transition-new(root) {
-    animation-duration: 260ms;
     animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
   }
-  html:active-view-transition-type(suivant)::view-transition-old(root) { animation-name: lecture-vers-gauche; }
-  html:active-view-transition-type(suivant)::view-transition-new(root) { animation-name: lecture-depuis-droite; }
-  html:active-view-transition-type(precedent)::view-transition-old(root) { animation-name: lecture-vers-droite; }
-  html:active-view-transition-type(precedent)::view-transition-new(root) { animation-name: lecture-depuis-gauche; }
+  ::view-transition-old(root) { animation-duration: 150ms; }
+  ::view-transition-new(root) { animation-duration: 260ms; }
+
+  /* Le glissement dans le sens de la lecture ; sans lui, un simple fondu. */
+  @media (prefers-reduced-motion: no-preference) {
+    html:active-view-transition-type(suivant)::view-transition-old(root) { animation-name: lecture-vers-gauche; }
+    html:active-view-transition-type(suivant)::view-transition-new(root) { animation-name: lecture-depuis-droite; }
+    html:active-view-transition-type(precedent)::view-transition-old(root) { animation-name: lecture-vers-droite; }
+    html:active-view-transition-type(precedent)::view-transition-new(root) { animation-name: lecture-depuis-gauche; }
+  }
 
   @keyframes lecture-vers-gauche { to { opacity: 0; transform: translateX(-24px); } }
   @keyframes lecture-vers-droite { to { opacity: 0; transform: translateX(24px); } }

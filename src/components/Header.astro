@@ -270,24 +270,31 @@ const CHEVRON = '<svg class="outils-chevron" xmlns="http://www.w3.org/2000/svg" 
 </style>
 
 <style is:global>
-  /* Menu « Outils » : mouvement selon SITE-010 (fondu et 6 px, 180 ms, sortie
-     forte). La fermeture est instantanée, plus rapide que l'ouverture. */
+  /* Menu « Outils » : mouvement selon SITE-010 (180 ms, sortie forte). Le
+     panneau grandit depuis son bouton, en haut à droite ; la fermeture est
+     instantanée, plus rapide que l'ouverture. */
   .outils > summary::-webkit-details-marker,
   .outils-mobile > summary::-webkit-details-marker { display: none; }
   .outils-chevron { transition: transform 180ms cubic-bezier(0.23, 1, 0.32, 1); }
   details[open] > summary .outils-chevron { transform: rotate(180deg); }
+  .outils-panel { transform-origin: top right; }
   .outils[open] .outils-panel,
   .outils-mobile[open] > ul {
     transition: opacity 180ms cubic-bezier(0.23, 1, 0.32, 1), transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
   }
   @starting-style {
-    .outils[open] .outils-panel { opacity: 0; transform: translateY(-6px); }
+    .outils[open] .outils-panel { opacity: 0; transform: translateY(-4px) scale(0.98); }
     .outils-mobile[open] > ul { opacity: 0; }
   }
+  /* Moins de mouvement ne veut pas dire aucun : le fondu reste, le
+     déplacement part. */
   @media (prefers-reduced-motion: reduce) {
-    .outils-chevron,
+    .outils-chevron { transition: none; }
     .outils[open] .outils-panel,
-    .outils-mobile[open] > ul { transition: none; }
+    .outils-mobile[open] > ul { transition: opacity 120ms ease-out; }
+    @starting-style {
+      .outils[open] .outils-panel { transform: none; }
+    }
   }
 </style>
 
