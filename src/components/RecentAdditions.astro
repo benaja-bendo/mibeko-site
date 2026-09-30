@@ -26,7 +26,7 @@ const dateFmt = (iso?: string | null) =>
             <span class="inline-flex items-center self-start sm:self-auto shrink-0 px-2.5 py-1 rounded bg-surface-container text-on-surface-variant text-xs font-semibold uppercase tracking-wider group-hover:bg-secondary/10 group-hover:text-secondary transition-colors">
               {documentTypeLabel(doc)}
             </span>
-            <span class="ai-sentence flex-1 text-sm sm:text-base font-bold text-on-surface group-hover:text-primary transition-colors leading-snug line-clamp-1">{doc.titre_officiel}</span>
+            <span class="casse-phrase flex-1 text-sm sm:text-base font-bold text-on-surface group-hover:text-primary transition-colors leading-snug line-clamp-1">{doc.titre_officiel}</span>
             {doc.created_at && (
               <span class="shrink-0 text-xs text-on-surface-muted">Intégré le {dateFmt(doc.created_at)}</span>
             )}
@@ -43,9 +43,3 @@ const dateFmt = (iso?: string | null) =>
     </div>
   </div>
 </section>
-
-<style>
-  .ai-sentence::first-letter {
-    text-transform: uppercase;
-  }
-</style>

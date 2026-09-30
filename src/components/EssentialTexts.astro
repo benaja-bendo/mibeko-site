@@ -28,7 +28,7 @@ const { documents, moreHref = '/textes', moreLabel = 'Parcourir tout le fonds' }
             <span class="inline-flex items-center self-start px-2.5 py-1 rounded bg-surface-container text-on-surface-variant text-xs font-semibold uppercase tracking-wider mb-3 group-hover:bg-secondary/10 group-hover:text-secondary transition-colors">
               {publicTypeLabel(doc.type_code, doc.type_name)}
             </span>
-            <h3 class="ai-sentence text-base font-bold text-on-surface group-hover:text-primary transition-colors leading-snug mb-2">{doc.title}</h3>
+            <h3 class="casse-phrase text-base font-bold text-on-surface group-hover:text-primary transition-colors leading-snug mb-2">{doc.title}</h3>
             {doc.articles_count > 0 && (
               <p class="mt-auto text-xs text-on-surface-muted">{doc.articles_count} article{doc.articles_count > 1 ? 's' : ''}</p>
             )}
@@ -45,11 +45,3 @@ const { documents, moreHref = '/textes', moreLabel = 'Parcourir tout le fonds' }
     </div>
   </div>
 </section>
-
-<style>
-  /* Le titre officiel n'est jamais réécrit : ceci ne change que le rendu visuel
-     (première lettre), jamais le texte accessible ni la donnée source. */
-  .ai-sentence::first-letter {
-    text-transform: uppercase;
-  }
-</style>

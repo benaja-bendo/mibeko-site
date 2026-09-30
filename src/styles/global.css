@@ -50,6 +50,16 @@
   }
 }
 
+/* Casse de phrase à l'affichage (charte § 5) : un intitulé officiel saisi en
+   minuscules (« code de la famille de 1984 ») prend sa capitale à l'écran.
+   Le texte du HTML, celui que lisent les lecteurs d'écran et les moteurs,
+   reste l'intitulé exact : `titre_officiel` n'est jamais réécrit (D-039).
+   `::first-letter` ne s'applique qu'à une boîte de type bloc : sur un lien
+   ou un `span`, ajouter `inline-block` ou `block`. */
+.casse-phrase::first-letter {
+  text-transform: uppercase;
+}
+
 /* Animations UX/UI */
 @keyframes fadeInUp {
   from {
