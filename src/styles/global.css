@@ -60,6 +60,50 @@
   text-transform: uppercase;
 }
 
+/* Renvoi interne (« l'article 136 », mibeko-site#82). Pointillé pour le
+   distinguer d'un lien ordinaire : il ouvre d'abord un aperçu. Le survol ne
+   change que le trait, jamais une position (charte § 7). */
+.renvoi {
+  color: var(--color-secondary);
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.renvoi:hover,
+.renvoi[aria-expanded="true"] { text-decoration-style: solid; }
+
+/* L'aperçu se déplie sous le paragraphe (SITE-010 : 220 ms, sortie forte).
+   Avec `prefers-reduced-motion`, un fondu seul. */
+.renvoi-apercu {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 220ms cubic-bezier(0.23, 1, 0.32, 1), opacity 220ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.renvoi-apercu > div { min-height: 0; overflow: hidden; }
+@starting-style {
+  .renvoi-apercu { grid-template-rows: 0fr; opacity: 0; }
+}
+.renvoi-carte {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.375rem;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: 0.5rem;
+  background: var(--color-surface-container-low);
+  padding: 0.75rem 1rem;
+}
+.renvoi-carte-titre { font-family: var(--font-sans); font-size: 0.8125rem; font-weight: 600; color: var(--color-on-surface); }
+.renvoi-carte-texte { font-size: 0.9375rem; line-height: 1.6; color: var(--color-on-surface-variant); }
+.renvoi-carte-lien { font-family: var(--font-sans); font-size: 0.8125rem; font-weight: 600; color: var(--color-secondary); justify-self: start; }
+.renvoi-carte-lien:hover { text-decoration: underline; }
+@media (prefers-reduced-motion: reduce) {
+  .renvoi-apercu { transition: opacity 120ms ease-out; }
+  @starting-style {
+    .renvoi-apercu { grid-template-rows: 1fr; }
+  }
+}
+
 /* Titres de lecture (charte § 5, rôles `document-title` et `article-heading`).
    Taille fluide entre le téléphone et l'ordinateur, sur toute la largeur de
    la colonne : bridé à quelques dizaines de caractères, un titre long restait

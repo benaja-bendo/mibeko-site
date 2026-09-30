@@ -135,6 +135,8 @@ export interface DocumentMeta {
   libelle_descriptif?: string | null;
   reference_nor: string | null;
   type_code: string | null;
+  /** STOCK (texte consolidé : code…) ou FLUX (acte unitaire d'un JO). */
+  document_role?: string | null;
   legal_scope: string;
   /** Statut juridique (« vigueur », « abrogé »…) exposé par l'API. */
   statut?: string | null;

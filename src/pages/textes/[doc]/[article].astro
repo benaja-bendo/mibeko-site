@@ -29,6 +29,7 @@ import { articleLeafLabel, casseDePhrase, documentLineLabel } from '../../../lib
 import { articlePlainText } from '../../../lib/tables';
 import { documentTypeLabel, formatFrenchDate, formatSectionPath, isUnclassifiedType } from '../../../lib/legalMetadata';
 import { UMAMI_EVENTS } from '../../../lib/analytics';
+import { indexNumeros, renvoisPermis } from '../../../lib/renvois';
 
 const ARTICLE_PREFIX = 'article-';
 const { doc, article: articleParam } = Astro.params;
@@ -108,6 +109,9 @@ const currentLabel = hasSection ? formatSectionPath(section!.path) || undefined 
 const versions: ArticleVersionRef[] = current?.versions ?? [];
 const versionFound = current?.version_found ?? true;
 const selectedVersion = au ? findVersionAt(versions, au) : null;
+
+// Renvois internes (mibeko-site#82) : codes, Constitution, Actes uniformes.
+const numeros = document && renvoisPermis(document) ? indexNumeros(articles.map((a) => a.number)) : undefined;
 
 const idx = current ? articles.findIndex((a) => a.number === current.number) : -1;
 const previous = idx > 0 ? articles[idx - 1] : null;
@@ -325,11 +329,15 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
             )}
 
             {hasSection ? (
-              <SectionReader section={section!} slug={document!.slug} activeNumber={current!.number} pdfUrl={pdfUrl} />
+              <SectionReader section={section!} slug={document!.slug} activeNumber={current!.number} pdfUrl={pdfUrl} numeros={numeros} />
             ) : versionFound ? (
               <div class="sm:rounded-lg sm:border sm:border-surface-variant sm:bg-surface-container-lowest sm:p-7 md:p-8">
                 <div>
-                  <LegalArticleBody content={current!.content} tables={current!.tables} />
+                  <LegalArticleBody
+                    content={current!.content}
+                    tables={current!.tables}
+                    renvois={numeros ? { slug: document!.slug, numeros, courant: current!.number } : undefined}
+                  />
                 </div>
               </div>
             ) : null}

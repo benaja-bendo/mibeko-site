@@ -18,6 +18,7 @@
  * texte qui se limite, pas la grille.
  */
 import type { PublicSection } from '../lib/api';
+import type { IndexNumeros } from '../lib/renvois';
 import { articleLeafLabel } from '../lib/sanitize';
 import { formatSectionPath } from '../lib/legalMetadata';
 import SectionArticleBlock from './SectionArticleBlock.astro';
@@ -29,9 +30,11 @@ interface Props {
   activeNumber?: string;
   /** PDF d'origine, pour le renvoi « page N du document source ». */
   pdfUrl?: string | null;
+  /** Numéros publiés du texte : active les renvois internes (mibeko-site#82). */
+  numeros?: IndexNumeros;
 }
 
-const { section, slug, activeNumber, pdfUrl = null } = Astro.props;
+const { section, slug, activeNumber, pdfUrl = null, numeros } = Astro.props;
 
 const heading = formatSectionPath(section.path);
 
@@ -84,7 +87,7 @@ const beforeLabel = before.length === 0
       </summary>
       <div class="mt-6">
         {before.map((article, index) => (
-          <SectionArticleBlock article={article} slug={slug} pdfUrl={pdfUrl} separated={index > 0} />
+          <SectionArticleBlock article={article} slug={slug} pdfUrl={pdfUrl} separated={index > 0} numeros={numeros} />
         ))}
       </div>
     </details>
@@ -97,6 +100,7 @@ const beforeLabel = before.length === 0
       pdfUrl={pdfUrl}
       active={activeNumber !== undefined && article.number === activeNumber}
       separated={index > 0}
+      numeros={numeros}
     />
   ))}
 

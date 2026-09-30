@@ -21,14 +21,26 @@
  */
 import { articleSegments, type ApiTable } from '../lib/tables';
 import { reflowLegalText } from '../lib/legalTextFlow';
+import { articlePath } from '../lib/api';
+import { decouperRenvois, type IndexNumeros } from '../lib/renvois';
 
 interface Props {
   content: string | null | undefined;
   tables?: ApiTable[] | null;
+  /**
+   * Renvois internes (mibeko-site#82) : « l'article 136 » devient un lien
+   * vers l'article 136 du même texte. Absent : le texte reste tel quel.
+   */
+  renvois?: { slug: string; numeros: IndexNumeros; courant?: string };
 }
 
-const { content, tables } = Astro.props;
+const { content, tables, renvois } = Astro.props;
 const segments = articleSegments(content, tables);
+
+// Le texte reste rendu en nœuds de texte, jamais en HTML : un renvoi n'est
+// qu'un `<a>` posé autour d'un morceau du texte d'origine.
+const morceaux = (texte: string) =>
+  renvois ? decouperRenvois(texte, renvois.numeros, renvois.courant) : [{ kind: 'texte' as const, texte }];
 
 /** Cellule numérique (montant, quantité) : alignée à droite, chiffres tabulaires. */
 const isNumeric = (cell: string) => /^[\d.,\s]*\d[\d.,\s]*\s*(%|FCFA|XAF)?$/i.test(cell.trim());
@@ -42,13 +54,17 @@ const isNumeric = (cell: string) => /^[\d.,\s]*\d[\d.,\s]*\s*(%|FCFA|XAF)?$/i.te
       <div class="font-serif text-on-surface text-base sm:text-lg leading-[1.75] break-words space-y-4 max-w-[68ch]">
         {reflowLegalText(segment.text).map((block) =>
           block.kind === 'paragraph' ? (
-            <p>{block.text}</p>
+            <p>{morceaux(block.text).map((m) =>
+              m.kind === 'texte' ? m.texte : <a class="renvoi" href={articlePath(renvois!.slug, m.numero)} data-renvoi={m.numero}>{m.texte}</a>,
+            )}</p>
           ) : (
             <ul class="list-none pl-0 space-y-2">
               {block.items.map((item) => (
                 <li class="flex gap-2">
                   <span class="text-on-surface-variant shrink-0" aria-hidden="true">—</span>
-                  <span>{item}</span>
+                  <span>{morceaux(item).map((m) =>
+                    m.kind === 'texte' ? m.texte : <a class="renvoi" href={articlePath(renvois!.slug, m.numero)} data-renvoi={m.numero}>{m.texte}</a>,
+                  )}</span>
                 </li>
               ))}
             </ul>
@@ -105,3 +121,88 @@ const isNumeric = (cell: string) => /^[\d.,\s]*\d[\d.,\s]*\s*(%|FCFA|XAF)?$/i.te
     ),
   )
 )}
+
+<script>
+  // Aperçu d'un renvoi (mibeko-site#82 ; SITE-010 : se déplie sous le
+  // paragraphe). Sans JavaScript, ou avec une touche de modification (nouvel
+  // onglet), le renvoi reste un lien ordinaire vers la page de l'article.
+  // Le texte de l'aperçu est lu dans la page quand l'article y figure déjà
+  // (même division), sinon dans la page de l'article, chargée une seule fois.
+  // Tout passe par `textContent` : aucun HTML de la page chargée n'est injecté.
+  const extraits = new Map<string, Promise<string | null>>();
+  let compteur = 0;
+
+  const extraitDe = (racine: Document, numero: string): string | null => {
+    const corps = racine.getElementById(`article-${numero}`)?.lastElementChild;
+    const texte = corps?.textContent?.replace(/\s+/g, ' ').trim();
+    return texte || null;
+  };
+
+  const charger = (lien: HTMLAnchorElement, numero: string): Promise<string | null> => {
+    const local = extraitDe(document, numero);
+    if (local) return Promise.resolve(local);
+    if (!extraits.has(lien.href)) {
+      extraits.set(
+        lien.href,
+        fetch(lien.href)
+          .then((reponse) => (reponse.ok ? reponse.text() : null))
+          .then((html) => (html ? extraitDe(new DOMParser().parseFromString(html, 'text/html'), numero) : null))
+          .catch(() => null),
+      );
+    }
+    return extraits.get(lien.href)!;
+  };
+
+  const couper = (texte: string, max = 420) => {
+    if (texte.length <= max) return texte;
+    const coupe = texte.slice(0, max);
+    return `${coupe.slice(0, coupe.lastIndexOf(' '))} …`;
+  };
+
+  const element = <K extends keyof HTMLElementTagNameMap>(tag: K, classe: string, texte?: string) => {
+    const el = document.createElement(tag);
+    el.className = classe;
+    if (texte !== undefined) el.textContent = texte;
+    return el;
+  };
+
+  document.addEventListener('click', async (event) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const lien = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a.renvoi') : null;
+    if (!lien?.dataset.renvoi) return;
+    event.preventDefault();
+
+    const ouvert = lien.getAttribute('aria-controls');
+    if (ouvert) {
+      document.getElementById(ouvert)?.remove();
+      lien.removeAttribute('aria-controls');
+      lien.setAttribute('aria-expanded', 'false');
+      return;
+    }
+
+    const numero = lien.dataset.renvoi;
+    const titre = `Article ${numero}`;
+    const apercu = element('div', 'renvoi-apercu');
+    apercu.id = `renvoi-apercu-${++compteur}`;
+    const carte = element('div', 'renvoi-carte');
+    carte.setAttribute('role', 'region');
+    carte.setAttribute('aria-label', `Aperçu de l’${titre.toLowerCase()}`);
+    const extrait = element('p', 'renvoi-carte-texte', 'Chargement de l’article…');
+    const ouvrir = element('a', 'renvoi-carte-lien', `Lire l’${titre.toLowerCase()} →`);
+    ouvrir.href = lien.href;
+    carte.append(element('p', 'renvoi-carte-titre', titre), extrait, ouvrir);
+    const interieur = element('div', '');
+    interieur.append(carte);
+    apercu.append(interieur);
+
+    // Sous le paragraphe ; dans un élément de liste, à la fin de l'élément.
+    const item = lien.closest('li > span');
+    if (item) item.append(apercu);
+    else (lien.closest('p') ?? lien).after(apercu);
+    lien.setAttribute('aria-controls', apercu.id);
+    lien.setAttribute('aria-expanded', 'true');
+
+    const texte = await charger(lien, numero);
+    extrait.textContent = texte ? couper(texte) : 'L’aperçu n’est pas disponible : ouvrez l’article.';
+  });
+</script>
