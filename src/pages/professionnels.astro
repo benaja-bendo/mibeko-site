@@ -5,6 +5,7 @@ import PageHeader from '../components/PageHeader.astro';
 import Footer from '../components/Footer.astro';
 import { Image } from 'astro:assets';
 import { UMAMI_EVENTS } from '../lib/analytics';
+import { WHATSAPP_AFFICHE, whatsappUrl } from '../lib/whatsapp';
 import captureTableau from '../assets/images/professionnels/tableau-de-bord.webp';
 import captureLecteur from '../assets/images/professionnels/lecteur-code-du-travail.webp';
 
@@ -138,6 +139,19 @@ const faqs = [
 						Demander une démonstration accompagnée
 					</a>
 				</div>
+				{/* Pour un avocat au Congo, la sortie la plus courte est une conversation,
+				    pas un formulaire (mibeko-site#90). Lien sortant, rien n'est envoyé. */}
+				<p class="mt-5 text-sm text-on-surface-variant">
+					Vous préférez en parler&nbsp;?{' '}
+					<a
+						href={whatsappUrl('Bonjour, j’ai vu Mibeko sur mibeko.fr et je voudrais le voir sur mes dossiers.')}
+						target="_blank"
+						rel="noopener noreferrer"
+						data-umami-event={UMAMI_EVENTS.travaillerWhatsapp}
+						class="text-secondary font-semibold hover:underline"
+					>Écrivez-nous sur WhatsApp</a>,
+					au <span class="whitespace-nowrap">{WHATSAPP_AFFICHE}</span>.
+				</p>
 				<p class="mt-6 text-sm text-on-surface-variant">
 					Déjà client ?{' '}
 					<a
