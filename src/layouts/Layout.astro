@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import SearchSuggest from '../components/SearchSuggest.astro';
+import LectureFluide from '../components/LectureFluide.astro';
 import { serializeJsonLd } from '../lib/jsonLd';
 
 interface Props {
@@ -17,6 +18,12 @@ interface Props {
 	 * texte que la personne était en train de lire.
 	 */
 	appArgument?: string;
+	/**
+	 * Page de lecture (texte, article) : transition et préchargement entre
+	 * pages de lecture (mibeko-site#76). Les deux pages d'une navigation
+	 * doivent l'avoir pour que la transition joue.
+	 */
+	lecture?: boolean;
 }
 
 const {
@@ -28,6 +35,7 @@ const {
 	jsonLd = [],
 	noindex = false,
 	appArgument,
+	lecture = false,
 } = Astro.props;
 
 const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
@@ -136,6 +144,8 @@ const websiteJsonLd = {
 		{jsonLd.map((schema) => (
 			<script type="application/ld+json" set:html={serializeJsonLd(schema)} />
 		))}
+
+		{lecture && <LectureFluide />}
 
 		{/* Mesure d'audience anonyme (Umami, sans cookies) — seulement si configurée */}
 		{umamiEnabled && (
