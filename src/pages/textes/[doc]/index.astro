@@ -24,6 +24,7 @@ import {
   ApiUnavailableError,
 } from '../../../lib/api';
 import { articleLeafLabel, casseDePhrase, documentLineLabel } from '../../../lib/sanitize';
+import { avecMarque, descriptionTexte, titreTexte } from '../../../lib/pageTitle';
 import { documentTypeLabel, formatFrenchDate, formatSectionPath, isUnclassifiedType } from '../../../lib/legalMetadata';
 import { UMAMI_EVENTS } from '../../../lib/analytics';
 import { indexNumeros, renvoisPermis } from '../../../lib/renvois';
@@ -122,6 +123,10 @@ const typeName = documentTypeLabel(document);
 const intituleUneLigne = documentLineLabel(document?.titre_officiel, document?.libelle_descriptif);
 // Hors de la page (onglet, Google, partage), là où `.casse-phrase` n'agit pas.
 const intituleAffiche = casseDePhrase(intituleUneLigne);
+// Intitulé officiel SEUL pour les balises de tête : la ligne ci-dessus joint le
+// libellé descriptif par un tiret (D-057) et reste trop longue pour un titre
+// (mibeko-site#92, `lib/pageTitle.ts`).
+const titreOfficiel = (document?.titre_officiel ?? '').trim() || document?.libelle_descriptif?.trim() || 'Document';
 // Au-delà, le titre descend d'un cran (`.titre-long`, global.css) : sinon une
 // loi de ratification occupe tout le premier écran d'un téléphone.
 const titreLong = (document?.titre_officiel ?? '').length > 90;
@@ -182,10 +187,10 @@ const btnGhost = 'appui inline-flex items-center justify-center gap-2 h-11 px-5 
 ---
 
 <Layout
-  title={unavailable ? 'Texte momentanément indisponible — Mibeko' : notFound ? 'Texte introuvable — Mibeko' : `${intituleAffiche} — Mibeko`}
+  title={avecMarque(unavailable ? 'Texte momentanément indisponible' : notFound ? 'Texte introuvable' : titreTexte(titreOfficiel, document?.libelle_descriptif))}
   description={empty
     ? "Ce texte n'est pas disponible dans le fonds Mibeko."
-    : `${intituleAffiche} — ${typeName} de la République du Congo. ${articles.length} articles, consultables librement sur Mibeko.`}
+    : descriptionTexte({ titreOfficiel, libelleDescriptif: document?.libelle_descriptif, typeName, nbArticles: articles.length })}
   image={document ? `/og/${document.slug}.png` : undefined}
   ogType="article"
   canonical={selfUrl || undefined}

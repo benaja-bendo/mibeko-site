@@ -26,6 +26,7 @@ import {
 } from '../../../lib/api';
 import { findVersionAt, isValidDateParam } from '../../../lib/articleVersions';
 import { articleLeafLabel, casseDePhrase, documentLineLabel } from '../../../lib/sanitize';
+import { avecMarque, descriptionArticleVide, titreArticle } from '../../../lib/pageTitle';
 import { articlePlainText } from '../../../lib/tables';
 import { documentTypeLabel, formatFrenchDate, formatSectionPath, isUnclassifiedType } from '../../../lib/legalMetadata';
 import { UMAMI_EVENTS } from '../../../lib/analytics';
@@ -124,6 +125,15 @@ const intituleParent = documentLineLabel(document?.titre_officiel, document?.lib
 // Hors de la page (onglet, Google, partage), là où `.casse-phrase` n'agit pas.
 const intituleAffiche = casseDePhrase(intituleParent);
 
+// Libellé de la feuille : « Article 5 », mais « Tableau 1 » ou « Préambule »
+// pour les feuilles techniques du pipeline.
+const articleLabel = current ? articleLeafLabel(current.number) : '';
+
+// Intitulé officiel SEUL, pour les balises de tête : `intituleParent` joint le
+// libellé descriptif par un tiret (D-057), et le titre doit rester court
+// (mibeko-site#92, `lib/pageTitle.ts`).
+const titreOfficiel = (document?.titre_officiel ?? '').trim() || document?.libelle_descriptif?.trim() || 'Document';
+
 // Texte SEO : un tableau y entre linéarisé (« A | B | C »), jamais en balises —
 // la description et le JSON-LD en dérivent tous les deux.
 const plain = articlePlainText(current?.content, current?.tables).replace(/\s+/g, ' ').trim();
@@ -131,14 +141,10 @@ const description = plain
   ? plain.length > 160
     ? `${plain.slice(0, 157)}…`
     : plain
-  : `Article ${numero} du ${intituleParent} — République du Congo.`;
-
-// Libellé de la feuille : « Article 5 », mais « Tableau 1 » ou « Préambule »
-// pour les feuilles techniques du pipeline.
-const articleLabel = current ? articleLeafLabel(current.number) : '';
+  : descriptionArticleVide(articleLabel || `Article ${numero}`, titreOfficiel);
 
 const pageTitle = document && current
-  ? `${articleLabel} — ${intituleAffiche}`
+  ? titreArticle(articleLabel, titreOfficiel)
   : 'Texte introuvable';
 
 const typeName = documentTypeLabel(document);
@@ -207,7 +213,7 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
 ---
 
 <Layout
-  title={unavailable ? 'Texte momentanément indisponible — Mibeko' : notFound ? 'Texte introuvable — Mibeko' : `${pageTitle} — Mibeko`}
+  title={avecMarque(unavailable ? 'Texte momentanément indisponible' : notFound ? 'Texte introuvable' : pageTitle)}
   description={description}
   image={document ? `/og/${document.slug}/${articleParam}.png` : undefined}
   ogType="article"

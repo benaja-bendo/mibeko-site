@@ -69,7 +69,7 @@ const collectionLd = documents.length > 0
   ? {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: 'Nouveautés du fonds — Mibeko',
+      name: 'Nouveautés du fonds | Mibeko',
       description: "Les derniers documents ajoutés au fonds juridique de la République du Congo et de l'espace OHADA.",
       inLanguage: 'fr',
       url: canonical,
@@ -99,7 +99,7 @@ const jsonLd = [collectionLd, breadcrumbLd].filter(Boolean) as Record<string, un
 ---
 
 <Layout
-  title="Nouveautés du fonds juridique — Mibeko"
+  title="Nouveautés du fonds juridique | Mibeko"
   description="Les derniers documents intégrés au fonds Mibeko, avec leur date d’intégration distincte de leur date juridique."
   canonical={canonical}
   jsonLd={jsonLd}

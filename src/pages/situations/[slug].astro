@@ -52,7 +52,7 @@ const jsonLd = breadcrumbLd ? [breadcrumbLd as Record<string, unknown>] : [];
 ---
 
 <Layout
-  title={unavailable ? 'Thème momentanément indisponible — Mibeko' : notFound ? 'Thème introuvable — Mibeko' : `${theme!.name} — Le droit par situation — Mibeko`}
+  title={unavailable ? 'Thème momentanément indisponible | Mibeko' : notFound ? 'Thème introuvable | Mibeko' : `${theme!.name} : le droit par situation | Mibeko`}
   description={notFound || unavailable ? 'Ce thème est introuvable.' : (theme!.description ?? `Les textes du droit congolais sur le thème « ${theme!.name} ».`)}
   canonical={canonical}
   jsonLd={jsonLd}
