@@ -16,7 +16,7 @@ Identifiants `SITE-NNN`, jamais réutilisés ; une nouvelle décision s'ajoute �
 Le statut juridique figure sur toute page qui montre du texte de loi ; par défaut, il est « non vérifié ». Les interdits de la charte s'écrivent en commandes `grep`, dont le résultat attendu est zéro.
 
 ### SITE-002 · 2026-09-20 · Le premier écran porte une promesse au lecteur, ni l'identité du site ni l'offre Pro
-**Statut** : en vigueur · **Réf.** : mibeko-site#25
+**Statut** : en vigueur, titre remplacé par SITE-013 · **Réf.** : mibeko-site#25
 
 **Décision** : la promesse va dans le H1 et le champ de recherche, la preuve (textes officiels, chiffres du fonds) en sous-titre, l'offre dans des pages dédiées. Le premier écran ne promet que ce que le champ livre. Aucune situation n'est nommée avant d'avoir été tapée dans le champ en production. Les professionnels gardent une porte latérale (« Vous exercez le droit ? », événement `travailler_offre`).
 **Écarté** : le registre « la référence du droit congolais » (Mibeko n'est pas l'État) ; un H1 en forme de question (un seul litige ne parle qu'à une seule personne).
@@ -92,3 +92,12 @@ Le statut juridique figure sur toute page qui montre du texte de loi ; par défa
 **Écarté** : l'appareil au filet de 1 px de la charte v2 (il ne se lit pas comme un téléphone) ; retirer le cadre sur téléphone (proposé le 02/10, écarté : réduit, il reste lisible à 390 px) ; une vidéo (lourde, et rien à toucher) ; un assistant ouvert aux visiteurs (SITE-004).
 **Conséquences** : la charte change au § 8 (« Écran de l'application, rejoué ») et gagne une ligne au § 7. D'autres pages pourront recevoir des démonstrations du même genre, avec les mêmes garde-fous. Le code repart des composants existants (`AssistantConversation.astro`, `Header.astro`) : les maquettes ne sont pas recopiées telles quelles.
 **On rouvre si** : une mesure montre que la démonstration retarde l'affichage du champ de recherche, ou fait dépasser à la page son budget de 150 ko sur un Android d'entrée de gamme.
+
+### SITE-013 · 2026-10-02 · Le titre de l'accueil devient une question : « Que dit la loi sur votre situation ? »
+**Statut** : en vigueur · **Réf.** : mibeko-site#96, SITE-002, SITE-012, canevas « Refonte mibeko.fr » (planches 8 et 8 bis)
+
+**Contexte** : SITE-002 mettait la promesse dans le titre (« Le droit congolais et OHADA, clair et cité à la source. ») et écartait un titre en forme de question, parce que la question testée nommait un seul litige (un bail). Avec la refonte (SITE-012), le téléphone du premier écran montre ce que ce titre affirmait : la source, le statut, la version. Le fondateur ne veut plus de « le droit congolais et OHADA » en titre.
+**Décision** : le titre de l'accueil est « Que dit la loi sur votre situation ? », suivi de « Décrivez-la avec vos mots : Mibeko retrouve les articles qui en parlent. », puis du champ de recherche, qui reste le premier geste. Le périmètre passe dans la ligne de chiffres, sous le champ (« textes officiels du Congo et de l'OHADA »), et reste dans le `<title>` de la page pour le référencement. La signature unique de la charte (§ 13) ne change pas.
+**Écarté** : garder le titre actuel (une affirmation que le téléphone prouve mieux) ; aucun titre visible (les premières secondes ne diraient plus rien, et Google comme les lecteurs d'écran perdraient le H1) ; une question qui nomme un seul litige (la raison de SITE-002 reste valable).
+**Conséquences** : le reste de SITE-002 tient (promesse au lecteur, preuve sous le champ, porte latérale pour les professionnels). La question est générique : elle renvoie au champ, qui reçoit la situation de chacun.
+**On rouvre si** : les recherches lancées depuis l'accueil baissent dans les 14 jours qui suivent la mise en ligne de mibeko-site#96, comparées aux 14 jours d'avant (Umami).
