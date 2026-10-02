@@ -1,6 +1,6 @@
 # Registre des décisions — site public (mibeko.fr)
 
-> Statut : à jour au 30 septembre 2026 · **Fait autorité sur** : les décisions en vigueur qui ne changent que le code de ce dépôt. Les décisions qui touchent plusieurs dépôts (site sans compte, marque, partage par URL, provenance, schéma d'URL, quotas vus du site…) sont dans le registre transverse (`docs/decisions.md` du monorepo, dépôt `mibeko-docs`), qui donne aussi le gabarit et les règles (D-001).
+> Statut : à jour au 2 octobre 2026 · **Fait autorité sur** : les décisions en vigueur qui ne changent que le code de ce dépôt. Les décisions qui touchent plusieurs dépôts (site sans compte, marque, partage par URL, provenance, schéma d'URL, quotas vus du site…) sont dans le registre transverse (`docs/decisions.md` du monorepo, dépôt `mibeko-docs`), qui donne aussi le gabarit et les règles (D-001).
 
 Identifiants `SITE-NNN`, jamais réutilisés ; une nouvelle décision s'ajoute à la fin. Les décisions reprises le 28/09/2026 ne portent « Écarté » et « On rouvre si » que si l'original les donnait ; texte d'origine : `docs/_archive/2026-09-28-journal-decisions-2026-07-a-09.md` (dépôt `mibeko-docs`).
 
@@ -78,3 +78,17 @@ Le statut juridique figure sur toute page qui montre du texte de loi ; par défa
 **Écarté** : « Produits » (contredit SITE-001 et sonne comme un catalogue à acheter) ; « Applications » (se confond avec « L'application ») ; « Services » (vague) ; un méga-menu (trois entrées ne le justifient pas).
 **Conséquences** : l'espace de travail n'a pas de sous-marque (D-054) : la troisième entrée se nomme par ce qu'on y fait, « Travailler vos dossiers ». L'ancien lien « Cabinets et juristes » du menu mobile disparaît dans le menu « Outils ».
 **On rouvre si** : le menu dépasse cinq entrées.
+
+### SITE-012 · 2026-10-02 · Les démonstrations se jouent dans un vrai téléphone, et le visiteur les pilote
+**Statut** : en vigueur · **Réf.** : canevas « Refonte mibeko.fr : Assistant et accueil » (planches 7, 7 bis, 8 et 8 bis), SITE-004, SITE-010, [`design-system.md`](design-system.md) § 7 et § 8
+
+**Contexte** : le fondateur trouve le site trop sommaire. La page Assistant ne montrait jamais une réponse, et l'accueil ne disait pas ce qu'on peut y faire. L'écran de l'application rejoué sur l'accueil (SITE-004) était dessiné comme un appareil sobre, avec un simple filet de 1 px, et ne réagissait à rien.
+**Décision** :
+- le téléphone a un cadre noir plein, avec îlot, boutons latéraux et barre d'accueil. Il reste plat : ni ombre, ni reflet, ni dégradé ;
+- la démonstration se pilote. Un repère ou un geste touché à côté du téléphone fait réagir l'écran, et un élément touché dans l'écran fait avancer la démonstration. Elle se joue seule tant que personne n'y touche, s'arrête dès qu'on y touche, et garde toujours « Pause » et « Rejouer » ;
+- chaque écran montre une capacité vraie aujourd'hui dans le produit. Ce qui n'existe pas encore (statut dans le lecteur de l'application, différences surlignées entre deux versions) n'entre dans l'animation qu'une fois livré ;
+- sur téléphone, le cadre est gardé mais réduit, les repères passent en pastilles défilantes au-dessus de l'écran, l'explication dessous, et la recherche reste le premier geste du premier écran ;
+- les garde-fous de SITE-004 et SITE-010 restent : sans JavaScript ou avec `prefers-reduced-motion`, l'écran est rendu terminé et lisible ; la boucle s'arrête hors écran et dans un onglet masqué ; aucune réponse inventée en production.
+**Écarté** : l'appareil au filet de 1 px de la charte v2 (il ne se lit pas comme un téléphone) ; retirer le cadre sur téléphone (proposé le 02/10, écarté : réduit, il reste lisible à 390 px) ; une vidéo (lourde, et rien à toucher) ; un assistant ouvert aux visiteurs (SITE-004).
+**Conséquences** : la charte change au § 8 (« Écran de l'application, rejoué ») et gagne une ligne au § 7. D'autres pages pourront recevoir des démonstrations du même genre, avec les mêmes garde-fous. Le code repart des composants existants (`AssistantConversation.astro`, `Header.astro`) : les maquettes ne sont pas recopiées telles quelles.
+**On rouvre si** : une mesure montre que la démonstration retarde l'affichage du champ de recherche, ou fait dépasser à la page son budget de 150 ko sur un Android d'entrée de gamme.
