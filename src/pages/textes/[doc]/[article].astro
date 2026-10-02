@@ -241,7 +241,7 @@ const lowerFirst = (label: string) => label.charAt(0).toLowerCase() + label.slic
             ? "Le fonds juridique ne répond pas pour l'instant. Le texte existe toujours : réessayez dans quelques minutes."
             : "L'article ou le texte que vous cherchez n'existe pas, ou n'est pas encore publié dans le fonds Mibeko."}
         </p>
-        <a href={unavailable ? Astro.url.pathname : '/textes'} class="appui inline-flex items-center h-11 px-6 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">
+        <a href={unavailable ? Astro.url.pathname : '/textes'} class="appui inline-flex items-center h-11 px-6 bg-primary text-on-primary font-semibold rounded-lg hover:bg-primary-container transition-colors">
           {unavailable ? 'Réessayer' : 'Parcourir le fonds juridique'}
         </a>
       </section>

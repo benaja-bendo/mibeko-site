@@ -217,7 +217,7 @@ const btnGhost = 'appui inline-flex items-center justify-center gap-2 h-11 px-5 
             Le fonds juridique ne répond pas pour l'instant. Le texte existe toujours : réessayez dans quelques minutes.
           </p>
         )}
-        <a href={unavailable ? Astro.url.pathname : '/textes'} class="appui inline-flex items-center h-11 px-6 bg-primary text-on-primary font-semibold rounded hover:bg-primary-container transition-colors">
+        <a href={unavailable ? Astro.url.pathname : '/textes'} class="appui inline-flex items-center h-11 px-6 bg-primary text-on-primary font-semibold rounded-lg hover:bg-primary-container transition-colors">
           {unavailable ? 'Réessayer' : 'Parcourir le fonds juridique'}
         </a>
       </section>
