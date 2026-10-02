@@ -24,4 +24,8 @@ export const UMAMI_EVENTS = {
   // Bouton « Ouvrir » du bandeau mobile : il ouvre l'app, ou le store si elle
   // est absente, sans qu'on puisse savoir lequel des deux.
   ouvrirApp: 'ouvrir_app',
+  // Lien « Découvrir » d'un des cinq gestes de l'accueil, avec l'identifiant
+  // du geste (chercher, lire, versions, demander, garder) : lequel donne envie
+  // d'aller plus loin ? (mibeko-site#96)
+  decouvrirGeste: 'decouvrir_geste',
 } as const;

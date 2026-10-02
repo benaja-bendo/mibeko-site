@@ -1,0 +1,587 @@
+---
+/**
+ * HomeGestures.astro : les cinq gestes de Mibeko, joués dans un téléphone
+ * (mibeko-site#96, décisions SITE-012 et SITE-013).
+ *
+ * POURQUOI. Un visiteur qui découvre le site ne voyait ni ce qu'il peut y faire,
+ * ni comment ouvrir un compte (mibeko-site#22). Le téléphone montre une seule
+ * situation, de bout en bout : chercher, lire et savoir si l'article s'applique,
+ * voir sa version d'avant, poser la question à l'assistant, garder le texte hors
+ * connexion. Chaque geste dit où il se fait (site ou application) et mène à sa
+ * page par un lien « Découvrir ».
+ *
+ * CE QUI EST VRAI. Tout ce que l'écran montre existe aujourd'hui (règle de la
+ * promesse, charte § 9) :
+ * - la question a été tapée dans la recherche de production le 02/10/2026 :
+ *   « mon employeur m'a licencié sans préavis » renvoie le Code du travail,
+ *   art. 41 puis 42 ;
+ * - le statut (« En vigueur, vérifié le 27 septembre 2026 ») et la version de
+ *   1975 sont ceux de la page de l'article 41 ;
+ * - le site ne surligne pas encore la différence entre deux versions : l'écran
+ *   montre donc la version antérieure telle que le site l'affiche ;
+ * - l'écran de l'assistant n'invente aucune réponse (SITE-004) : comme
+ *   l'application, il montre la question, puis les sources ;
+ * - « Copie locale du … » est le libellé du lecteur de l'application.
+ * Avant de changer un texte de ce fichier, le retaper en production.
+ *
+ * SANS JAVASCRIPT, le serveur rend la liste complète des gestes, avec leurs
+ * liens, et le premier écran du téléphone. Le script ne fait qu'animer et
+ * piloter ce qui existe déjà. Avec `prefers-reduced-motion`, rien ne défile seul.
+ *
+ * GÉOMÉTRIE. Le cadre du téléphone et l'écran de l'application vivent dans le
+ * `<style>` de ce composant, jamais en classes utilitaires (charte § 8) : les
+ * greps du § 2 restent à zéro.
+ */
+import { UMAMI_EVENTS } from '../lib/analytics';
+
+const dateCopieLocale = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+
+const gestes = [
+	{
+		id: 'chercher',
+		court: 'Chercher',
+		titre: 'Chercher avec vos mots',
+		ligne: "Une situation suffit, pas besoin du numéro d'article.",
+		ou: 'Sur mibeko.fr, sans compte',
+		lien: { libelle: 'Ouvrir le fonds', href: '/textes' },
+	},
+	{
+		id: 'lire',
+		court: 'Lire',
+		titre: "Lire, et savoir si ça s'applique",
+		ligne: 'Chaque article affiche son statut, vérifié et daté.',
+		ou: 'Sur mibeko.fr, sans compte',
+		lien: { libelle: "Lire l'article 41", href: '/textes/code-du-travail/article-41' },
+	},
+	{
+		id: 'versions',
+		court: 'Versions',
+		titre: "Retrouver la version d'avant",
+		ligne: "L'article de 1975, avant sa modification de 1996.",
+		ou: 'Sur mibeko.fr, sans compte',
+		lien: { libelle: 'Voir la version de 1975', href: '/textes/code-du-travail/article-41?au=1975-03-15' },
+	},
+	{
+		id: 'demander',
+		court: 'Demander',
+		titre: "Poser la question à l'assistant",
+		ligne: 'Il cherche dans le fonds et cite les articles.',
+		ou: 'Application ou web, compte gratuit',
+		lien: { libelle: "Découvrir l'assistant", href: '/assistant' },
+	},
+	{
+		id: 'garder',
+		court: 'Hors ligne',
+		titre: 'Garder hors connexion',
+		ligne: 'Les textes téléchargés restent lisibles sans réseau.',
+		ou: "Dans l'application",
+		lien: { libelle: "Découvrir l'application", href: '/application' },
+	},
+];
+---
+
+<div class="gestes" data-gestes>
+	<div class="gestes__entete">
+		<p class="text-xs font-semibold uppercase tracking-wider text-on-surface-muted">Ce que vous pouvez faire</p>
+		<button type="button" class="gestes__pause appui" data-gestes-pause hidden>Pause</button>
+	</div>
+
+	<ol class="gestes__liste" role="list" data-gestes-liste hidden>
+		{gestes.map((geste, index) => (
+			<li>
+				<button
+					type="button"
+					class="gestes__bouton"
+					data-geste-bouton={index}
+					aria-controls={`geste-${geste.id}`}
+					aria-current={index === 0 ? 'step' : undefined}
+				>
+					<span class="gestes__numero">{String(index + 1).padStart(2, '0')}</span>
+					<span class="gestes__titre">{geste.titre}</span>
+					<span class="gestes__court" aria-hidden="true">{geste.court}</span>
+					<span class="gestes__progression" aria-hidden="true"></span>
+				</button>
+			</li>
+		))}
+	</ol>
+
+	<div class="gestes__appareil">
+		<div class="device" aria-label="Démonstration : chercher un article, lire son statut, retrouver sa version de 1975, poser la question à l'assistant, garder le texte hors connexion." role="img">
+			<span class="device__bouton device__bouton--volume-haut"></span>
+			<span class="device__bouton device__bouton--volume-bas"></span>
+			<span class="device__bouton device__bouton--alimentation"></span>
+			<div class="ecran">
+				<span class="ilot"></span>
+				<div class="barre-etat" aria-hidden="true">
+					<span>9:41</span>
+					<span class="barre-etat__icones">
+						<svg width="15" height="10" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.3" y="5" width="3" height="6" rx="1"/><rect x="8.6" y="2.6" width="3" height="8.4" rx="1"/><rect x="12.9" y="0" width="3" height="11" rx="1" opacity=".35"/></svg>
+						<svg width="21" height="10" viewBox="0 0 23 11" fill="none"><rect x=".6" y=".6" width="19" height="9.8" rx="2.5" stroke="currentColor" stroke-opacity=".45"/><rect x="2.2" y="2.2" width="13" height="6.6" rx="1.5" fill="currentColor"/></svg>
+					</span>
+				</div>
+
+				<section class="vue" data-geste-vue="0" aria-hidden="true">
+					<div class="url">mibeko.fr/textes?q=licencié sans préavis</div>
+					<div class="champ">mon employeur m'a licencié sans préavis</div>
+					<p class="surtitre">Articles qui en parlent</p>
+					<div class="resultats">
+						<span class="resultat touche" data-geste-suivant="1">
+							<span class="resultat__texte">Code du travail</span>
+							<span class="resultat__article">Article 41</span>
+							<span class="resultat__extrait">Toute rupture du contrat à durée indéterminée sans préavis…</span>
+						</span>
+						<span class="resultat">
+							<span class="resultat__texte">Code du travail</span>
+							<span class="resultat__article">Article 42</span>
+							<span class="resultat__extrait">Toute rupture abusive du contrat de travail donne lieu à la réintégration.</span>
+						</span>
+						<span class="resultat">
+							<span class="resultat__texte">Code du travail</span>
+							<span class="resultat__article">Article 56</span>
+							<span class="resultat__extrait">Les conventions collectives visées à la présente section…</span>
+						</span>
+					</div>
+				</section>
+
+				<section class="vue" data-geste-vue="1" aria-hidden="true" hidden>
+					<div class="url">mibeko.fr/textes/code-du-travail/article-41</div>
+					<div class="page">
+						<span class="ariane">Code du travail › Titre 2 › Chapitre 2</span>
+						<span class="page__titre">Article 41</span>
+						<span class="statut">
+							<span class="statut__mot">En vigueur</span>
+							<span class="statut__phrase">Vérifié par Mibeko le 27 septembre 2026.</span>
+						</span>
+						<span class="versions">
+							<span class="versions__choix versions__choix--actif">Depuis 1996</span>
+							<span class="versions__choix touche" data-geste-suivant="2">Avant 1996</span>
+						</span>
+						<span class="loi">Toute rupture du contrat à durée indéterminée sans préavis ou sans que le délai de préavis ait été intégralement observé emporte obligation pour la partie responsable de verser à l'autre partie une indemnité dite indemnité compensatrice de préavis…</span>
+					</div>
+				</section>
+
+				<section class="vue" data-geste-vue="2" aria-hidden="true" hidden>
+					<div class="url">mibeko.fr/…/article-41?au=1975-03-15</div>
+					<div class="page">
+						<span class="page__titre">Article 41</span>
+						<span class="avis">
+							<span class="avis__mot">Version antérieure</span>
+							<span class="statut__phrase">En vigueur du 15 mars 1975 au 6 mars 1996. Modifiée par la loi n°&nbsp;6-96.</span>
+						</span>
+						<span class="loi">Toute rupture du contrat à durée indéterminée sans préavis […] emporte obligation pour la partie responsable de verser à l'autre partie une indemnité dite «&nbsp;indemnité de préavis&nbsp;»…</span>
+						<span class="action touche" data-geste-suivant="3">Demander à l'assistant</span>
+					</div>
+				</section>
+
+				<section class="vue vue--app" data-geste-vue="3" aria-hidden="true" hidden>
+					<div class="barre-app">Assistant Mibeko</div>
+					<div class="fil">
+						<span class="bulle bulle--vous">Mon employeur m'a licencié sans préavis. A-t-il le droit&nbsp;?</span>
+						<span class="ia"><span class="ia__pastille"></span>Mibeko IA</span>
+						<span class="sources-phrase">Voici les sources juridiques pertinentes pour votre situation&nbsp;:</span>
+						<span class="cartes">
+							<span class="carte touche" data-geste-suivant="4">
+								<span class="carte__texte">Code du travail</span>
+								<span class="carte__article">Article 41</span>
+							</span>
+							<span class="carte">
+								<span class="carte__texte">Code du travail</span>
+								<span class="carte__article">Article 42</span>
+							</span>
+						</span>
+					</div>
+					<div class="saisie">
+						<span class="modes"><span class="modes__choix modes__choix--actif">Concis</span><span class="modes__choix">Analyse</span></span>
+						<span class="saisie__ligne">
+							<span class="saisie__champ">Posez une question sur le droit...</span>
+							<span class="saisie__envoi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg></span>
+						</span>
+						<span class="avertissement">Mibeko IA peut faire des erreurs. Vérifiez les sources citées.</span>
+					</div>
+				</section>
+
+				<section class="vue vue--app" data-geste-vue="4" aria-hidden="true" hidden>
+					<div class="barre-app">Code du travail</div>
+					<div class="page">
+						<span class="copie-locale">Copie locale du {dateCopieLocale}</span>
+						<span class="page__titre">Article 41</span>
+						<span class="loi">Toute rupture du contrat à durée indéterminée sans préavis ou sans que le délai de préavis ait été intégralement observé…</span>
+						<span class="page__titre page__titre--petit">Article 42</span>
+						<span class="loi">Toute rupture abusive du contrat de travail donne lieu à la réintégration…</span>
+					</div>
+				</section>
+
+				<span class="barre-accueil"></span>
+			</div>
+		</div>
+	</div>
+
+	<ol class="gestes__details" role="list">
+		{gestes.map((geste, index) => (
+			<li id={`geste-${geste.id}`} class="gestes__detail" data-geste-detail={index}>
+				<p class="gestes__detail-titre"><span class="gestes__numero">{String(index + 1).padStart(2, '0')}</span>{geste.titre}</p>
+				<p class="text-sm text-on-surface-variant">{geste.ligne}</p>
+				<p class="text-xs font-semibold uppercase tracking-wider text-on-surface-muted">{geste.ou}</p>
+				<a
+					href={geste.lien.href}
+					class="inline-flex items-center gap-1.5 min-h-[44px] text-sm font-semibold text-secondary hover:underline"
+					data-umami-event={UMAMI_EVENTS.decouvrirGeste}
+					data-umami-event-geste={geste.id}
+				>
+					{geste.lien.libelle}
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+				</a>
+			</li>
+		))}
+	</ol>
+</div>
+
+<script>
+	/**
+	 * Pilote la démonstration. Rien n'est ajouté au DOM : le script bascule
+	 * l'écran visible, le geste courant et son détail, déjà rendus par le
+	 * serveur. Pause hors écran et onglet masqué, comme AssistantConversation.
+	 */
+	const DUREE_ETAPE = 5200;
+	const AVANT_TOUCHE = 900;
+
+	const piloter = (racine: HTMLElement) => {
+		const vues = [...racine.querySelectorAll<HTMLElement>('[data-geste-vue]')];
+		const boutons = [...racine.querySelectorAll<HTMLButtonElement>('[data-geste-bouton]')];
+		const details = [...racine.querySelectorAll<HTMLElement>('[data-geste-detail]')];
+		const liste = racine.querySelector<HTMLElement>('[data-gestes-liste]');
+		const pause = racine.querySelector<HTMLButtonElement>('[data-gestes-pause]');
+		if (!liste || !pause || vues.length === 0) return;
+
+		const mouvementReduit = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		let courant = 0;
+		let lecture = !mouvementReduit;
+		let horsChamp = false;
+		let minuterie: number | undefined;
+		let minuterieTouche: number | undefined;
+
+		racine.dataset.arme = '';
+		liste.hidden = false;
+		pause.hidden = false;
+
+		const montrer = (index: number) => {
+			courant = index;
+			vues.forEach((vue, i) => {
+				vue.hidden = i !== index;
+				vue.classList.toggle('vue--entree', i === index);
+			});
+			boutons.forEach((bouton, i) => {
+				if (i === index) bouton.setAttribute('aria-current', 'step');
+				else bouton.removeAttribute('aria-current');
+			});
+			details.forEach((detail, i) => detail.classList.toggle('gestes__detail--actif', i === index));
+			// Sur téléphone, la pastille du geste courant reste visible dans sa rangée.
+			const bouton = boutons[index];
+			if (bouton && liste.scrollWidth > liste.clientWidth) {
+				liste.scrollTo({ left: bouton.offsetLeft - 16, behavior: mouvementReduit ? 'auto' : 'smooth' });
+			}
+			racine.querySelectorAll('.touche--appui').forEach((el) => el.classList.remove('touche--appui'));
+		};
+
+		const planifier = () => {
+			window.clearTimeout(minuterie);
+			window.clearTimeout(minuterieTouche);
+			racine.dataset.lecture = String(lecture && !horsChamp);
+			if (!lecture || horsChamp) return;
+			// Le doigt « touche » l'élément qui mène au geste suivant, puis l'écran change.
+			minuterieTouche = window.setTimeout(() => {
+				vues[courant]?.querySelector('[data-geste-suivant]')?.classList.add('touche--appui');
+			}, DUREE_ETAPE - AVANT_TOUCHE);
+			minuterie = window.setTimeout(() => {
+				montrer((courant + 1) % vues.length);
+				planifier();
+			}, DUREE_ETAPE);
+		};
+
+		const choisir = (index: number) => {
+			lecture = false;
+			pause.textContent = 'Lecture';
+			montrer(index);
+			planifier();
+		};
+
+		boutons.forEach((bouton, i) => bouton.addEventListener('click', () => choisir(i)));
+		racine.querySelectorAll<HTMLElement>('[data-geste-suivant]').forEach((el) => {
+			el.addEventListener('click', () => choisir(Number(el.dataset.gesteSuivant)));
+		});
+		pause.addEventListener('click', () => {
+			lecture = !lecture;
+			pause.textContent = lecture ? 'Pause' : 'Lecture';
+			planifier();
+		});
+		if (mouvementReduit) pause.textContent = 'Lecture';
+
+		const synchroniser = () => {
+			horsChamp = document.hidden || racine.dataset.horsChamp === 'true';
+			planifier();
+		};
+		document.addEventListener('visibilitychange', synchroniser);
+		new IntersectionObserver(
+			([entree]) => {
+				racine.dataset.horsChamp = String(!entree.isIntersecting);
+				synchroniser();
+			},
+			{ threshold: 0.3 }
+		).observe(racine);
+
+		montrer(0);
+		planifier();
+	};
+
+	document.querySelectorAll<HTMLElement>('[data-gestes]').forEach(piloter);
+</script>
+
+<style>
+	/* --- Disposition : liste + détail à gauche, téléphone à droite ; empilé sur téléphone --- */
+	.gestes {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas: 'entete' 'liste' 'appareil' 'details';
+		gap: 16px;
+	}
+	.gestes__entete { grid-area: entete; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+	.gestes__liste { grid-area: liste; }
+	.gestes__appareil { grid-area: appareil; display: flex; justify-content: center; }
+	.gestes__details { grid-area: details; display: flex; flex-direction: column; gap: 16px; }
+
+	@media (min-width: 1024px) {
+		.gestes {
+			grid-template-columns: minmax(0, 1fr) 280px;
+			grid-template-areas: 'entete appareil' 'liste appareil' 'details appareil';
+			grid-template-rows: auto auto 1fr;
+			column-gap: 28px;
+			row-gap: 8px;
+			align-items: start;
+		}
+	}
+
+	.gestes__pause {
+		height: 32px;
+		padding: 0 12px;
+		border: 1px solid var(--color-outline-variant);
+		border-radius: 8px;
+		background: var(--color-surface-container-lowest);
+		font-size: 12px;
+		font-weight: 600;
+		color: var(--color-on-surface);
+	}
+
+	/* La liste des gestes : pastilles qui défilent sur téléphone, liste sur ordinateur. */
+	.gestes__liste {
+		position: relative;
+		display: flex;
+		gap: 8px;
+		overflow-x: auto;
+		scrollbar-width: none;
+		margin: 0 -16px;
+		padding: 0 16px;
+	}
+	.gestes__liste::-webkit-scrollbar { display: none; }
+	.gestes__bouton {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		flex: none;
+		min-height: 44px;
+		padding: 0 14px;
+		border: 1px solid var(--color-outline-variant);
+		border-radius: 8px;
+		background: var(--color-surface-container-lowest);
+		font-size: 14px;
+		font-weight: 600;
+		color: var(--color-on-surface);
+		text-align: left;
+		cursor: pointer;
+		overflow: hidden;
+	}
+	.gestes__bouton[aria-current='step'] {
+		border-color: var(--color-primary);
+		background: var(--color-primary);
+		color: var(--color-on-primary);
+	}
+	.gestes__bouton[aria-current='step'] .gestes__numero { color: var(--color-inverse-primary); }
+	/* Sur téléphone, la pastille porte un mot ; le titre entier reste lu par les lecteurs d'écran. */
+	.gestes__titre { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+	.gestes__court { white-space: nowrap; }
+	@media (min-width: 1024px) {
+		.gestes__titre { position: static; width: auto; height: auto; overflow: visible; clip: auto; white-space: normal; }
+		.gestes__court { display: none; }
+	}
+	.gestes__numero { font-size: 12px; font-weight: 700; color: var(--color-secondary); margin-right: 8px; }
+	.gestes__bouton .gestes__numero { margin-right: 0; }
+
+	/* Barre de progression du geste courant, seulement quand la démonstration joue. */
+	.gestes__progression {
+		position: absolute;
+		left: 0;
+		bottom: 0;
+		height: 2px;
+		width: 0;
+		background: var(--color-inverse-primary);
+	}
+	[data-lecture='true'] .gestes__bouton[aria-current='step'] .gestes__progression {
+		animation: progression 5200ms linear forwards;
+	}
+	@keyframes progression { from { width: 0; } to { width: 100%; } }
+
+	@media (min-width: 1024px) {
+		.gestes__liste { flex-direction: column; overflow: visible; margin: 0; padding: 0; gap: 4px; }
+		.gestes__bouton {
+			width: 100%;
+			min-height: 44px;
+			padding: 10px 12px;
+			border-color: transparent;
+			background: transparent;
+			font-size: 15px;
+		}
+		.gestes__bouton:hover { background: var(--color-surface-container-low); }
+		.gestes__bouton[aria-current='step'] {
+			border-color: var(--color-surface-variant);
+			background: var(--color-surface-container-lowest);
+			color: var(--color-on-surface);
+		}
+		.gestes__bouton[aria-current='step'] .gestes__numero { color: var(--color-secondary); }
+		.gestes__progression { background: var(--color-secondary); }
+	}
+
+	/* Détails : tous visibles sans JavaScript ; seul le geste courant ensuite. */
+	.gestes__detail { display: flex; flex-direction: column; gap: 4px; }
+	.gestes__detail-titre { font-size: 16px; font-weight: 600; color: var(--color-on-surface); }
+	[data-arme] .gestes__detail { display: none; }
+	[data-arme] .gestes__detail--actif { display: flex; }
+	[data-arme] .gestes__detail-titre { display: none; }
+	@media (max-width: 1023px) {
+		[data-arme] .gestes__detail--actif { align-items: center; text-align: center; }
+	}
+	@media (min-width: 1024px) {
+		[data-arme] .gestes__detail--actif { padding: 0 12px; }
+	}
+
+	/* --- Le téléphone : cadre noir plein, plat (SITE-012) --- */
+	.device {
+		position: relative;
+		width: 260px;
+		height: 540px;
+		box-sizing: border-box;
+		padding: 9px;
+		border-radius: 44px;
+		background: #1b1c1c;
+		flex: none;
+	}
+	@media (min-width: 1024px) {
+		.device { width: 280px; height: 580px; padding: 10px; border-radius: 46px; }
+	}
+	.device__bouton { position: absolute; width: 3px; border-radius: 2px; background: #1b1c1c; }
+	.device__bouton--volume-haut { left: -3px; top: 120px; height: 46px; }
+	.device__bouton--volume-bas { left: -3px; top: 178px; height: 46px; }
+	.device__bouton--alimentation { right: -3px; top: 150px; height: 72px; }
+
+	.ecran {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		overflow: hidden;
+		border-radius: 35px;
+		background: var(--color-background);
+		color: var(--color-on-surface);
+		font-family: var(--font-sans, Inter, sans-serif);
+	}
+	.ilot { position: absolute; top: 9px; left: 50%; margin-left: -38px; width: 76px; height: 22px; border-radius: 11px; background: #1b1c1c; z-index: 2; }
+	.barre-etat { display: flex; flex: none; justify-content: space-between; align-items: center; height: 24px; padding: 11px 20px 0; font-size: 11px; font-weight: 600; }
+	.barre-etat__icones { display: flex; gap: 4px; align-items: center; opacity: 0.85; }
+	.barre-accueil { position: absolute; bottom: 6px; left: 50%; margin-left: -50px; width: 100px; height: 4px; border-radius: 2px; background: #1b1c1c; opacity: 0.85; }
+
+	.vue { display: flex; flex-direction: column; gap: 9px; padding-top: 6px; min-height: 0; }
+	.vue[hidden] { display: none; }
+	.vue--app { padding-top: 0; flex: 1; }
+	.vue--entree { animation: entree 300ms cubic-bezier(0.23, 1, 0.32, 1); }
+	@keyframes entree { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+	.url { display: flex; align-items: center; height: 26px; margin: 4px 10px 0; padding: 0 10px; border-radius: 13px; background: var(--color-surface-container-high); font-size: 10px; font-weight: 500; color: var(--color-on-surface-variant); white-space: nowrap; overflow: hidden; }
+	.champ { margin: 0 12px; padding: 9px 11px; border: 2px solid var(--color-primary); border-radius: 8px; background: var(--color-surface-container-lowest); font-size: 12px; }
+	.surtitre { margin: 0 12px; font-size: 9.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-on-surface-muted); }
+	.resultats { display: flex; flex-direction: column; gap: 7px; margin: 0 12px; }
+	.resultat { position: relative; display: flex; flex-direction: column; gap: 3px; padding: 9px 11px; border: 1px solid var(--color-surface-variant); border-radius: 8px; background: var(--color-surface-container-lowest); }
+	.resultat__texte { font-size: 9px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-secondary); }
+	.resultat__article { font-size: 13px; font-weight: 700; }
+	.resultat__extrait, .loi { font-family: var(--font-serif, 'Source Serif 4', Georgia, serif); font-size: 11.5px; line-height: 1.6; color: var(--color-on-surface-variant); }
+	.loi { color: var(--color-on-surface); }
+
+	.page { display: flex; flex-direction: column; gap: 9px; padding: 4px 14px 0; }
+	.ariane { font-size: 9.5px; color: var(--color-on-surface-muted); }
+	.page__titre { font-size: 20px; font-weight: 700; line-height: 1.1; }
+	.page__titre--petit { font-size: 16px; padding-top: 4px; }
+	.statut, .avis { display: flex; flex-direction: column; gap: 2px; padding: 7px 9px; border-left: 3px solid var(--color-statut-vigueur); background: var(--color-statut-vigueur-tint); }
+	.avis { border-left-color: var(--color-statut-inconnu); background: var(--color-statut-inconnu-tint); }
+	.statut__mot, .avis__mot { font-size: 9px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-statut-vigueur); }
+	.avis__mot { color: var(--color-statut-inconnu); }
+	.statut__phrase { font-size: 10.5px; line-height: 1.4; color: var(--color-on-surface-variant); }
+	.versions { display: flex; gap: 6px; }
+	.versions__choix { position: relative; padding: 6px 8px; border: 1px solid var(--color-outline-variant); border-radius: 6px; background: var(--color-surface-container-lowest); font-size: 10px; font-weight: 600; }
+	.versions__choix--actif { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+	.action { position: relative; display: flex; align-items: center; justify-content: center; height: 36px; margin-top: 6px; border-radius: 8px; background: var(--color-primary); color: var(--color-on-primary); font-size: 11.5px; font-weight: 600; }
+
+	/* Écrans de l'application : vocabulaire de ChatScreen.kt (bulles, pastilles). */
+	.barre-app { display: flex; flex: none; align-items: center; height: 40px; padding: 0 14px; border-bottom: 1px solid var(--color-surface-variant); font-size: 13.5px; font-weight: 600; }
+	.fil { display: flex; flex-direction: column; gap: 8px; padding: 10px 0; }
+	.bulle--vous { align-self: flex-end; max-width: 200px; margin: 0 12px; padding: 9px 11px; border-radius: 16px 4px 16px 16px; background: var(--color-surface-variant); color: var(--color-on-surface-variant); font-size: 11.5px; line-height: 1.45; }
+	.ia { display: flex; align-items: center; gap: 6px; margin: 0 12px; font-size: 10px; color: var(--color-on-surface-variant); }
+	.ia__pastille { width: 20px; height: 20px; border-radius: 50%; background: #1e6b47; }
+	.sources-phrase { margin: 0 12px; font-size: 10.5px; line-height: 1.45; color: var(--color-on-surface-variant); }
+	.cartes { display: flex; gap: 8px; padding: 0 12px; }
+	.carte { position: relative; flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 9px; border: 1px solid var(--color-surface-variant); border-radius: 8px; background: var(--color-surface-container-lowest); }
+	.carte__texte { width: fit-content; padding: 2px 5px; border-radius: 4px; background: var(--color-surface-variant); font-size: 7.5px; font-weight: 700; text-transform: uppercase; color: var(--color-on-surface-variant); }
+	.carte__article { font-size: 12px; font-weight: 700; color: var(--color-primary); }
+	.saisie { display: flex; flex-direction: column; gap: 6px; margin-top: auto; padding: 0 12px 20px; }
+	.modes { display: inline-flex; align-self: flex-start; border: 1px solid var(--color-outline-variant); border-radius: 4px; overflow: hidden; }
+	.modes__choix { padding: 3px 9px; font-size: 9.5px; font-weight: 500; color: var(--color-on-surface-variant); }
+	.modes__choix--actif { background: var(--color-primary-container); color: var(--color-on-primary); }
+	.saisie__ligne { display: flex; gap: 6px; align-items: center; }
+	.saisie__champ { flex: 1; min-height: 32px; display: flex; align-items: center; padding: 0 9px; border: 1px solid var(--color-outline-variant); border-radius: 4px; font-size: 10.5px; color: var(--color-on-surface-muted); }
+	.saisie__envoi { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 4px; background: var(--color-primary); color: var(--color-on-primary); }
+	.avertissement { font-size: 7.5px; font-weight: 600; letter-spacing: 0.06em; text-align: center; text-transform: uppercase; color: var(--color-on-surface-muted); }
+	.copie-locale { width: fit-content; padding: 4px 7px; border-radius: 4px; background: var(--color-statut-vigueur-tint); font-size: 9px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-statut-vigueur); }
+
+	/* L'élément qui mène au geste suivant : on peut le toucher, le doigt l'indique. */
+	[data-arme] .touche { cursor: pointer; }
+	[data-arme] .touche::after {
+		content: '';
+		position: absolute;
+		inset: -3px;
+		border: 2px solid var(--color-secondary);
+		border-radius: 9px;
+		opacity: 0;
+		pointer-events: none;
+	}
+	[data-arme][data-lecture='true'] .touche::after { animation: indice 1400ms ease-in-out infinite; }
+	@keyframes indice { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.85; } }
+	.touche--appui::before {
+		content: '';
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		width: 32px;
+		height: 32px;
+		margin: -16px 0 0 -16px;
+		border: 2px solid var(--color-secondary);
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--color-secondary) 35%, transparent);
+		animation: appui 700ms ease-out forwards;
+		pointer-events: none;
+		z-index: 3;
+	}
+	@keyframes appui { from { transform: scale(0.6); opacity: 1; } to { transform: scale(1.3); opacity: 0; } }
+
+	@media (prefers-reduced-motion: reduce) {
+		.vue--entree { animation: entree-douce 150ms ease-out; }
+		@keyframes entree-douce { from { opacity: 0; } to { opacity: 1; } }
+		[data-arme] .touche::after, .touche--appui::before, .gestes__progression { animation: none !important; }
+	}
+</style>
