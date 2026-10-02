@@ -1,0 +1,51 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import PageHeader from '../components/PageHeader.astro';
+---
+
+<Layout
+  title="Le droit civil au Congo : pourquoi un document a été retiré | Mibeko"
+  description="Pourquoi Mibeko a retiré une édition française du Code civil de son fonds congolais, et où consulter les textes disponibles."
+>
+  <Header />
+  <main id="main" class="flex-grow bg-background">
+    <PageHeader
+      eyebrow="Notre fonds juridique"
+      title="Le droit civil au Congo"
+      subtitle="Une explication sur le document que nous avons retiré et sur les sources que vous pouvez consulter."
+    />
+
+    <article class="max-w-[760px] mx-auto px-4 sm:px-6 lg:px-8 pb-16 md:pb-24 text-on-surface-variant font-serif leading-relaxed">
+      <section class="mb-10">
+        <h2 class="text-2xl font-bold text-on-surface mb-4 font-sans">Pourquoi l'ancienne fiche a disparu</h2>
+        <p class="mb-4">
+          Mibeko présentait un document intitulé « Code civil Congo Brazzaville-2012-03-24 » comme un texte congolais en vigueur. Il s'agissait d'une édition du Code civil français consolidée en 2012. Elle contient des dispositions françaises postérieures à l'indépendance du Congo. Son intitulé et son statut pouvaient faire croire à tort que l'ensemble de cette édition s'appliquait au Congo.
+        </p>
+        <p>
+          Nous avons donc retiré ce document du fonds public. Changer uniquement son titre n'aurait pas corrigé les réponses de recherche ou de l'Assistant qui citaient ses articles. Nous ne disposons pas encore d'une édition sourcée et vérifiée du droit civil général applicable au Congo qui pourrait le remplacer.
+        </p>
+      </section>
+
+      <section class="mb-10">
+        <h2 class="text-2xl font-bold text-on-surface mb-4 font-sans">Les textes disponibles</h2>
+        <p class="mb-4">
+          Pour les questions de mariage, de divorce et de famille, vous pouvez consulter la <a class="text-secondary font-semibold underline" href="/textes/code-de-la-famille-de-1984">loi n° 073/84 portant Code de la famille</a>. Le <a class="text-secondary font-semibold underline" href="https://www.sgg.cg/codes/congo-code-1984-famille.pdf" target="_blank" rel="noopener noreferrer">Secrétariat général du Gouvernement</a> en publie le document source.
+        </p>
+        <p>
+          En droit des affaires, les <a class="text-secondary font-semibold underline" href="https://www.ohada.org" target="_blank" rel="noopener noreferrer">Actes uniformes de l'OHADA</a> sont une autre source à consulter selon votre question. Le <a class="text-secondary font-semibold underline" href="/textes">fonds juridique Mibeko</a> donne accès aux textes actuellement publiés, avec leur provenance.
+        </p>
+      </section>
+
+      <section class="rounded-lg border border-surface-variant bg-surface-container-low p-6">
+        <h2 class="text-xl font-bold text-on-surface mb-3 font-sans">Vous disposez d'une source ?</h2>
+        <p class="mb-4">
+          Si vous utilisez une édition datée du droit civil applicable au Congo, vous pouvez nous en indiquer la référence et la provenance. Nous la vérifierons avant toute publication.
+        </p>
+        <a class="text-secondary font-semibold underline" href="/contact">Écrire à Mibeko</a>
+      </section>
+    </article>
+  </main>
+  <Footer />
+</Layout>

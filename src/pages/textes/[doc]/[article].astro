@@ -30,6 +30,7 @@ import { avecMarque, descriptionArticleVide, titreArticle } from '../../../lib/p
 import { articlePlainText } from '../../../lib/tables';
 import { documentTypeLabel, formatFrenchDate, formatSectionPath, isUnclassifiedType } from '../../../lib/legalMetadata';
 import { UMAMI_EVENTS } from '../../../lib/analytics';
+import { CODE_CIVIL_2012_SLUG, DROIT_CIVIL_EXPLICATION_PATH } from '../../../lib/retiredDocuments';
 import { indexNumeros, renvoisPermis } from '../../../lib/renvois';
 
 const ARTICLE_PREFIX = 'article-';
@@ -70,6 +71,10 @@ if (!invalid) {
 
 const notFound = !unavailable && (invalid || !payload || !payload.current_article);
 const empty = notFound || unavailable;
+
+if (notFound && doc === CODE_CIVIL_2012_SLUG) {
+  return Astro.redirect(DROIT_CIVIL_EXPLICATION_PATH, 301);
+}
 
 if (notFound) {
   Astro.response.status = 404;
