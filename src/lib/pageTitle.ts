@@ -23,8 +23,15 @@ export const DESCRIPTION_MAX = 160;
 const DEBUT_OBJET =
   /\s+(?:portant|relatifs?|relatives?|fixant|modifiant|complétant|instituant|créant|autorisant|approuvant|abrogeant|déterminant|organisant|établissant|ratifiant|promulguant|attribuant|nommant|concernant|rectifiant|définissant|réglementant)\b/i;
 
+// Un tiret cadratin DANS l'intitulé source (« Journal officiel n° 1-2011 — spécial »)
+// ne passe pas dans une balise de tête : elle n'est pas une citation du texte,
+// qui reste intact dans la page et le JSON-LD.
 function nettoyer(texte: string): string {
-  return texte.replace(/\s+/g, ' ').trim().replace(/[\s.,;:]+$/, '');
+  return texte
+    .replace(/\s*\u2014\s*/g, ', ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[\s.,;:]+$/, '');
 }
 
 /** Coupe au dernier mot entier qui tient dans `max`, et le dit par « … ». */

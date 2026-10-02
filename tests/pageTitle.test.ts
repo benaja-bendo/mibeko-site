@@ -43,6 +43,22 @@ describe('intituleCourt', () => {
   });
 });
 
+describe('tiret cadratin dans l’intitulé source', () => {
+  it('le remplace par une virgule dans le titre', () => {
+    const titre = avecMarque(titreArticle('Article 144', `Journal officiel n° 1-2011 ${TIRET_CADRATIN} spécial`));
+    assert.equal(titre, 'Article 144 : Journal officiel n° 1-2011, spécial | Mibeko');
+  });
+
+  it('le remplace aussi dans la description', () => {
+    const description = descriptionTexte({
+      titreOfficiel: `Journal officiel n° 1-2011 ${TIRET_CADRATIN} spécial`,
+      typeName: 'Journal officiel',
+      nbArticles: 3,
+    });
+    assert.ok(!description.includes(TIRET_CADRATIN), description);
+  });
+});
+
 describe('titreArticle', () => {
   it('tient dans la limite avec la marque, même sur un intitulé de 190 caractères', () => {
     const titre = avecMarque(titreArticle('Article 7', ARRETE_LONG));
