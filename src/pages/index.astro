@@ -7,8 +7,6 @@ import HomeHero from '../components/HomeHero.astro';
 import EssentialTexts from '../components/EssentialTexts.astro';
 import RecentAdditions from '../components/RecentAdditions.astro';
 import GuidesBand from '../components/GuidesBand.astro';
-import WhyMibeko from '../components/WhyMibeko.astro';
-import AssistantBand from '../components/AssistantBand.astro';
 import AppExit from '../components/AppExit.astro';
 import Footer from '../components/Footer.astro';
 import { fetchLibraryFundStats, fetchPublishedDocuments, type LibraryFundStats, type DocumentMeta } from '../lib/api';
@@ -55,25 +53,22 @@ const guides = (await getCollection('guides', ({ data }) => !data.draft))
 		{/* Chaque bloc porte un contenu réel — un texte, une nouveauté, un guide —
 		    au lieu d'une affirmation sur Mibeko. Voir docs/produit/positionnement-site-app.md
 		    et la charte visuelle v2 (§ 6, densité) pour la doctrine. */}
-		{/* ORDRE DE LA PAGE (07/09/2026) — il répond à « qu'est-ce que je peux
-		    faire ici ? », dans l'ordre où un visiteur se pose la question :
-		    chercher (hero), lire (le fonds), demander (l'Assistant), vérifier
-		    (l'engagement), comprendre (les guides), constater que le fonds vit
-		    (les nouveautés), l'emporter (l'app).
+		{/* ORDRE DE LA PAGE (02/10/2026, mibeko-site#96). Le premier écran répond
+		    à « qu'est-ce que je peux faire ici ? » : le champ de recherche, puis le
+		    téléphone qui joue les cinq gestes (chercher, lire et savoir si ça
+		    s'applique, retrouver la version d'avant, demander à l'assistant,
+		    garder hors connexion), chacun avec son lien vers la page qui le
+		    détaille. Viennent ensuite le fonds, les guides, les nouveautés et
+		    l'application.
 
-		    L'Assistant est remonté du sixième au troisième rang : c'est le seul
-		    bloc qui montre ce que le produit fait de plus que consulter un PDF,
-		    et le seul qui mène à un compte — il était servi après un bloc de
-		    nouveautés qui affiche des arrêtés de 1959, ce qui faisait dépendre
-		    la découverte du produit de la patience du visiteur. Les nouveautés
-		    descendent d'autant : elles prouvent que le fonds vit, ce qui est un
-		    argument de retour, pas d'accueil. */}
+		    Retirés : le bloc Assistant (son écran rejoué est devenu le 4e geste)
+		    et la bande « Notre engagement » (le téléphone montre le statut et la
+		    source ; /methode reste lié depuis le fonds). La page raccourcit, ce que
+		    demande la charte (§ 6, densité). */}
 		<HomeHero stats={fundStats} />
 		{fundStats && fundStats.essentialDocuments.length > 0 && (
 			<EssentialTexts documents={fundStats.essentialDocuments} />
 		)}
-		<AssistantBand />
-		<WhyMibeko />
 		{guides.length > 0 && <GuidesBand guides={guides} />}
 		{recentDocuments.length > 0 && <RecentAdditions documents={recentDocuments} />}
 		<AppExit />

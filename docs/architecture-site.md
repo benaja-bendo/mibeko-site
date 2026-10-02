@@ -75,7 +75,7 @@ Entrée du droit **par situation** plutôt que par nom de code (famille, travail
 
 ## Pages transverses
 
-- **Accueil `/`** : page d'orientation composée de blocs (`HomeHero`, `ThemesBand`, `IntentionPillars`, `AudienceSplit`, `LatestUpdates`, `WhyMibeko`, `CTASection`) qui présentent les piliers et dirigent citoyens et professionnels.
+- **Accueil `/`** (mis à jour le 2 octobre 2026, mibeko-site#96) : `HomeHero` (titre en question, champ de recherche, chiffres du fonds, et `HomeGestures` : le téléphone qui joue les cinq gestes, chacun lié à sa page), puis `EssentialTexts`, `GuidesBand`, `RecentAdditions` et `AppExit`.
 - **Contact `/contact`** + **`/api/contact`** : formulaire natif (fonctionne sans JavaScript). Le POST est traité par la route serveur `api/contact.ts`, qui refait un contrôle d'origine (`Origin`/`Referer` sur une liste d'hôtes autorisés) puis relaie le message à l'API Laravel, avec redirection vers `/contact?status=…` (ok / invalid / error).
 - **Pages légales** : `/cgu`, `/confidentialite`, `/mentions-legales`.
 - **`/produits`** : présentation de l'app mobile et de la plateforme pro.
