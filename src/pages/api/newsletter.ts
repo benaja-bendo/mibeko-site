@@ -44,7 +44,7 @@ const MESSAGES: Record<Outcome, { title: string; body: string }> = {
 const htmlPage = (status: Outcome, backHref: string) => {
   const { title, body } = MESSAGES[status];
   return new Response(
-    `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>${title} — Mibeko</title><style>body{font-family:system-ui,sans-serif;max-width:32rem;margin:4rem auto;padding:0 1.25rem;color:#1a2b23;line-height:1.6}h1{font-size:1.4rem}a{color:#1e6b47}</style></head><body><h1>${title}</h1><p>${body}</p><p><a href="${escapeHtml(backHref)}">← Retour</a></p></body></html>`,
+    `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>${title} | Mibeko</title><style>body{font-family:system-ui,sans-serif;max-width:32rem;margin:4rem auto;padding:0 1.25rem;color:#1a2b23;line-height:1.6}h1{font-size:1.4rem}a{color:#1e6b47}</style></head><body><h1>${title}</h1><p>${body}</p><p><a href="${escapeHtml(backHref)}">← Retour</a></p></body></html>`,
     { status: STATUS_CODE[status], headers: { 'Content-Type': 'text/html; charset=utf-8' } },
   );
 };
