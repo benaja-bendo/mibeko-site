@@ -94,7 +94,8 @@ typography:
     size: 13px
 radius:
   filet: 0
-  controle: 4px
+  puce: 4px
+  controle: 8px
   carte: 8px
   max: 8px
 spacing:
@@ -266,7 +267,7 @@ C'est ici que se joue concrètement « institution, pas produit ».
 
 ## 7. Formes et élévation
 
-- **Rayons** : 0 pour les filets et les bandeaux, 4 px pour les contrôles (boutons, champs), 8 px maximum pour les cartes. **Aucun rayon supérieur à 8 px sur le site.**
+- **Rayons** : 0 pour les filets et les bandeaux, 4 px pour les puces, 8 px (`rounded-lg`) pour les contrôles (boutons, champs) et les cartes. **Aucun rayon supérieur à 8 px sur le site.** Corrigé le 2 octobre 2026 : la charte annonçait 4 px pour les contrôles, alors que les plus visibles (recherche de l'en-tête et de l'accueil, boutons principaux) sont à 8 px. Quelques contrôles de pages secondaires restent à 4 px (`rounded`) : la dernière commande de la section « Vérification de conformité » les liste, à aligner.
 - **Élévation plate.** Aucune ombre. La hiérarchie se lit par le fond (`surface-container-*`) et par un filet de 1 px.
 - **États** : le focus est un filet de 2 px en `primary`, visible et non supprimé. Le survol change une couleur, jamais une position. L'état actif est un aplat, jamais un relief.
 
@@ -453,6 +454,7 @@ npm run check                                        # types et templates
 grep -roE 'rounded-(xl|2xl|3xl|full)|shadow-(sm|md|lg|xl|2xl)|blur-(2xl|3xl)' src | wc -l   # attendu : 0
 grep -c -- '--color-' src/styles/global.css          # doit correspondre au frontmatter
 npm run check:assistant-links                        # chaque article cité par une démonstration répond 200
+grep -rnE -e '<(button|input|select|textarea)[^>]*class="[^"]*\brounded\b[^-]' -e 'class="[^"]*bg-primary[^"]*\brounded\b[^-]' src   # contrôles à 4 px au lieu de 8 : attendu 0 (écart connu le 02/10/2026)
 ```
 
 Aucun chiffre de cette charte n'est à recopier à la main : les commandes ci-dessus font foi. Toute décision structurante prise sur la base de ce document appelle une ligne datée dans `docs/decisions.md` du dépôt `docs/`.
