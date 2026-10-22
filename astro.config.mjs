@@ -54,6 +54,11 @@ export default defineConfig({
   security: {
     checkOrigin: false
   },
+  // Les deux feuilles CSS (14 Kio) bloquaient le rendu : 2 aller-retours réseau
+  // pour gagner 330 à 490 ms de FCP en 4G lente (PageSpeed mobile, 22/10/2026).
+  build: {
+    inlineStylesheets: 'always'
+  },
   vite: {
     plugins: [tailwindcss()]
   }
